@@ -1,0 +1,194 @@
+
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  email         String    @unique
+  password      String?
+  emailVerified DateTime?
+  image         String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  // Relacionamentos
+  accounts      Account[]
+  sessions      Session[]
+  profile       UserProfile?
+  agendaItems   AgendaItem[]
+  goals         Goal[]
+  expenses      Expense[]
+  healthData    HealthData[]
+  notifications Notification[]
+  chatMessages  ChatMessage[]
+  iotDevices    IoTDevice[]
+}
+
+model UserProfile {
+  id           String   @id @default(cuid())
+  userId       String   @unique
+  preferences  String?  // JSON string
+  timezone     String   @default("America/Sao_Paulo")
+  language     String   @default("pt-BR")
+  workHours    String?  // JSON: {"start": "09:00", "end": "18:00"}
+  sleepHours   String?  // JSON: {"bedtime": "23:00", "wakeup": "07:00"}
+  location     String?
+  interests    String?  // JSON array
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model AgendaItem {
+  id          String   @id @default(cuid())
+  userId      String
+  title       String
+  description String?
+  startTime   DateTime
+  endTime     DateTime?
+  location    String?
+  category    String   @default("personal")
+  priority    String   @default("medium") // low, medium, high
+  status      String   @default("scheduled") // scheduled, completed, cancelled
+  isRecurring Boolean  @default(false)
+  recurrence  String?  // JSON for recurrence rules
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Goal {
+  id          String   @id @default(cuid())
+  userId      String
+  title       String
+  description String?
+  category    String   // health, career, personal, financial
+  targetValue Float?
+  currentValue Float   @default(0)
+  unit        String?  // kg, hours, reais, etc
+  deadline    DateTime?
+  status      String   @default("active") // active, completed, paused
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Expense {
+  id          String   @id @default(cuid())
+  userId      String
+  amount      Float
+  description String
+  category    String   // alimentacao, transporte, saude, etc
+  date        DateTime @default(now())
+  isRecurring Boolean  @default(false)
+  tags        String?  // JSON array
+  createdAt   DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model HealthData {
+  id        String   @id @default(cuid())
+  userId    String
+  type      String   // weight, steps, sleep, water, exercise
+  value     Float
+  unit      String
+  date      DateTime @default(now())
+  notes     String?
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Notification {
+  id        String   @id @default(cuid())
+  userId    String
+  title     String
+  message   String
+  type      String   // reminder, suggestion, alert, info
+  category  String   // agenda, health, finance, iot, coaching
+  isRead    Boolean  @default(false)
+  actionUrl String?
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model ChatMessage {
+  id        String   @id @default(cuid())
+  userId    String
+  message   String
+  isUser    Boolean  // true for user messages, false for AI
+  context   String?  // JSON with conversation context
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model IoTDevice {
+  id          String   @id @default(cuid())
+  userId      String
+  name        String
+  type        String   // light, thermostat, security, appliance
+  room        String
+  status      String   @default("offline") // online, offline, error
+  properties  String?  // JSON with device properties
+  lastUpdated DateTime @default(now())
+  createdAt   DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Recommendation {
+  id        String   @id @default(cuid())
+  userId    String
+  title     String
+  content   String
+  category  String   // agenda, health, finance, productivity
+  priority  Int      @default(1) // 1-5
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  expiresAt DateTime?
+
+  @@index([userId, isActive])
+}

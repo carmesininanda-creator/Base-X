@@ -1,0 +1,45 @@
+{
+  "name": "bazex",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
+    "db:seed": "tsx prisma/seed.ts",
+    "db:reset": "npx prisma migrate reset --force && npm run db:seed"
+  },
+  "dependencies": {
+    "@headlessui/react": "^2.2.0",
+    "@next-auth/prisma-adapter": "^1.0.7",
+    "@prisma/client": "^6.14.0",
+    "@types/bcryptjs": "^2.4.6",
+    "@types/pg": "^8.11.10",
+    "bcryptjs": "^2.4.3",
+    "date-fns": "^4.1.0",
+    "lucide-react": "^0.468.0",
+    "next": "15.4.6",
+    "next-auth": "^4.24.10",
+    "openai": "^4.73.0",
+    "pg": "^8.13.1",
+    "prisma": "^6.14.0",
+    "react": "^18",
+    "react-dom": "^18"
+  },
+  "devDependencies": {
+    "@eslint/eslintrc": "^3.2.0",
+    "@tailwindcss/postcss": "^0.0.0-insiders.a6214f7",
+    "@types/node": "^20",
+    "@types/react": "^18",
+    "@types/react-dom": "^18",
+    "eslint": "^8",
+    "eslint-config-next": "15.4.6",
+    "tailwindcss": "^3.4.1",
+    "tsx": "^4.20.4",
+    "typescript": "^5"
+  },
+  "prisma": {
+    "seed": "tsx prisma/seed.ts"
+  }
+}
