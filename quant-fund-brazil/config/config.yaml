@@ -1,0 +1,88 @@
+# Configuração do Fundo Quantitativo
+
+# Configurações de Dados
+data:
+  # Diretório para armazenar dados históricos
+  historical_data_dir: "data/historical"
+  
+  # Diretório para armazenar dados em tempo real
+  realtime_data_dir: "data/realtime"
+  
+  # Fonte de dados padrão
+  default_source: "yahoo"
+  
+  # Universo de ativos (tickers)
+  universe:
+    - "PETR4.SA"
+    - "VALE3.SA"
+    - "ITUB4.SA"
+    - "BBDC4.SA"
+    - "ABEV3.SA"
+    - "B3SA3.SA"
+    - "WEGE3.SA"
+    - "RENT3.SA"
+    - "GGBR4.SA"
+    - "SUZB3.SA"
+
+# Configurações de Backtesting
+backtesting:
+  # Capital inicial
+  initial_capital: 100000.0
+  
+  # Custos de transação
+  commission:
+    type: "percentage"
+    value: 0.0005  # 0.05% por operação
+  
+  # Slippage
+  slippage:
+    type: "percentage"
+    value: 0.0001  # 0.01%
+  
+  # Período de backtesting
+  start_date: "2020-01-01"
+  end_date: "2024-12-31"
+
+# Configurações de Gestão de Risco
+risk:
+  # Máximo drawdown aceitável (%)
+  max_drawdown: 15.0
+  
+  # Alavancagem máxima
+  max_leverage: 2.0
+  
+  # Concentração máxima por ativo (%)
+  max_position_size: 10.0
+  
+  # Stop-loss por posição (%)
+  stop_loss: 5.0
+  
+  # VaR (Value at Risk)
+  var:
+    confidence_level: 0.95
+    time_horizon: 1  # dias
+
+# Configurações de Estratégia
+strategy:
+  # Nome da estratégia
+  name: "momentum"
+  
+  # Parâmetros da estratégia de momentum
+  momentum:
+    lookback_period: 63  # dias (aproximadamente 3 meses)
+    rebalance_frequency: "monthly"  # mensal
+    top_n: 5  # número de ações para comprar
+    bottom_n: 5  # número de ações para vender
+
+# Configurações de Monitoramento
+monitoring:
+  # Dashboard
+  dashboard:
+    enabled: true
+    port: 8501
+    refresh_interval: 60  # segundos
+  
+  # Logs
+  logging:
+    level: "INFO"
+    file: "logs/quant_fund.log"
