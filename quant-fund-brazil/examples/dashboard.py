@@ -6,11 +6,20 @@ Para executar:
 """
 
 import sys
+import os
 from pathlib import Path
 
-# Adicionar o diretório src ao path
-project_root = Path(__file__).parent.parent
-sys.path.insert(0, str(project_root / "src"))
+# Adicionar o diretório src ao path de forma absoluta
+project_root = Path(__file__).parent.parent.resolve()
+src_path = project_root / "src"
+
+# Adicionar ao início do sys.path
+if str(src_path) not in sys.path:
+    sys.path.insert(0, str(src_path))
+
+# Também adicionar o project_root
+if str(project_root) not in sys.path:
+    sys.path.insert(0, str(project_root))
 
 import streamlit as st
 import pandas as pd
@@ -18,6 +27,7 @@ import plotly.graph_objects as go
 import plotly.express as px
 from datetime import datetime, timedelta
 
+# Importar módulos do projeto
 from data.market_data import MarketDataProvider
 from strategies.momentum_strategy import MomentumStrategy
 from backtesting.backtest_engine import BacktestEngine

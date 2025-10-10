@@ -34,3 +34,5 @@ quantlib>=1.31
 # Utilitários
 tqdm>=4.65.0
 requests>=2.31.0
+streamlit
+plotly
