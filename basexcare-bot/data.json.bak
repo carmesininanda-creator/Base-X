@@ -1,0 +1,144 @@
+{
+  "patients": {
+    "patient_1773346985315": {
+      "name": "Heide C Braga",
+      "age": "87",
+      "conditions": "Alzheimer",
+      "medicationsRaw": "depois",
+      "medications": [],
+      "mobility": "Caminha com apoio",
+      "caregiverId": "6914193810",
+      "familyIds": [],
+      "code": "CUI-U2A25",
+      "registeredAt": "12/03/2026, 17:23:05"
+    },
+    "patient_1773355032994": {
+      "name": "rafael braga",
+      "age": "78",
+      "conditions": "pos operatorio",
+      "medicationsRaw": "losartana 8h e 16 h, rivotril 10 e 19 hs, donaren 21 hs",
+      "medications": [
+        "losartana 8h e 16 h, rivotril 10 e 19 hs, donaren 21 hs"
+      ],
+      "mobility": "Cadeira de rodas",
+      "caregiverId": "6914193810",
+      "familyIds": [],
+      "code": "CUI-YGNLJ",
+      "registeredAt": "12/03/2026, 19:37:12"
+    }
+  },
+  "caregivers": {
+    "6914193810": {
+      "name": "Maria Fernanda",
+      "chatId": 6914193810,
+      "role": "caregiver",
+      "registeredAt": "12/03/2026, 19:35:05",
+      "patientId": "patient_1773355032994"
+    }
+  },
+  "families": {
+    "6914193810": {
+      "name": "Maria Fernanda",
+      "chatId": 6914193810,
+      "role": "family",
+      "registeredAt": "13/03/2026, 09:43:44"
+    }
+  },
+  "shifts": {
+    "shift_1773347037971": {
+      "caregiverId": "6914193810",
+      "patientId": "patient_1773346985315",
+      "patientName": "Heide C Braga",
+      "startedAt": "12/03/2026, 17:23:57",
+      "startTimestamp": 1773347037971,
+      "active": false,
+      "completedTasks": [
+        "pressao",
+        "remedio_manha",
+        "remedio_tarde",
+        "sono",
+        "agua_tarde"
+      ],
+      "completedTasks_times": {
+        "pressao": "17:24",
+        "remedio_manha": "17:25",
+        "remedio_tarde": "19:39",
+        "sono": "19:39",
+        "agua_tarde": "19:40"
+      },
+      "observations": [
+        {
+          "time": "19:11",
+          "text": "ola"
+        }
+      ],
+      "humor": "😊 Tranquilo",
+      "humorTime": "17:27",
+      "vitals": [
+        {
+          "temperatura": 37,
+          "saturacao": 96,
+          "pressao_sis": 120,
+          "pressao_dia": 70,
+          "freq_cardiaca": 80,
+          "period": "noite",
+          "registeredAt": "12/03/2026, 19:37:56",
+          "registeredBy": "6914193810",
+          "date": "12-03-2026"
+        }
+      ],
+      "endedAt": "Encerrado automaticamente (manutenção)",
+      "endTimestamp": 1773355736955
+    },
+    "shift_1773405860084": {
+      "caregiverId": "6914193810",
+      "patientId": "patient_1773355032994",
+      "patientName": "rafael braga",
+      "startedAt": "13/03/2026, 09:44:20",
+      "startTimestamp": 1773405860084,
+      "active": false,
+      "completedTasks": [
+        "remedio_manha",
+        "higiene",
+        "almoco",
+        "agua_manha",
+        "lanche"
+      ],
+      "completedTasks_times": {
+        "remedio_manha": "09:44",
+        "higiene": "09:44",
+        "almoco": "09:44",
+        "agua_manha": "09:44",
+        "lanche": "09:44"
+      },
+      "observations": [],
+      "vitals": [],
+      "humor": null,
+      "endedAt": "13/03/2026, 09:51:00",
+      "endTimestamp": 1773406260713
+    }
+  },
+  "checklists": {
+    "report_1773406260714": {
+      "shiftId": "shift_1773405860084",
+      "patientId": "patient_1773355032994",
+      "report": "━━━━━━━━━━━━━━━━━━━━━\n👤 *Paciente:* rafael braga\n👩‍⚕️ *Cuidador(a):* Maria Fernanda\n🕐 *Início:* 13/03/2026, 09:44:20\n🕐 *Fim:* 13/03/2026, 09:51:00\n⏱️ *Duração:* 6min\n━━━━━━━━━━━━━━━━━━━━━\n\n📋 *Checklist:* 5/13\n\n✅ Remédio da manhã _(09:44)_\n❌ Café da manhã\n✅ Higiene pessoal / banho _(09:44)_\n❌ Verificar pressão arterial\n✅ Hidratação (manhã) _(09:44)_\n✅ Almoço _(09:44)_\n❌ Remédio da tarde\n❌ Caminhada / exercício\n✅ Lanche da tarde _(09:44)_\n❌ Hidratação (tarde)\n❌ Jantar\n❌ Remédio da noite\n❌ Preparar para dormir\n\n📊 *Sinais Vitais:* Não registrados neste turno\n\n━━━━━━━━━━━━━━━━━━━━━\n_Relatório gerado pela BaseX Care — Cuidar+_",
+      "createdAt": "13/03/2026, 09:51:00"
+    }
+  },
+  "vitals": {
+    "patient_1773355032994": [
+      {
+        "temperatura": 37,
+        "saturacao": 96,
+        "pressao_sis": 120,
+        "pressao_dia": 70,
+        "freq_cardiaca": 80,
+        "period": "noite",
+        "registeredAt": "12/03/2026, 19:37:56",
+        "registeredBy": "6914193810",
+        "date": "12-03-2026"
+      }
+    ]
+  }
+}
