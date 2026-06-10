@@ -7,8 +7,12 @@ depois que a pessoa confirma); aqui é só a execução.
 """
 
 import json
+import logging
 
 from . import memory
+from .integrations import google_calendar
+
+log = logging.getLogger("giu.tools")
 
 # Definições no formato de function calling da OpenAI
 TOOL_DEFINITIONS = [
@@ -113,17 +117,41 @@ def execute_tool(name, arguments, user_id, channel="web"):
         item_id = memory.add_agenda(
             user_id, args["titulo"], args.get("data"), args.get("hora"), args.get("notas")
         )
-        return f"Compromisso #{item_id} adicionado à Agenda Viva."
+        result = f"Compromisso #{item_id} adicionado à Agenda Viva."
+        if google_calendar.is_configured() and args.get("data"):
+            try:
+                link = google_calendar.create_event(
+                    args["titulo"], args["data"], args.get("hora"), args.get("notas")
+                )
+                result += f" Também criei no Google Calendar: {link}"
+            except Exception as e:
+                log.warning("Falha ao criar evento no Google Calendar: %s", e)
+                result += " (não consegui criar no Google Calendar, mas está salvo aqui)"
+        return result
 
     if name == "ver_agenda":
+        lines = []
         items = memory.get_agenda(user_id)
-        if not items:
-            return "A agenda está vazia."
-        return "\n".join(
-            f"#{i['id']} {i['title']} — {i['date'] or 'sem data'} {i['time'] or ''}"
-            + (f" ({i['notes']})" if i["notes"] else "")
-            for i in items
-        )
+        if items:
+            lines.append("Agenda Viva:")
+            lines.extend(
+                f"#{i['id']} {i['title']} — {i['date'] or 'sem data'} {i['time'] or ''}"
+                + (f" ({i['notes']})" if i["notes"] else "")
+                for i in items
+            )
+        if google_calendar.is_configured():
+            try:
+                events = google_calendar.list_events()
+                if events:
+                    lines.append("Google Calendar (próximos):")
+                    lines.extend(
+                        f"{e['title']} — {e['start']}" + (f" @ {e['location']}" if e["location"] else "")
+                        for e in events
+                    )
+            except Exception as e:
+                log.warning("Falha ao listar Google Calendar: %s", e)
+                lines.append("(não consegui consultar o Google Calendar agora)")
+        return "\n".join(lines) if lines else "A agenda está vazia."
 
     if name == "concluir_compromisso":
         ok = memory.complete_agenda(user_id, args["id"])
