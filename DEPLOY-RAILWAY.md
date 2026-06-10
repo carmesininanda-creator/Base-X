@@ -74,7 +74,7 @@ Antes do bot funcionar, voce precisa configurar o token do Telegram.
 
 | Variavel | Valor |
 |----------|-------|
-| `BOT_TOKEN` | `8633651730:AAHnjRPM4gs6Q2XcXoTgjlSqLM-ceu3eYQQ` |
+| `BOT_TOKEN` | `seu-token-do-botfather` (pegue com o @BotFather no Telegram) |
 
 4. Clique em **"Add"** e o Railway fara redeploy automaticamente.
 

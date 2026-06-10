@@ -17,7 +17,11 @@ const path = require("path");
 //  CONFIGURAÇÃO
 // ═══════════════════════════════════════════════════════
 
-const BOT_TOKEN = process.env.BOT_TOKEN || "8633651730:AAHnjRPM4gs6Q2XcXoTgjlSqLM-ceu3eYQQ";
+const BOT_TOKEN = process.env.BOT_TOKEN;
+if (!BOT_TOKEN) {
+  console.error("ERRO: defina a variavel de ambiente BOT_TOKEN (token do @BotFather).");
+  process.exit(1);
+}
 const bot = new Telegraf(BOT_TOKEN);
 const DB_PATH = path.join(__dirname, "data.json");
 
