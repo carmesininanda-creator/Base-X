@@ -80,8 +80,10 @@ def create_event(title, date, time=None, notes=None, duration_minutes=60):
         event["start"] = {"dateTime": start.isoformat(), "timeZone": config.TIMEZONE}
         event["end"] = {"dateTime": end.isoformat(), "timeZone": config.TIMEZONE}
     else:
+        # Evento de dia inteiro: o Google exige end.date exclusivo (dia seguinte)
+        next_day = (datetime.fromisoformat(date) + timedelta(days=1)).date().isoformat()
         event["start"] = {"date": date}
-        event["end"] = {"date": date}
+        event["end"] = {"date": next_day}
 
     resp = httpx.post(
         f"{CALENDAR_URL}/calendars/{config.GOOGLE_CALENDAR_ID}/events",

@@ -14,13 +14,21 @@ OPENAI_MODEL = os.getenv("OPENAI_MODEL", "gpt-4o-mini")
 # ─── Memória ──────────────────────────────────────────────────────────────────
 DB_PATH = os.getenv("GIU_DB_PATH", str(Path(__file__).resolve().parent.parent / "giu_memory.db"))
 
+# ─── Segurança ────────────────────────────────────────────────────────────────
+# Token de API para /chat e endpoints de memória (obrigatório em produção)
+GIU_API_TOKEN = os.getenv("GIU_API_TOKEN", "")
+
 # ─── WhatsApp Cloud API (Meta) ────────────────────────────────────────────────
 WHATSAPP_TOKEN = os.getenv("WHATSAPP_TOKEN", "")
 WHATSAPP_PHONE_ID = os.getenv("WHATSAPP_PHONE_ID", "")
 WHATSAPP_VERIFY_TOKEN = os.getenv("WHATSAPP_VERIFY_TOKEN", "giu-bazex")
+# App Secret da Meta — valida a assinatura X-Hub-Signature-256 dos webhooks
+META_APP_SECRET = os.getenv("META_APP_SECRET", "")
 
 # ─── Telegram Bot API ─────────────────────────────────────────────────────────
 TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN", "")
+# Secret enviado pelo Telegram no header X-Telegram-Bot-Api-Secret-Token
+TELEGRAM_SECRET_TOKEN = os.getenv("TELEGRAM_SECRET_TOKEN", "")
 
 # ─── Google Calendar (OAuth com refresh token) ────────────────────────────────
 GOOGLE_CLIENT_ID = os.getenv("GOOGLE_CLIENT_ID", "")

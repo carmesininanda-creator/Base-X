@@ -11,10 +11,13 @@ Rodar: uvicorn server:app --host 0.0.0.0 --port 8000
 """
 
 import asyncio
+import hashlib
+import hmac
+import json
 import logging
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI, Request, Response
+from fastapi import Depends, FastAPI, Header, HTTPException, Request, Response
 from pydantic import BaseModel
 
 from giu import brain, config, memory
@@ -59,6 +62,18 @@ async def lifespan(app):
 app = FastAPI(title="Giu — BazeX", version="0.1.0", lifespan=lifespan)
 
 
+# ─── Autenticação ─────────────────────────────────────────────────────────────
+
+def require_token(authorization: str = Header(default="")):
+    """Protege endpoints com Bearer token. Sem GIU_API_TOKEN definido, libera (modo dev)."""
+    if not config.GIU_API_TOKEN:
+        log.warning("GIU_API_TOKEN não definido — endpoints abertos (use apenas em desenvolvimento)")
+        return
+    expected = f"Bearer {config.GIU_API_TOKEN}"
+    if not hmac.compare_digest(authorization, expected):
+        raise HTTPException(status_code=401, detail="Token inválido ou ausente")
+
+
 @app.get("/")
 def status():
     from giu.integrations import google_calendar
@@ -81,10 +96,29 @@ class ChatRequest(BaseModel):
     message: str
 
 
-@app.post("/chat")
+@app.post("/chat", dependencies=[Depends(require_token)])
 def chat(req: ChatRequest):
     reply = brain.think(req.user_id, req.message, channel="web")
     return {"reply": reply}
+
+
+# ─── Governança da memória (os dados pertencem à pessoa) ─────────────────────
+
+@app.get("/memories/{user_id}", dependencies=[Depends(require_token)])
+def list_memories(user_id: str):
+    return {"facts": memory.get_facts(user_id, limit=500)}
+
+
+@app.delete("/memories/{user_id}/{fact_id}", dependencies=[Depends(require_token)])
+def delete_memory(user_id: str, fact_id: int):
+    if not memory.delete_fact(user_id, fact_id):
+        raise HTTPException(status_code=404, detail="Fato não encontrado")
+    return {"deleted": fact_id}
+
+
+@app.get("/pending-actions/{user_id}", dependencies=[Depends(require_token)])
+def pending_actions(user_id: str):
+    return {"pending": memory.list_pending_actions(user_id)}
 
 
 # ─── Porta WhatsApp ───────────────────────────────────────────────────────────
@@ -103,7 +137,17 @@ def whatsapp_verify(request: Request):
 
 @app.post("/webhook/whatsapp")
 async def whatsapp_webhook(request: Request):
-    payload = await request.json()
+    body = await request.body()
+    # Valida a assinatura da Meta — rejeita payloads forjados
+    if config.META_APP_SECRET:
+        signature = request.headers.get("X-Hub-Signature-256", "")
+        expected = "sha256=" + hmac.new(
+            config.META_APP_SECRET.encode(), body, hashlib.sha256
+        ).hexdigest()
+        if not hmac.compare_digest(signature, expected):
+            log.warning("Webhook WhatsApp com assinatura inválida — descartado")
+            return Response(status_code=403)
+    payload = json.loads(body)
     parsed = whatsapp.parse_incoming(payload)
     if parsed:
         number, text = parsed
@@ -118,6 +162,12 @@ async def whatsapp_webhook(request: Request):
 
 @app.post("/webhook/telegram")
 async def telegram_webhook(request: Request):
+    # Valida o secret token registrado no setWebhook — rejeita payloads forjados
+    if config.TELEGRAM_SECRET_TOKEN:
+        received = request.headers.get("X-Telegram-Bot-Api-Secret-Token", "")
+        if not hmac.compare_digest(received, config.TELEGRAM_SECRET_TOKEN):
+            log.warning("Webhook Telegram com secret inválido — descartado")
+            return Response(status_code=403)
     payload = await request.json()
     parsed = telegram.parse_incoming(payload)
     if parsed:

@@ -17,10 +17,15 @@ Na aba **Variables**, adicione:
 |----------|--------------|-------|
 | `OPENAI_API_KEY` | ✅ Sim | sua chave da OpenAI |
 | `GIU_DB_PATH` | ✅ Sim | `/data/giu_memory.db` (ver Passo 3) |
+| `GIU_API_TOKEN` | ✅ Sim em produção | string aleatória longa — protege `/chat` e `/memories` |
 | `TELEGRAM_BOT_TOKEN` | opcional | token do @BotFather |
+| `TELEGRAM_SECRET_TOKEN` | recomendado | string aleatória — valida que o webhook veio do Telegram |
 | `WHATSAPP_TOKEN` | opcional | token da Meta Cloud API |
 | `WHATSAPP_PHONE_ID` | opcional | phone ID da Meta |
+| `META_APP_SECRET` | recomendado | App Secret da Meta — valida a assinatura dos webhooks |
 | `GOOGLE_CLIENT_ID/SECRET/REFRESH_TOKEN` | opcional | ver README |
+
+Para gerar tokens aleatórios: `python -c "import secrets; print(secrets.token_urlsafe(32))"`
 
 ## Passo 3 — Volume persistente (a memória NÃO pode se perder)
 

@@ -7,6 +7,7 @@ devolve a resposta. O canal é só uma porta — o cérebro é o mesmo em todas.
 """
 
 from datetime import datetime
+from zoneinfo import ZoneInfo
 
 from openai import OpenAI
 
@@ -19,13 +20,15 @@ def _system_prompt(user_id):
     profile = memory.get_profile(user_id)
     facts = memory.get_facts(user_id)
     agenda = memory.get_agenda(user_id)
+    pending = memory.list_pending_actions(user_id)
     count = memory.message_count(user_id)
-    now = datetime.now().strftime("%A, %d/%m/%Y %H:%M")
+    now = datetime.now(ZoneInfo(config.TIMEZONE)).strftime("%A, %d/%m/%Y %H:%M")
 
     facts_str = "\n".join(f"- [{f['category']}] {f['content']}" for f in facts) or "- (ainda não sei nada — vá conhecendo a pessoa aos poucos)"
     agenda_str = "\n".join(
         f"- #{i['id']} {i['title']} — {i['date'] or 'sem data'} {i['time'] or ''}" for i in agenda[:8]
     ) or "- (vazia)"
+    pending_str = "\n".join(f"- #{a['id']} {a['summary']}" for a in pending) or "- (nenhuma)"
 
     name = profile["name"] or "ainda não sei o nome"
 
@@ -49,12 +52,17 @@ O QUE VOCÊ SABE SOBRE ELA (memória permanente):
 AGENDA VIVA:
 {agenda_str}
 
+AÇÕES AGUARDANDO CONFIRMAÇÃO DA PESSOA:
+{pending_str}
+
 PRINCÍPIOS INVIOLÁVEIS:
 1. Memória ativa — use o que sabe; se a pessoa contar algo importante (pessoas,
    saúde, preferências, rotina, jeito de se comunicar), guarde com lembrar_fato
    SEM pedir permissão.
-2. Proatividade ética — para AÇÕES (agendar, criar lembrete): proponha → confirme → execute.
-   Nunca execute uma ação sem a pessoa confirmar na conversa.
+2. Proatividade ética — o fluxo de ações é propõe → confirma → executa, e está
+   no sistema: agendar e criar_lembrete apenas CRIAM uma ação pendente.
+   Apresente o resumo, pergunte se confirma, e SÓ chame confirmar_acao depois
+   de um sim explícito da pessoa nesta conversa.
 3. Privacidade radical — os dados pertencem à pessoa, nunca exponha dados de outra pessoa.
 4. Zero julgamento — a pessoa pode esquecer, repetir a mesma pergunta, desistir
    no meio. Você recomeça com leveza. NUNCA diga \"como eu já falei\" ou cobre algo.

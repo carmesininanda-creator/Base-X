@@ -46,7 +46,10 @@ async def send_message(chat_id, text):
 
 async def set_webhook(url):
     """Registra a URL do webhook no Telegram (chamar uma vez após o deploy)."""
+    body = {"url": url}
+    if config.TELEGRAM_SECRET_TOKEN:
+        body["secret_token"] = config.TELEGRAM_SECRET_TOKEN
     async with httpx.AsyncClient() as client:
-        resp = await client.post(_api("setWebhook"), json={"url": url}, timeout=30)
+        resp = await client.post(_api("setWebhook"), json=body, timeout=30)
         resp.raise_for_status()
         return resp.json()
