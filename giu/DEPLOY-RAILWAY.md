@@ -48,10 +48,11 @@ Teste: abra `https://SEU-DOMINIO/` — deve responder:
 
 ## Passo 5 — Registrar os webhooks
 
-**Telegram** (uma vez):
+**Telegram** (uma vez — o `secret_token` DEVE ser o mesmo valor de `TELEGRAM_SECRET_TOKEN`):
 ```bash
-curl "https://api.telegram.org/bot<SEU_TOKEN>/setWebhook?url=https://SEU-DOMINIO/webhook/telegram"
+curl "https://api.telegram.org/bot<SEU_TOKEN>/setWebhook?url=https://SEU-DOMINIO/webhook/telegram&secret_token=<SEU_TELEGRAM_SECRET_TOKEN>"
 ```
+Confirme com: `curl "https://api.telegram.org/bot<SEU_TOKEN>/getWebhookInfo"` — deve mostrar a URL e `"pending_update_count": 0`.
 
 **WhatsApp**: no painel da Meta (Configuration → Webhook), cadastre
 `https://SEU-DOMINIO/webhook/whatsapp` com verify token `giu-bazex` e assine o campo `messages`.
