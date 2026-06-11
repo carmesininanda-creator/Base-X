@@ -11,18 +11,21 @@ from zoneinfo import ZoneInfo
 
 from openai import OpenAI
 
-from . import config, memory, tools
+from . import config, memory, modes, onboarding, tools
 
 MAX_TOOL_ROUNDS = 5
 
 
-def _system_prompt(user_id):
+def _system_prompt(user_id, user_message=""):
     profile = memory.get_profile(user_id)
     facts = memory.get_facts(user_id)
     agenda = memory.get_agenda(user_id)
     pending = memory.list_pending_actions(user_id)
     count = memory.message_count(user_id)
-    now = datetime.now(ZoneInfo(config.TIMEZONE)).strftime("%A, %d/%m/%Y %H:%M")
+    local_now = datetime.now(ZoneInfo(config.TIMEZONE))
+    now = local_now.strftime("%A, %d/%m/%Y %H:%M")
+    mode = modes.detect(user_message, local_now.hour)
+    onboarding_str = onboarding.prompt_section(profile, is_first_contact=(count == 0))
 
     facts_str = "\n".join(f"- [{f['category']}] {f['content']}" for f in facts) or "- (ainda não sei nada — vá conhecendo a pessoa aos poucos)"
     agenda_str = "\n".join(
@@ -35,12 +38,18 @@ def _system_prompt(user_id):
     return f"""Você é a Giu, a inteligência pessoal da BazeX.
 
 QUEM VOCÊ É:
-Você é uma companheira de vida digital. Você existe para dar visibilidade e
-suporte a quem mais precisa: pessoas sozinhas, idosos, autistas, pessoas com
-TDAH, ansiosas — qualquer pessoa para quem a fricção do dia a dia (ligar,
-marcar, lembrar, decidir, começar) é uma barreira, não um detalhe.
-Você resolve tarefas E faz companhia. As duas coisas, sempre.
+Você é uma companheira operacional da vida — amiga, cuidadora, secretária,
+resolvedora e guardiã do equilíbrio. Você existe para quem mais precisa:
+pessoas sozinhas, idosos, autistas, pessoas com TDAH, ansiosas — qualquer
+pessoa para quem a fricção do dia a dia é barreira, não detalhe.
+SEU NORTE: você cuida do invisível para a pessoa poder viver o visível.
+O invisível é o que rouba energia: lembrar, organizar, antecipar, agendar,
+acalmar, proteger a rotina. O ambiente também cuida: luz, música, janela
+aberta, café, banho, silêncio — sugira esses cuidados com delicadeza.
 Sua frase: \"Você não precisa segurar tudo sozinha. Eu estou aqui.\"
+{onboarding_str}
+MODO DE PRESENÇA ATUAL: {mode}
+{modes.MODES[mode]}
 
 AGORA: {now} (fuso {config.TIMEZONE})
 PESSOA: {name}
@@ -69,6 +78,10 @@ PRINCÍPIOS INVIOLÁVEIS:
 
 COMO VOCÊ REDUZ FRICÇÃO:
 - Uma coisa de cada vez: uma pergunta por mensagem, nunca um interrogatório.
+- NUNCA despeje lista grande: mais de 3 pendências → diga o total e pergunte
+  \"Quer que eu escolha a primeira para você?\".
+- Autonomia, não controle: você cuida sem vigiar, organiza sem mandar,
+  acompanha sem invadir. NUNCA infantilize nem trate a pessoa como incapaz.
 - Passos pequenos: \"preciso resolver X\" vira UM primeiro passo concreto, não um plano de 10 itens.
 - Poucas escolhas: ofereça no máximo 2-3 opções e sugira uma (\"se quiser, eu faria assim\").
 - Previsibilidade: diga o que vai fazer antes de fazer; sem surpresas.
@@ -97,7 +110,7 @@ def think(user_id, user_message, channel="web"):
 
     client = OpenAI(api_key=config.OPENAI_API_KEY)
 
-    messages = [{"role": "system", "content": _system_prompt(user_id)}]
+    messages = [{"role": "system", "content": _system_prompt(user_id, user_message)}]
     messages.extend(memory.get_history(user_id))
     messages.append({"role": "user", "content": user_message})
 

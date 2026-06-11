@@ -223,6 +223,28 @@ def mark_reminder_sent(reminder_id):
         conn.execute("UPDATE reminders SET sent=1 WHERE id=?", (reminder_id,))
 
 
+def reminders_today(user_id):
+    """Lembretes ainda não enviados com vencimento hoje."""
+    today = _now()[:10]
+    with _conn() as conn:
+        rows = conn.execute(
+            "SELECT text, due_at FROM reminders WHERE user_id=? AND sent=0 AND substr(due_at,1,10)=?",
+            (user_id, today),
+        ).fetchall()
+    return [dict(r) for r in rows]
+
+
+def push_users():
+    """Usuários alcançáveis proativamente: (user_id, canal da última conversa com push)."""
+    with _conn() as conn:
+        rows = conn.execute(
+            "SELECT user_id, channel FROM messages WHERE id IN ("
+            "  SELECT MAX(id) FROM messages WHERE channel IN ('whatsapp','telegram') GROUP BY user_id"
+            ")"
+        ).fetchall()
+    return [(r["user_id"], r["channel"]) for r in rows]
+
+
 # ─── Ações Pendentes (execução com autorização real) ──────────────────────────
 
 def add_pending_action(user_id, action_type, summary, payload, risk_level="baixo"):

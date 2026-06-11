@@ -38,3 +38,7 @@ GOOGLE_CALENDAR_ID = os.getenv("GOOGLE_CALENDAR_ID", "primary")
 
 # ─── Geral ────────────────────────────────────────────────────────────────────
 TIMEZONE = os.getenv("GIU_TIMEZONE", "America/Sao_Paulo")
+
+# ─── Check-in diário (horário local HH:MM) ────────────────────────────────────
+MORNING_CHECKIN = os.getenv("GIU_MORNING_CHECKIN", "08:00")
+NIGHT_CHECKIN = os.getenv("GIU_NIGHT_CHECKIN", "21:00")

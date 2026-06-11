@@ -20,7 +20,10 @@ from contextlib import asynccontextmanager
 from fastapi import Depends, FastAPI, Header, HTTPException, Request, Response
 from pydantic import BaseModel
 
-from giu import brain, config, memory
+from datetime import datetime
+from zoneinfo import ZoneInfo
+
+from giu import brain, config, memory, routines
 from giu.channels import telegram, whatsapp
 
 logging.basicConfig(level=logging.INFO)
@@ -51,12 +54,51 @@ async def reminder_loop():
         await asyncio.sleep(60)
 
 
+async def _send_push(user_id, channel, text):
+    if channel == "whatsapp" and whatsapp.is_configured():
+        await whatsapp.send_message(user_id, text)
+    elif channel == "telegram" and telegram.is_configured():
+        await telegram.send_message(user_id, text)
+    else:
+        return False
+    memory.save_message(user_id, "assistant", text, channel)
+    return True
+
+
+async def checkin_loop():
+    """Check-in diário: a Giu aparece de manhã e à noite, sem ser chamada."""
+    while True:
+        try:
+            now = datetime.now(ZoneInfo(config.TIMEZONE))
+            hhmm, today = now.strftime("%H:%M"), now.date().isoformat()
+            period = "manha" if hhmm == config.MORNING_CHECKIN else (
+                "noite" if hhmm == config.NIGHT_CHECKIN else None)
+            if period:
+                for user_id, channel in memory.push_users():
+                    profile = memory.get_profile(user_id)
+                    data = profile["data"]
+                    # Só após onboarding completo, com check-in não desativado, 1x por dia
+                    if not data.get("onboarding", {}).get("consentimento"):
+                        continue
+                    if data.get("checkin") is False or data.get(f"checkin_{period}") == today:
+                        continue
+                    text = (routines.morning_message(user_id) if period == "manha"
+                            else routines.night_message(user_id))
+                    if await _send_push(user_id, channel, text):
+                        memory.set_profile(user_id, **{f"checkin_{period}": today})
+                        log.info("Check-in %s enviado para %s via %s", period, user_id, channel)
+        except Exception:
+            log.exception("Erro no loop de check-in")
+        await asyncio.sleep(30)
+
+
 @asynccontextmanager
 async def lifespan(app):
     memory.init_db()
-    task = asyncio.create_task(reminder_loop())
+    tasks = [asyncio.create_task(reminder_loop()), asyncio.create_task(checkin_loop())]
     yield
-    task.cancel()
+    for t in tasks:
+        t.cancel()
 
 
 app = FastAPI(title="Giu — BazeX", version="0.1.0", lifespan=lifespan)
@@ -119,6 +161,12 @@ def delete_memory(user_id: str, fact_id: int):
 @app.get("/pending-actions/{user_id}", dependencies=[Depends(require_token)])
 def pending_actions(user_id: str):
     return {"pending": memory.list_pending_actions(user_id)}
+
+
+@app.get("/summary/{user_id}", dependencies=[Depends(require_token)])
+def summary(user_id: str):
+    """Resumo diário: pendências, lembretes, agenda, saúde + um cuidado."""
+    return routines.daily_summary(user_id)
 
 
 # ─── Porta WhatsApp ───────────────────────────────────────────────────────────

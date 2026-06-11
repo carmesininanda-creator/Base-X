@@ -13,7 +13,7 @@ import logging
 from datetime import datetime
 from zoneinfo import ZoneInfo
 
-from . import config, memory
+from . import config, memory, onboarding
 from .integrations import google_calendar
 
 log = logging.getLogger("giu.tools")
@@ -74,11 +74,41 @@ TOOL_DEFINITIONS = [
                     "fato": {"type": "string", "description": "O fato, escrito de forma clara e completa. Ex: 'Pauline é filha da Nanda'"},
                     "categoria": {
                         "type": "string",
-                        "enum": ["pessoas", "saude", "preferencias", "comunicacao", "rotina", "trabalho", "geral"],
+                        "enum": ["identidade", "comunicacao", "preferencias", "saude", "rotina",
+                                 "familia", "pendencias", "limites", "afeto", "geral"],
                     },
                 },
                 "required": ["fato"],
             },
+        },
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "registrar_onboarding",
+            "description": (
+                "Registra a resposta de uma etapa do onboarding (primeira conversa). "
+                "Use assim que a pessoa responder a pergunta da etapa atual."
+            ),
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "campo": {"type": "string", "enum": ["pendencia_inicial", "nome", "consentimento"]},
+                    "valor": {"type": "string"},
+                },
+                "required": ["campo", "valor"],
+            },
+        },
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "resumo_do_dia",
+            "description": (
+                "Resumo do dia da pessoa: pendências, lembretes, agenda, saúde e uma sugestão "
+                "de bem-estar. Use quando ela perguntar 'o que tenho hoje?' ou no check-in."
+            ),
+            "parameters": {"type": "object", "properties": {}},
         },
     },
     {
@@ -235,6 +265,31 @@ def execute_tool(name, arguments, user_id, channel="web"):
         memory.remember_fact(user_id, args["fato"], args.get("categoria", "geral"))
         return "Fato guardado na memória permanente."
 
+    if name == "registrar_onboarding":
+        return onboarding.register(user_id, args["campo"], args["valor"])
+
+    if name == "resumo_do_dia":
+        from . import routines
+        summary = routines.daily_summary(user_id)
+        n = len(summary["pendencias_hoje"])
+        lines = [f"Pendências em aberto: {n}"]
+        if n:
+            lines += [f"- #{p['id']} {p['titulo']} {p['hora'] or ''}" for p in summary["pendencias_hoje"][:3]]
+        if summary["lembretes"]:
+            lines.append("Lembretes de hoje: " + "; ".join(r["texto"] for r in summary["lembretes"]))
+        if summary["agenda"]:
+            lines.append("Agenda de hoje: " + "; ".join(
+                f"{a['titulo']} {a['hora'] or ''}" for a in summary["agenda"]))
+        if summary["saude"]:
+            lines.append("Saúde (memória): " + "; ".join(summary["saude"]))
+        lines.append(f"Sugestão de bem-estar: {summary['sugestao_bem_estar']}")
+        if n > 3:
+            lines.append(
+                f"ATENÇÃO UX: são {n} pendências — NÃO liste todas. Diga o total, "
+                "destaque só a mais simples e pergunte: 'Quer que eu escolha a primeira para você?'"
+            )
+        return "\n".join(lines)
+
     if name == "agendar":
         if args.get("data") and (err := _validate_date(args["data"])):
             return err
@@ -287,13 +342,23 @@ def execute_tool(name, arguments, user_id, channel="web"):
         actions = memory.list_pending_actions(user_id)
         if not actions:
             return "Nenhuma ação aguardando confirmação."
-        return "\n".join(
-            f"#{a['id']} [{a['risk_level']}] {a['summary']}" for a in actions
-        )
+        listing = "\n".join(f"#{a['id']} [{a['risk_level']}] {a['summary']}" for a in actions)
+        if len(actions) > 3:
+            listing = (
+                f"ATENÇÃO UX: são {len(actions)} ações — NÃO liste todas. Diga o total e "
+                "pergunte: 'Quer que eu escolha a primeira para você?'\n" + listing
+            )
+        return listing
 
     if name == "ver_agenda":
         lines = []
         items = memory.get_agenda(user_id)
+        if len(items) > 3:
+            lines.append(
+                f"ATENÇÃO UX: são {len(items)} itens — NÃO liste todos para a pessoa. "
+                "Diga o total, destaque só o mais simples ou mais próximo, e pergunte: "
+                "'Quer que eu escolha a primeira para você?'"
+            )
         if items:
             lines.append("Agenda Viva:")
             lines.extend(
