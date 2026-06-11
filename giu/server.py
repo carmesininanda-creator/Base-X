@@ -18,7 +18,7 @@ from fastapi import FastAPI, Request, Response
 from pydantic import BaseModel
 
 from giu import brain, config, memory
-from giu.channels import whatsapp
+from giu.channels import telegram, whatsapp
 
 logging.basicConfig(level=logging.INFO)
 log = logging.getLogger("giu")
@@ -34,6 +34,10 @@ async def reminder_loop():
                     await whatsapp.send_message(r["user_id"], text)
                     memory.mark_reminder_sent(r["id"])
                     log.info("Lembrete %s enviado via WhatsApp", r["id"])
+                elif r["channel"] == "telegram" and telegram.is_configured():
+                    await telegram.send_message(r["user_id"], text)
+                    memory.mark_reminder_sent(r["id"])
+                    log.info("Lembrete %s enviado via Telegram", r["id"])
                 else:
                     # Canais sem push (web/cli): entregue na próxima conversa
                     memory.save_message(r["user_id"], "assistant", text, r["channel"])
@@ -57,10 +61,16 @@ app = FastAPI(title="Giu — BazeX", version="0.1.0", lifespan=lifespan)
 
 @app.get("/")
 def status():
+    from giu.integrations import google_calendar
     return {
         "giu": "online",
         "tagline": "Você não precisa segurar tudo sozinha. Eu estou aqui.",
-        "canais": {"web": True, "whatsapp": whatsapp.is_configured()},
+        "canais": {
+            "web": True,
+            "whatsapp": whatsapp.is_configured(),
+            "telegram": telegram.is_configured(),
+        },
+        "integracoes": {"google_calendar": google_calendar.is_configured()},
     }
 
 
@@ -101,4 +111,19 @@ async def whatsapp_webhook(request: Request):
         # O número de telefone é a identidade da pessoa no cérebro
         reply = brain.think(number, text, channel="whatsapp")
         await whatsapp.send_message(number, reply)
+    return {"status": "ok"}
+
+
+# ─── Porta Telegram ───────────────────────────────────────────────────────────
+
+@app.post("/webhook/telegram")
+async def telegram_webhook(request: Request):
+    payload = await request.json()
+    parsed = telegram.parse_incoming(payload)
+    if parsed:
+        chat_id, text = parsed
+        log.info("Telegram de %s: %s", chat_id, text)
+        # O chat_id é a identidade da pessoa no cérebro
+        reply = brain.think(chat_id, text, channel="telegram")
+        await telegram.send_message(chat_id, reply)
     return {"status": "ok"}
