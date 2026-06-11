@@ -31,7 +31,7 @@ TOOL_DEFINITIONS = [
                     "fato": {"type": "string", "description": "O fato, escrito de forma clara e completa. Ex: 'Pauline é filha da Nanda'"},
                     "categoria": {
                         "type": "string",
-                        "enum": ["pessoas", "saude", "preferencias", "rotina", "trabalho", "geral"],
+                        "enum": ["pessoas", "saude", "preferencias", "comunicacao", "rotina", "trabalho", "geral"],
                     },
                 },
                 "required": ["fato"],
