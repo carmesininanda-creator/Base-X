@@ -12,6 +12,7 @@ Mais a Agenda Viva e os Lembretes, que são memória do futuro.
 import json
 import sqlite3
 from datetime import datetime
+from zoneinfo import ZoneInfo
 
 from . import config
 
@@ -65,11 +66,28 @@ def init_db():
                 sent       INTEGER DEFAULT 0,
                 created_at TEXT
             );
+            CREATE TABLE IF NOT EXISTS pending_actions (
+                id           INTEGER PRIMARY KEY AUTOINCREMENT,
+                user_id      TEXT NOT NULL,
+                type         TEXT NOT NULL,
+                summary      TEXT NOT NULL,
+                payload_json TEXT NOT NULL,
+                risk_level   TEXT DEFAULT 'baixo',
+                status       TEXT DEFAULT 'pending',
+                created_at   TEXT,
+                confirmed_at TEXT,
+                executed_at  TEXT
+            );
+            CREATE INDEX IF NOT EXISTS idx_messages_user ON messages(user_id, id);
+            CREATE INDEX IF NOT EXISTS idx_facts_user ON facts(user_id, id);
+            CREATE INDEX IF NOT EXISTS idx_reminders_due ON reminders(sent, due_at);
+            CREATE INDEX IF NOT EXISTS idx_actions_user ON pending_actions(user_id, status);
         """)
 
 
 def _now():
-    return datetime.now().isoformat(timespec="seconds")
+    """Agora no fuso configurado, salvo como horário local naive (comparável por string)."""
+    return datetime.now(ZoneInfo(config.TIMEZONE)).replace(tzinfo=None).isoformat(timespec="seconds")
 
 
 # ─── Perfil ───────────────────────────────────────────────────────────────────
@@ -107,10 +125,16 @@ def remember_fact(user_id, content, category="geral"):
 def get_facts(user_id, limit=40):
     with _conn() as conn:
         rows = conn.execute(
-            "SELECT category, content FROM facts WHERE user_id=? ORDER BY id DESC LIMIT ?",
+            "SELECT id, category, content FROM facts WHERE user_id=? ORDER BY id DESC LIMIT ?",
             (user_id, limit),
         ).fetchall()
-    return [{"category": r["category"], "content": r["content"]} for r in reversed(rows)]
+    return [{"id": r["id"], "category": r["category"], "content": r["content"]} for r in reversed(rows)]
+
+
+def delete_fact(user_id, fact_id):
+    with _conn() as conn:
+        cur = conn.execute("DELETE FROM facts WHERE user_id=? AND id=?", (user_id, fact_id))
+        return cur.rowcount > 0
 
 
 def search_facts(user_id, query, limit=10):
@@ -197,3 +221,69 @@ def due_reminders():
 def mark_reminder_sent(reminder_id):
     with _conn() as conn:
         conn.execute("UPDATE reminders SET sent=1 WHERE id=?", (reminder_id,))
+
+
+def reminders_today(user_id):
+    """Lembretes ainda não enviados com vencimento hoje."""
+    today = _now()[:10]
+    with _conn() as conn:
+        rows = conn.execute(
+            "SELECT text, due_at FROM reminders WHERE user_id=? AND sent=0 AND substr(due_at,1,10)=?",
+            (user_id, today),
+        ).fetchall()
+    return [dict(r) for r in rows]
+
+
+def push_users():
+    """Usuários alcançáveis proativamente: (user_id, canal da última conversa com push)."""
+    with _conn() as conn:
+        rows = conn.execute(
+            "SELECT user_id, channel FROM messages WHERE id IN ("
+            "  SELECT MAX(id) FROM messages WHERE channel IN ('whatsapp','telegram') GROUP BY user_id"
+            ")"
+        ).fetchall()
+    return [(r["user_id"], r["channel"]) for r in rows]
+
+
+# ─── Ações Pendentes (execução com autorização real) ──────────────────────────
+
+def add_pending_action(user_id, action_type, summary, payload, risk_level="baixo"):
+    with _conn() as conn:
+        cur = conn.execute(
+            """INSERT INTO pending_actions (user_id, type, summary, payload_json, risk_level, created_at)
+               VALUES (?,?,?,?,?,?)""",
+            (user_id, action_type, summary, json.dumps(payload, ensure_ascii=False), risk_level, _now()),
+        )
+        return cur.lastrowid
+
+
+def get_pending_action(user_id, action_id):
+    with _conn() as conn:
+        row = conn.execute(
+            "SELECT * FROM pending_actions WHERE user_id=? AND id=?", (user_id, action_id)
+        ).fetchone()
+    if not row:
+        return None
+    action = dict(row)
+    action["payload"] = json.loads(action.pop("payload_json"))
+    return action
+
+
+def list_pending_actions(user_id):
+    with _conn() as conn:
+        rows = conn.execute(
+            "SELECT id, type, summary, risk_level, created_at FROM pending_actions "
+            "WHERE user_id=? AND status='pending' ORDER BY id",
+            (user_id,),
+        ).fetchall()
+    return [dict(r) for r in rows]
+
+
+def mark_action_executed(user_id, action_id):
+    now = _now()
+    with _conn() as conn:
+        conn.execute(
+            "UPDATE pending_actions SET status='executed', confirmed_at=?, executed_at=? "
+            "WHERE user_id=? AND id=?",
+            (now, now, user_id, action_id),
+        )
