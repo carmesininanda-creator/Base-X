@@ -1,25 +1,35 @@
-# Fluxa — Material para Investidor (sob NDA)
+# Fluxa — Pacote Investidor (sob NDA)
 
-Documentação mínima para investidor técnico (CTO avaliando) que pedir profundidade além do Pitch Deck.
+Material para investidores que pedirem profundidade além do Pitch Deck.
 
-## Conteúdo
+## Conteúdo Atual
 
-| Documento | Por que enviar |
-|-----------|----------------|
-| FLUXA_ADR.pdf | Mostra maturidade de decisão arquitetural. Impressiona CTO. |
+| Documento | Função |
+|-----------|--------|
+| FLUXA_ATLAS_FINAL.pdf | System Map — visão macro da arquitetura e domínios |
 
-## Regra
+## Documentos a Preparar
 
-> Investidor compra mercado + execução + moat. Não compra documentação técnica.
+| Documento | Status |
+|-----------|--------|
+| Investor Deck (narrativa visual) | Pendente |
+| One Pager | Pendente |
+| Financial Model | Pendente |
+| Roadmap Visual | Pendente |
+| Due Diligence Pack | Pendente |
 
-O pacote padrão para investidor é: **Business Plan + Pitch Deck + Demo**.
+## Regra de Ouro
 
-Só envie o ADR se o investidor tiver perfil técnico e pedir explicitamente.
+> Investidor compra **narrativa + mercado + execução + moat**. Não compra documentação técnica.
+
+O pacote padrão é: **Pitch Deck + One Pager + Financial Model**.
+
+O Atlas Final entra como anexo se o investidor tiver perfil técnico e pedir explicitamente.
 
 ## NUNCA enviar para investidor
 
-- Engines (lógica de IA = vantagem competitiva)
+- Engines (lógica da Syntropy = vantagem competitiva)
 - Arquitetura Cognitiva (segredo industrial)
 - Code Atlas (dependências e pontos críticos)
 - RepoMap (mapa do repositório)
-- Atlas Completo (contém tudo)
+- Cap Table (está em repositório separado: `company-private`)

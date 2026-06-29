@@ -11,7 +11,10 @@ Documentação que **jamais sai da empresa**. Contém segredos industriais e van
 | FLUXA_FASE2_INTELIGENCIA.pdf | Decision Engine + Simulation + Context |
 | FLUXA_CODE_ATLAS.pdf | Dependency graph + Impact map + Critical flows |
 | FLUXA_ATLAS_FASE0_COMPLETO.pdf | Histórico — útil para auditoria interna |
-| Fluxa_Cap_Table.xlsx | Estrutura societária |
+
+## Cap Table e Societário
+
+Movido para repositório separado: **`company-private`** (acesso restrito a sócios fundadores).
 
 ## Acesso
 
