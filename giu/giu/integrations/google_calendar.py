@@ -9,7 +9,7 @@ fallback quando o Google não está configurado.
 Autenticação: OAuth com refresh token (obtido uma única vez — ver README).
 """
 
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 
 import httpx
 
@@ -48,7 +48,7 @@ def list_events(max_results=10):
         f"{CALENDAR_URL}/calendars/{config.GOOGLE_CALENDAR_ID}/events",
         headers={"Authorization": f"Bearer {token}"},
         params={
-            "timeMin": datetime.utcnow().isoformat() + "Z",
+            "timeMin": datetime.now(timezone.utc).isoformat(),
             "maxResults": max_results,
             "singleEvents": True,
             "orderBy": "startTime",

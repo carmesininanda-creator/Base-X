@@ -94,6 +94,13 @@ async def checkin_loop():
 
 @asynccontextmanager
 async def lifespan(app):
+    errors, warnings = config.startup_issues()
+    for w in warnings:
+        log.warning("Configuração: %s", w)
+    if errors:
+        for e in errors:
+            log.error("Configuração: %s", e)
+        raise RuntimeError("Configuração insegura — corrija as variáveis acima: " + " | ".join(errors))
     memory.init_db()
     tasks = [asyncio.create_task(reminder_loop()), asyncio.create_task(checkin_loop())]
     yield
@@ -101,7 +108,9 @@ async def lifespan(app):
         t.cancel()
 
 
-app = FastAPI(title="Giu — BazeX", version="0.1.0", lifespan=lifespan)
+import giu as _giu
+
+app = FastAPI(title="Giu — BazeX", version=_giu.__version__, lifespan=lifespan)
 
 
 # ─── Autenticação ─────────────────────────────────────────────────────────────
