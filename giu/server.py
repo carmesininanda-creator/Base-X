@@ -154,6 +154,18 @@ DECLINE_MESSAGE = (
 )
 
 
+def pending_welcome(user_id):
+    """Texto de boas-vindas aprovado pela operadora, se for o primeiro contato.
+
+    A abertura é o momento mais delicado do vínculo: quando existe um texto
+    aprovado, ele é enviado VERBATIM (determinístico); da segunda mensagem em
+    diante, o cérebro assume com o onboarding normal."""
+    member = memory.get_member(user_id)
+    if member and member.get("welcome") and memory.message_count(user_id) == 0:
+        return member["welcome"]
+    return None
+
+
 @app.get("/")
 def status():
     from giu.integrations import google_calendar
@@ -219,11 +231,12 @@ class MemberRequest(BaseModel):
     name: str
     role: str = "member"
     emergency_contact: str | None = None
+    welcome: str | None = None  # abertura personalizada aprovada pela operadora
 
 
 @app.post("/family/members", dependencies=[Depends(require_token)])
 def add_family_member(req: MemberRequest):
-    token = memory.add_member(req.user_id, req.name, req.role, req.emergency_contact)
+    token = memory.add_member(req.user_id, req.name, req.role, req.emergency_contact, req.welcome)
     return {
         "user_id": req.user_id,
         "name": req.name,
@@ -280,6 +293,12 @@ async def whatsapp_webhook(request: Request):
             return {"status": "ok"}
         # Metadados apenas — conteúdo de conversa NUNCA vai para logs
         log.info("WhatsApp: mensagem de %s (%d caracteres)", number, len(text))
+        welcome = pending_welcome(number)
+        if welcome:
+            memory.save_message(number, "user", text, "whatsapp")
+            memory.save_message(number, "assistant", welcome, "whatsapp")
+            await whatsapp.send_message(number, welcome)
+            return {"status": "ok"}
         # O número de telefone é a identidade da pessoa no cérebro
         reply = brain.think(number, text, channel="whatsapp")
         await whatsapp.send_message(number, reply)

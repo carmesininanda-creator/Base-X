@@ -92,17 +92,39 @@ def test_status_expoe_modo_familia(client):
 # ─── 3. Onboarding individual e independente ──────────────────────────────────
 
 def test_onboarding_individual():
-    # Ian completa o onboarding
-    tools.execute_tool("registrar_onboarding", {"campo": "pendencia_inicial", "valor": "devolver livros"}, IAN)
+    # A ordem da primeira conversa: NOME primeiro (decisão da Nanda), depois
+    # a pendência inicial, depois o consentimento
+    assert onboarding.current_step(memory.get_profile(IAN)) == "nome"
     tools.execute_tool("registrar_onboarding", {"campo": "nome", "valor": "Ian"}, IAN)
+    assert onboarding.current_step(memory.get_profile(IAN)) == "pendencia_inicial"
+    tools.execute_tool("registrar_onboarding", {"campo": "pendencia_inicial", "valor": "devolver livros"}, IAN)
     tools.execute_tool("registrar_onboarding", {"campo": "consentimento", "valor": "sim"}, IAN)
     assert onboarding.current_step(memory.get_profile(IAN)) is None
 
     # Pauline ainda está no começo do dela — progresso NÃO vazou
-    assert onboarding.current_step(memory.get_profile(PAULINE)) == "pendencia_inicial"
+    assert onboarding.current_step(memory.get_profile(PAULINE)) == "nome"
+    tools.execute_tool("registrar_onboarding", {"campo": "nome", "valor": "Nine"}, PAULINE)
     tools.execute_tool("registrar_onboarding", {"campo": "pendencia_inicial", "valor": "agendar dentista"}, PAULINE)
-    tools.execute_tool("registrar_onboarding", {"campo": "nome", "valor": "Pauline"}, PAULINE)
     tools.execute_tool("registrar_onboarding", {"campo": "consentimento", "valor": "sim"}, PAULINE)
+
+
+def test_abertura_personalizada_por_membro(client):
+    from server import pending_welcome
+    texto = "Rafa, sou a Giu! Como você prefere que eu te chame?"
+    r = client.post(
+        "/family/members",
+        json={"user_id": RAFAEL, "name": "Rafael", "emergency_contact": NANDA, "welcome": texto},
+        headers=ADMIN,
+    )
+    assert r.status_code == 200
+    # Primeiro contato: o texto aprovado pela operadora, verbatim
+    assert pending_welcome(RAFAEL) == texto
+    # Depois da primeira troca, o cérebro assume — nunca repete o script
+    memory.save_message(RAFAEL, "user", "oi", "whatsapp")
+    memory.save_message(RAFAEL, "assistant", texto, "whatsapp")
+    assert pending_welcome(RAFAEL) is None
+    # Membro sem texto aprovado: sem script, cérebro desde a primeira mensagem
+    assert pending_welcome(IAN) is None
 
 
 # ─── 4. Isolamento de memória entre membros ───────────────────────────────────
