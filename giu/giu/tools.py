@@ -263,12 +263,12 @@ TOOL_DEFINITIONS = [
             "name": "acionar_emergencia",
             "description": (
                 "SOMENTE em risco sério (saúde/segurança): avisa o contato de emergência da "
-                "pessoa com o mínimo necessário — nunca o histórico. Pergunte UMA vez antes, "
-                "exceto se a pessoa pediu socorro explicitamente."
+                "pessoa com um TEMPLATE FIXO (o motivo fica só no registro interno, nunca é "
+                "enviado). Pergunte UMA vez antes, exceto se a pessoa pediu socorro explicitamente."
             ),
             "parameters": {
                 "type": "object",
-                "properties": {"motivo": {"type": "string", "description": "Resumo mínimo. Ex: 'pediu ajuda agora'"}},
+                "properties": {"motivo": {"type": "string", "description": "Motivo para o registro interno de auditoria. Ex: 'pediu ajuda agora'"}},
                 "required": ["motivo"],
             },
         },
@@ -452,8 +452,9 @@ def execute_tool(name, arguments, user_id, channel="web"):
                 "192 (SAMU), 193 (Bombeiros) ou 190 (Polícia) conforme o caso."
             )
         name_str = member["name"] if member else "Um membro da família"
-        _deliver_now(contact, f"🚨 EMERGÊNCIA (pela Giu): {name_str} — {args['motivo']}. Entre em contato agora.")
-        # Trilha de auditoria: registrada como ação já executada
+        # Template FIXO e determinístico: o texto do modelo (motivo) NUNCA é
+        # enviado ao contato — vai apenas para a trilha de auditoria interna
+        _deliver_now(contact, f"🚨 EMERGÊNCIA (pela Giu): {name_str} precisa de ajuda AGORA. Entre em contato imediatamente.")
         aid = memory.add_pending_action(
             user_id, "emergencia", f"Contato de emergência acionado: {args['motivo']}", args, "alto"
         )

@@ -151,6 +151,7 @@ def status():
     return {
         "giu": "online",
         "tagline": "Você não precisa segurar tudo sozinha. Eu estou aqui.",
+        "modo_familia": config.FAMILY_MODE,
         "canais": {
             "web": True,
             "whatsapp": whatsapp.is_configured(),
@@ -268,7 +269,8 @@ async def whatsapp_webhook(request: Request):
             log.info("WhatsApp de número não registrado — recusado sem processar")
             await whatsapp.send_message(number, DECLINE_MESSAGE)
             return {"status": "ok"}
-        log.info("WhatsApp de %s: %s", number, text)
+        # Metadados apenas — conteúdo de conversa NUNCA vai para logs
+        log.info("WhatsApp: mensagem de %s (%d caracteres)", number, len(text))
         # O número de telefone é a identidade da pessoa no cérebro
         reply = brain.think(number, text, channel="whatsapp")
         await whatsapp.send_message(number, reply)
@@ -293,7 +295,8 @@ async def telegram_webhook(request: Request):
             log.info("Telegram de chat não registrado — recusado sem processar")
             await telegram.send_message(chat_id, DECLINE_MESSAGE)
             return {"status": "ok"}
-        log.info("Telegram de %s: %s", chat_id, text)
+        # Metadados apenas — conteúdo de conversa NUNCA vai para logs
+        log.info("Telegram: mensagem de %s (%d caracteres)", chat_id, len(text))
         # O chat_id é a identidade da pessoa no cérebro
         reply = brain.think(chat_id, text, channel="telegram")
         await telegram.send_message(chat_id, reply)

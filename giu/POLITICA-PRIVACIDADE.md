@@ -46,6 +46,29 @@ e-mail, transporte, comida, pagamentos) sem a sua confirmação explícita
 naquela conversa. Funções novas nascem **desligadas** e só passam a existir
 para você se você liberar — e você pode desligar de volta quando quiser.
 
+## Limitações conhecidas desta fase (piloto familiar)
+
+Honestidade acima de tudo — duas limitações técnicas existem hoje e serão
+resolvidas nas próximas fases:
+
+1. **Acesso à infraestrutura.** As proteções de "ninguém lê sua memória"
+   valem para todos os acessos pela Giu e pela API. Porém, quem administra o
+   servidor da família tem, tecnicamente, acesso ao banco de dados no nível
+   da infraestrutura. Nesta fase, a confidencialidade nesse nível é um
+   compromisso da administradora, não uma barreira técnica (criptografia por
+   pessoa está no plano da plataforma).
+
+2. **Processamento pelo provedor de IA.** Para pensar e responder, a Giu
+   envia o contexto da sua conversa a um provedor de modelo de inteligência
+   artificial (hoje, a OpenAI), sob os termos de proteção de dados desse
+   provedor. Suas conversas não são usadas para treinar modelos de terceiros
+   segundo a política de API vigente do provedor, mas o tráfego existe e você
+   deve saber disso.
+
+O que **não** é limitação (garantido e testado): mensagens não aparecem em
+registros técnicos do servidor; o texto enviado ao contato de emergência é um
+template fixo que nunca inclui o conteúdo das suas conversas.
+
 ## Base legal
 
 Tratamento de dados pessoais com base no consentimento (LGPD, art. 7º, I),

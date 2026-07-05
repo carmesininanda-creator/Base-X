@@ -84,6 +84,11 @@ def test_membro_passa_e_e_ativado(client):
     assert memory.get_member(IAN)["status"] == "active"
 
 
+def test_status_expoe_modo_familia(client):
+    # Verificável de fora, sem autenticação: produção mostra se a portaria está ativa
+    assert client.get("/").json()["modo_familia"] is True
+
+
 # ─── 3. Onboarding individual e independente ──────────────────────────────────
 
 def test_onboarding_individual():
@@ -215,21 +220,27 @@ def test_liberar_escopo_e_registrado():
 
 # ─── 8. Emergência: mínimo necessário + auditoria ─────────────────────────────
 
-def test_emergencia_avisa_contato_com_minimo():
+def test_emergencia_avisa_contato_com_template_fixo():
     memory.save_message(NANDA, "user", "oi", "whatsapp")  # canal de push da Nanda
-    r = tools.execute_tool("acionar_emergencia", {"motivo": "pediu ajuda agora"}, IAN)
+    motivo_do_modelo = "pediu ajuda depois de contar detalhe íntimo X"
+    r = tools.execute_tool("acionar_emergencia", {"motivo": motivo_do_modelo}, IAN)
     assert "avisado" in r
     entregues = [x for x in memory.due_reminders() if x["user_id"] == NANDA]
     assert len(entregues) == 1
-    assert "Ian" in entregues[0]["text"] and "pediu ajuda agora" in entregues[0]["text"]
-    assert "prova de matemática" not in entregues[0]["text"]  # NUNCA vaza histórico
-    # Trilha de auditoria existe e está executada
+    texto = entregues[0]["text"]
+    # Template determinístico: identifica a pessoa e a urgência...
+    assert "Ian" in texto and "precisa de ajuda AGORA" in texto
+    # ...e NUNCA contém o texto livre do modelo nem histórico de conversa
+    assert motivo_do_modelo not in texto and "íntimo" not in texto
+    assert "prova de matemática" not in texto
+    # O motivo fica APENAS na trilha de auditoria interna, executada e de risco alto
     with memory._conn() as conn:
         row = conn.execute(
-            "SELECT status, risk_level FROM pending_actions WHERE user_id=? AND type='emergencia'",
+            "SELECT status, risk_level, summary FROM pending_actions WHERE user_id=? AND type='emergencia'",
             (IAN,),
         ).fetchone()
     assert row["status"] == "executed" and row["risk_level"] == "alto"
+    assert motivo_do_modelo in row["summary"]
 
 
 def test_emergencia_sem_contato_orienta():

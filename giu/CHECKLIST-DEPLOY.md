@@ -86,6 +86,26 @@ curl https://SEU-DOMINIO/summary/<SEU_CHAT_ID> -H 'Authorization: Bearer <GIU_AP
 **9. Check-in (opcional, no dia seguinte)** — às 08:00 ela manda o bom dia sozinha
 (só depois do onboarding completo com consentimento "sim").
 
+## G. Piloto fechado Giu Família (bloqueadores de liberação)
+
+- [ ] Adicionar `GIU_FAMILY_MODE=1` nas variáveis do Railway
+- [ ] Confirmar de fora: `curl https://SEU-DOMINIO/` deve mostrar `"modo_familia": true`
+- [ ] Cadastrar os membros (um comando por pessoa; guarde cada token pessoal na hora):
+  ```bash
+  curl -X POST https://SEU-DOMINIO/family/members \
+    -H 'Authorization: Bearer <GIU_API_TOKEN>' -H 'Content-Type: application/json' \
+    -d '{"user_id": "<numero>", "name": "<Nome>", "emergency_contact": "<seu numero>"}'
+  ```
+- [ ] **Teste negativo (obrigatório):** mandar "oi" de um número NÃO cadastrado →
+      deve receber a recusa educada, e nada pode aparecer em `/family/members`
+- [ ] **Onboarding real completo:** com um número cadastrado, conversar do "oi"
+      até o consentimento (3 perguntas, UMA por mensagem) — anotar qualquer desvio
+- [ ] **Ação real:** pedir um lembrete → confirmar → receber no horário
+- [ ] **Logs limpos:** abrir os logs do Railway durante a conversa e confirmar que
+      aparecem só metadados (remetente e tamanho), NUNCA o texto das mensagens
+- [ ] Só depois de todas as caixas acima: entregar os tokens pessoais a Ian,
+      Pauline e Rafael e liberar o piloto
+
 ## Se algo falhar
 
 | Sintoma | Causa provável |
