@@ -116,6 +116,35 @@ def require_token(authorization: str = Header(default="")):
         raise HTTPException(status_code=401, detail="Token inválido ou ausente")
 
 
+def require_self(user_id: str, authorization: str = Header(default="")):
+    """Acesso à memória: em modo família, SÓ o token pessoal do próprio usuário.
+    O token de operadora não lê memória de ninguém. Fora do modo família, vale o token geral."""
+    if not config.FAMILY_MODE:
+        return require_token(authorization)
+    token = authorization.removeprefix("Bearer ").strip()
+    member = memory.get_member_by_token(token) if token else None
+    if not member or member["user_id"] != user_id:
+        raise HTTPException(status_code=403, detail="Apenas a própria pessoa acessa sua memória")
+
+
+def family_gate(user_id):
+    """Portaria do modo família: True se a pessoa pode conversar com a Giu."""
+    if not config.FAMILY_MODE:
+        return True
+    member = memory.get_member(user_id)
+    if not member:
+        return False
+    if member["status"] != "active":
+        memory.activate_member(user_id)
+    return True
+
+
+DECLINE_MESSAGE = (
+    "Oi! Eu sou a Giu, uma assistente pessoal de família — e este espaço é só dos "
+    "membros cadastrados. Não vou guardar nada do que você enviou. 💛"
+)
+
+
 @app.get("/")
 def status():
     from giu.integrations import google_calendar
@@ -138,35 +167,71 @@ class ChatRequest(BaseModel):
     message: str
 
 
-@app.post("/chat", dependencies=[Depends(require_token)])
-def chat(req: ChatRequest):
+@app.post("/chat")
+def chat(req: ChatRequest, authorization: str = Header(default="")):
+    # Em modo família, só a própria pessoa conversa em seu nome (token pessoal)
+    require_self(req.user_id, authorization)
     reply = brain.think(req.user_id, req.message, channel="web")
     return {"reply": reply}
 
 
 # ─── Governança da memória (os dados pertencem à pessoa) ─────────────────────
+# Em modo família estes endpoints exigem o token PESSOAL do próprio usuário;
+# o token de operadora não lê a memória de ninguém.
 
-@app.get("/memories/{user_id}", dependencies=[Depends(require_token)])
+@app.get("/memories/{user_id}", dependencies=[Depends(require_self)])
 def list_memories(user_id: str):
     return {"facts": memory.get_facts(user_id, limit=500)}
 
 
-@app.delete("/memories/{user_id}/{fact_id}", dependencies=[Depends(require_token)])
+@app.delete("/memories/{user_id}/{fact_id}", dependencies=[Depends(require_self)])
 def delete_memory(user_id: str, fact_id: int):
     if not memory.delete_fact(user_id, fact_id):
         raise HTTPException(status_code=404, detail="Fato não encontrado")
     return {"deleted": fact_id}
 
 
-@app.get("/pending-actions/{user_id}", dependencies=[Depends(require_token)])
+@app.get("/pending-actions/{user_id}", dependencies=[Depends(require_self)])
 def pending_actions(user_id: str):
     return {"pending": memory.list_pending_actions(user_id)}
 
 
-@app.get("/summary/{user_id}", dependencies=[Depends(require_token)])
+@app.get("/summary/{user_id}", dependencies=[Depends(require_self)])
 def summary(user_id: str):
     """Resumo diário: pendências, lembretes, agenda, saúde + um cuidado."""
     return routines.daily_summary(user_id)
+
+
+# ─── Família (cadastro — token de operadora; nunca dá acesso a memória) ──────
+
+class MemberRequest(BaseModel):
+    user_id: str
+    name: str
+    role: str = "member"
+    emergency_contact: str | None = None
+
+
+@app.post("/family/members", dependencies=[Depends(require_token)])
+def add_family_member(req: MemberRequest):
+    token = memory.add_member(req.user_id, req.name, req.role, req.emergency_contact)
+    return {
+        "user_id": req.user_id,
+        "name": req.name,
+        "token": token,
+        "aviso": "Guarde este token pessoal AGORA — ele não será mostrado de novo.",
+    }
+
+
+@app.get("/family/members", dependencies=[Depends(require_token)])
+def family_members():
+    return {"members": memory.list_members()}
+
+
+@app.delete("/family/members/{user_id}", dependencies=[Depends(require_token)])
+def delete_family_member(user_id: str):
+    if not memory.remove_member(user_id):
+        raise HTTPException(status_code=404, detail="Membro não encontrado")
+    return {"removed": user_id, "nota": "A memória da pessoa NÃO foi apagada; apague a pedido dela via /memories."}
 
 
 # ─── Porta WhatsApp ───────────────────────────────────────────────────────────
@@ -199,6 +264,10 @@ async def whatsapp_webhook(request: Request):
     parsed = whatsapp.parse_incoming(payload)
     if parsed:
         number, text = parsed
+        if not family_gate(number):
+            log.info("WhatsApp de número não registrado — recusado sem processar")
+            await whatsapp.send_message(number, DECLINE_MESSAGE)
+            return {"status": "ok"}
         log.info("WhatsApp de %s: %s", number, text)
         # O número de telefone é a identidade da pessoa no cérebro
         reply = brain.think(number, text, channel="whatsapp")
@@ -220,6 +289,10 @@ async def telegram_webhook(request: Request):
     parsed = telegram.parse_incoming(payload)
     if parsed:
         chat_id, text = parsed
+        if not family_gate(chat_id):
+            log.info("Telegram de chat não registrado — recusado sem processar")
+            await telegram.send_message(chat_id, DECLINE_MESSAGE)
+            return {"status": "ok"}
         log.info("Telegram de %s: %s", chat_id, text)
         # O chat_id é a identidade da pessoa no cérebro
         reply = brain.think(chat_id, text, channel="telegram")

@@ -37,9 +37,10 @@ MODES = {
     "modo_emergencia": (
         "POSSÍVEL EMERGÊNCIA. Prioridade total: mantenha a calma, frases muito curtas e "
         "claras. Pergunte primeiro: 'Você está segura agora?'. Oriente a ligar 192 (SAMU), "
-        "193 (Bombeiros) ou 190 (Polícia) conforme o caso, e ofereça avisar o contato de "
-        "emergência da memória, se houver. Sofrimento emocional intenso: CVV 188. "
-        "Nada de tarefas, nada de agenda — só a pessoa importa agora."
+        "193 (Bombeiros) ou 190 (Polícia) conforme o caso. Ofereça avisar o contato de "
+        "emergência (ferramenta acionar_emergencia — pergunte UMA vez; se a pessoa pediu "
+        "socorro explicitamente ou parou de responder, acione direto). Sofrimento emocional "
+        "intenso: CVV 188. Nada de tarefas, nada de agenda — só a pessoa importa agora."
     ),
 }
 

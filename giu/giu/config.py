@@ -15,8 +15,12 @@ OPENAI_MODEL = os.getenv("OPENAI_MODEL", "gpt-4o-mini")
 DB_PATH = os.getenv("GIU_DB_PATH", str(Path(__file__).resolve().parent.parent / "giu_memory.db"))
 
 # ─── Segurança ────────────────────────────────────────────────────────────────
-# Token de API para /chat e endpoints de memória (obrigatório em produção)
+# Token de operadora: gerencia membros; em modo família NÃO lê memória de ninguém
 GIU_API_TOKEN = os.getenv("GIU_API_TOKEN", "")
+
+# ─── Modo Família ─────────────────────────────────────────────────────────────
+# 1 = só membros registrados conversam; memória via API exige token pessoal
+FAMILY_MODE = os.getenv("GIU_FAMILY_MODE", "0") == "1"
 
 # ─── WhatsApp Cloud API (Meta) ────────────────────────────────────────────────
 WHATSAPP_TOKEN = os.getenv("WHATSAPP_TOKEN", "")
