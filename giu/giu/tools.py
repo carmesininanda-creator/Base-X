@@ -18,6 +18,34 @@ from .integrations import google_calendar
 
 log = logging.getLogger("giu.tools")
 
+# Escopos de permissão: núcleo liberado; ações futuras nascem DESLIGADAS
+SCOPES = {
+    "agenda": True,
+    "lembretes": True,
+    "compartilhamento": True,  # sempre com confirmação por uso
+    "email": False,
+    "transporte": False,
+    "comida": False,
+    "pagamentos": False,
+    "casa": False,
+}
+# Mapeia tipo de ação pendente → escopo exigido
+ACTION_SCOPES = {
+    "agendar": "agenda",
+    "criar_lembrete": "lembretes",
+    "compartilhar": "compartilhamento",
+    "email": "email",
+    "transporte": "transporte",
+    "comida": "comida",
+    "pagamentos": "pagamentos",
+    "casa": "casa",
+}
+
+
+def _scope_allowed(user_id, scope):
+    perms = memory.get_profile(user_id)["data"].get("permissoes", {})
+    return perms.get(scope, SCOPES.get(scope, False))
+
 
 # ─── Validação de datas (o modelo erra; o sistema confere) ────────────────────
 
@@ -195,6 +223,59 @@ TOOL_DEFINITIONS = [
     {
         "type": "function",
         "function": {
+            "name": "compartilhar_com_familia",
+            "description": (
+                "Envia um recado da pessoa para OUTRO membro da família. NÃO executa: cria "
+                "ação pendente. Mostre a mensagem exata e o destinatário e peça confirmação. "
+                "Só a mensagem é enviada — nunca o histórico. Use apenas quando a pessoa pedir."
+            ),
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "para": {"type": "string", "description": "Nome do membro da família que vai receber"},
+                    "mensagem": {"type": "string", "description": "O recado exato a enviar"},
+                },
+                "required": ["para", "mensagem"],
+            },
+        },
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "gerenciar_permissao",
+            "description": (
+                "Liga ou desliga uma permissão de ação futura (email, transporte, comida, "
+                "pagamentos, casa). Use apenas quando a pessoa pedir explicitamente."
+            ),
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "escopo": {"type": "string", "enum": ["email", "transporte", "comida", "pagamentos", "casa", "compartilhamento"]},
+                    "conceder": {"type": "boolean"},
+                },
+                "required": ["escopo", "conceder"],
+            },
+        },
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "acionar_emergencia",
+            "description": (
+                "SOMENTE em risco sério (saúde/segurança): avisa o contato de emergência da "
+                "pessoa com um TEMPLATE FIXO (o motivo fica só no registro interno, nunca é "
+                "enviado). Pergunte UMA vez antes, exceto se a pessoa pediu socorro explicitamente."
+            ),
+            "parameters": {
+                "type": "object",
+                "properties": {"motivo": {"type": "string", "description": "Motivo para o registro interno de auditoria. Ex: 'pediu ajuda agora'"}},
+                "required": ["motivo"],
+            },
+        },
+    },
+    {
+        "type": "function",
+        "function": {
             "name": "ver_agenda",
             "description": "Lista os compromissos da Agenda Viva da pessoa.",
             "parameters": {"type": "object", "properties": {}},
@@ -251,9 +332,29 @@ def _execute_criar_lembrete(user_id, payload):
     return f"Lembrete criado para {payload['quando']}."
 
 
+def _deliver_now(target_user_id, text):
+    """Entrega uma mensagem proativa a um membro: vira lembrete vencido, que o
+    scheduler envia em até 60s pelo canal com push da pessoa."""
+    channel = memory.last_push_channel(target_user_id) or "web"
+    memory.add_reminder(target_user_id, text, memory._now(), channel)
+
+
+def _execute_compartilhar(user_id, payload):
+    sender = memory.get_member(user_id)
+    target = memory.get_member_by_name(payload["para"])
+    if not target:
+        return f"Não encontrei '{payload['para']}' na família — o recado NÃO foi enviado."
+    if target["user_id"] == user_id:
+        return "O destinatário é a própria pessoa — nada a enviar."
+    sender_name = sender["name"] if sender else "alguém da família"
+    _deliver_now(target["user_id"], f"💬 Recado de {sender_name} (pela Giu): {payload['mensagem']}")
+    return f"Recado enviado para {target['name']}. Só a mensagem foi compartilhada, nada mais."
+
+
 EXECUTORS = {
     "agendar": _execute_agendar,
     "criar_lembrete": _execute_criar_lembrete,
+    "compartilhar": _execute_compartilhar,
 }
 
 
@@ -315,6 +416,51 @@ def execute_tool(name, arguments, user_id, channel="web"):
             f"Se ela confirmar, chame confirmar_acao com action_id={action_id}."
         )
 
+    if name == "compartilhar_com_familia":
+        target = memory.get_member_by_name(args["para"])
+        if not target:
+            return (
+                f"'{args['para']}' não está na família registrada — diga isso à pessoa. "
+                "Nada foi enviado."
+            )
+        summary = f"Enviar para {target['name']}: \"{args['mensagem']}\""
+        action_id = memory.add_pending_action(
+            user_id, "compartilhar", summary, {"para": target["name"], "mensagem": args["mensagem"]}, "medio"
+        )
+        return (
+            f"Ação pendente #{action_id} criada: {summary}. Mostre a mensagem exata e o "
+            f"destinatário e peça confirmação; se confirmar, chame confirmar_acao com action_id={action_id}."
+        )
+
+    if name == "gerenciar_permissao":
+        profile = memory.get_profile(user_id)
+        perms = profile["data"].get("permissoes", {})
+        perms[args["escopo"]] = bool(args["conceder"])
+        memory.set_profile(user_id, permissoes=perms)
+        verbo = "liberada" if args["conceder"] else "desligada"
+        memory.remember_fact(
+            user_id, f"Permissão '{args['escopo']}' {verbo} pela própria pessoa", "limites"
+        )
+        return f"Permissão '{args['escopo']}' {verbo} e registrada na memória."
+
+    if name == "acionar_emergencia":
+        member = memory.get_member(user_id)
+        contact = member and member.get("emergency_contact")
+        if not contact:
+            return (
+                "Esta pessoa não tem contato de emergência configurado. Oriente a ligar "
+                "192 (SAMU), 193 (Bombeiros) ou 190 (Polícia) conforme o caso."
+            )
+        name_str = member["name"] if member else "Um membro da família"
+        # Template FIXO e determinístico: o texto do modelo (motivo) NUNCA é
+        # enviado ao contato — vai apenas para a trilha de auditoria interna
+        _deliver_now(contact, f"🚨 EMERGÊNCIA (pela Giu): {name_str} precisa de ajuda AGORA. Entre em contato imediatamente.")
+        aid = memory.add_pending_action(
+            user_id, "emergencia", f"Contato de emergência acionado: {args['motivo']}", args, "alto"
+        )
+        memory.mark_action_executed(user_id, aid)
+        return "Contato de emergência avisado com o mínimo necessário. Fique com a pessoa."
+
     if name == "propor_acao":
         action_id = memory.add_pending_action(
             user_id, args["tipo"], args["resumo"], args.get("payload", {}), args.get("risco", "medio")
@@ -327,6 +473,12 @@ def execute_tool(name, arguments, user_id, channel="web"):
             return "Não encontrei essa ação pendente."
         if action["status"] != "pending":
             return f"Essa ação já está com status '{action['status']}' — nada a fazer."
+        scope = ACTION_SCOPES.get(action["type"])
+        if scope and not _scope_allowed(user_id, scope):
+            return (
+                f"A permissão '{scope}' está desligada para esta pessoa — a ação NÃO foi "
+                "executada. Explique e pergunte se ela quer liberar (gerenciar_permissao)."
+            )
         executor = EXECUTORS.get(action["type"])
         if not executor:
             memory.mark_action_executed(user_id, action["id"])

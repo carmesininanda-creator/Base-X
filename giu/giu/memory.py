@@ -9,7 +9,9 @@ Três tipos de memória:
 Mais a Agenda Viva e os Lembretes, que são memória do futuro.
 """
 
+import hashlib
 import json
+import secrets
 import sqlite3
 from datetime import datetime
 from zoneinfo import ZoneInfo
@@ -77,6 +79,15 @@ def init_db():
                 created_at   TEXT,
                 confirmed_at TEXT,
                 executed_at  TEXT
+            );
+            CREATE TABLE IF NOT EXISTS family_members (
+                user_id           TEXT PRIMARY KEY,
+                name              TEXT NOT NULL,
+                role              TEXT DEFAULT 'member',
+                status            TEXT DEFAULT 'invited',
+                token_hash        TEXT NOT NULL,
+                emergency_contact TEXT,
+                created_at        TEXT
             );
             CREATE INDEX IF NOT EXISTS idx_messages_user ON messages(user_id, id);
             CREATE INDEX IF NOT EXISTS idx_facts_user ON facts(user_id, id);
@@ -232,6 +243,85 @@ def reminders_today(user_id):
             (user_id, today),
         ).fetchall()
     return [dict(r) for r in rows]
+
+
+# ─── Família (identidade e confidencialidade) ─────────────────────────────────
+
+def _hash_token(token):
+    return hashlib.sha256(token.encode()).hexdigest()
+
+
+def add_member(user_id, name, role="member", emergency_contact=None):
+    """Registra um membro da família. Retorna o token pessoal (mostrado UMA vez)."""
+    token = secrets.token_urlsafe(32)
+    with _conn() as conn:
+        conn.execute(
+            """INSERT INTO family_members (user_id, name, role, status, token_hash, emergency_contact, created_at)
+               VALUES (?,?,?,?,?,?,?)
+               ON CONFLICT(user_id) DO UPDATE SET name=excluded.name, role=excluded.role,
+                 emergency_contact=excluded.emergency_contact""",
+            (user_id, name, role, "invited", _hash_token(token), emergency_contact, _now()),
+        )
+    return token
+
+
+def get_member(user_id):
+    with _conn() as conn:
+        row = conn.execute(
+            "SELECT user_id, name, role, status, emergency_contact FROM family_members WHERE user_id=?",
+            (user_id,),
+        ).fetchone()
+    return dict(row) if row else None
+
+
+def get_member_by_name(name):
+    with _conn() as conn:
+        row = conn.execute(
+            "SELECT user_id, name, role, status, emergency_contact FROM family_members "
+            "WHERE lower(name)=lower(?)",
+            (name,),
+        ).fetchone()
+    return dict(row) if row else None
+
+
+def get_member_by_token(token):
+    with _conn() as conn:
+        row = conn.execute(
+            "SELECT user_id, name, role, status, emergency_contact FROM family_members WHERE token_hash=?",
+            (_hash_token(token),),
+        ).fetchone()
+    return dict(row) if row else None
+
+
+def list_members():
+    """Cadastro da família — sem tokens, sem memória de ninguém."""
+    with _conn() as conn:
+        rows = conn.execute(
+            "SELECT user_id, name, role, status, emergency_contact, created_at FROM family_members ORDER BY created_at"
+        ).fetchall()
+    return [dict(r) for r in rows]
+
+
+def activate_member(user_id):
+    with _conn() as conn:
+        conn.execute("UPDATE family_members SET status='active' WHERE user_id=?", (user_id,))
+
+
+def remove_member(user_id):
+    with _conn() as conn:
+        cur = conn.execute("DELETE FROM family_members WHERE user_id=?", (user_id,))
+        return cur.rowcount > 0
+
+
+def last_push_channel(user_id):
+    """Canal com push da última conversa desta pessoa (para entregar recados)."""
+    with _conn() as conn:
+        row = conn.execute(
+            "SELECT channel FROM messages WHERE user_id=? AND channel IN ('whatsapp','telegram') "
+            "ORDER BY id DESC LIMIT 1",
+            (user_id,),
+        ).fetchone()
+    return row["channel"] if row else None
 
 
 def push_users():
