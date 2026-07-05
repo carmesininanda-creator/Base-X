@@ -2,6 +2,10 @@
 
 > "Você não precisa segurar tudo sozinha. Eu estou aqui."
 
+**Fonte oficial:** este diretório (`giu/`) na branch `main` deste repositório é
+a única fonte ativa do código da Giu. Zips e cópias são fotografias
+históricas; protótipos antigos no repositório são legado sem manutenção.
+
 A Giu não é um app. Os dispositivos já existem — **a Giu é o cérebro** que
 aparece neles. Este projeto é exatamente a arquitetura desenhada:
 
@@ -42,6 +46,38 @@ conversa, cuida e observa. O vínculo é o produto.
 | ⏰ Proatividade | Scheduler envia lembretes na hora marcada, pelo canal de origem |
 
 A memória é **uma só**: o que você conta no terminal, ela lembra no WhatsApp.
+
+## Modo Família (multiusuário com confidencialidade total)
+
+Com `GIU_FAMILY_MODE=1`, a Giu atende só membros registrados — cada pessoa com
+memória, permissões e confidencialidade completamente separadas:
+
+- **Portaria fechada**: números não cadastrados recebem recusa educada e nada é processado nem salvo
+- **Token pessoal por membro** (mostrado uma única vez no cadastro): só a
+  própria pessoa acessa a própria memória via API — **o token de operadora
+  cadastra membros, mas não lê a memória de ninguém**
+- **Recados entre membros só com confirmação explícita** — apenas a mensagem
+  exata, nunca histórico
+- **Emergência**: em risco sério, o contato de emergência recebe um template
+  fixo mínimo, com trilha de auditoria
+- Política completa em linguagem humana: [`POLITICA-PRIVACIDADE.md`](POLITICA-PRIVACIDADE.md)
+
+Cadastro (token de operadora): `POST /family/members` · `GET /family/members` ·
+`DELETE /family/members/{user_id}`
+
+## Segurança
+
+- `POST /chat`, `/memories`, `/summary` e `/pending-actions` exigem Bearer token
+  (`GIU_API_TOKEN`; em modo família, o token **pessoal** do próprio usuário)
+- Webhooks validados: assinatura `X-Hub-Signature-256` da Meta
+  (`META_APP_SECRET`) e secret do Telegram (`TELEGRAM_SECRET_TOKEN`)
+- Ações passam por propõe → confirma → executa (tabela auditável de ações
+  pendentes); escopos sensíveis nascem desligados por pessoa
+- Logs registram apenas metadados — conteúdo de conversa nunca vai para logs
+- Validação de configuração na inicialização: combinações inseguras impedem o
+  servidor de subir
+- Testes: `python -m pytest tests/` (E2E de isolamento, tokens, portaria,
+  consentimento e emergência)
 
 ## Como rodar agora (5 minutos)
 

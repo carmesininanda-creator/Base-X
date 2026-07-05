@@ -46,3 +46,35 @@ TIMEZONE = os.getenv("GIU_TIMEZONE", "America/Sao_Paulo")
 # ─── Check-in diário (horário local HH:MM) ────────────────────────────────────
 MORNING_CHECKIN = os.getenv("GIU_MORNING_CHECKIN", "08:00")
 NIGHT_CHECKIN = os.getenv("GIU_NIGHT_CHECKIN", "21:00")
+
+
+def startup_issues():
+    """Valida a configuração na inicialização.
+
+    Retorna (erros, avisos). Erros impedem o servidor de subir — são
+    combinações inseguras. Avisos degradam funcionalidade, mas não segurança.
+    """
+    errors, warnings = [], []
+
+    if FAMILY_MODE and not GIU_API_TOKEN:
+        errors.append(
+            "GIU_FAMILY_MODE=1 exige GIU_API_TOKEN: sem ele, os endpoints de "
+            "cadastro da família ficariam abertos a qualquer pessoa."
+        )
+
+    if not OPENAI_API_KEY:
+        warnings.append("OPENAI_API_KEY ausente — a Giu não conseguirá pensar nem responder.")
+    if not GIU_API_TOKEN:
+        warnings.append("GIU_API_TOKEN ausente — API aberta (aceitável apenas em desenvolvimento).")
+    if WHATSAPP_TOKEN and not META_APP_SECRET:
+        warnings.append(
+            "WhatsApp configurado sem META_APP_SECRET — webhooks não terão a assinatura validada."
+        )
+    if TELEGRAM_BOT_TOKEN and not TELEGRAM_SECRET_TOKEN:
+        warnings.append(
+            "Telegram configurado sem TELEGRAM_SECRET_TOKEN — webhooks não terão o secret validado."
+        )
+    if not WHATSAPP_TOKEN and not TELEGRAM_BOT_TOKEN:
+        warnings.append("Nenhum canal de mensagens configurado — apenas a porta web estará ativa.")
+
+    return errors, warnings
