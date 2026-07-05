@@ -87,6 +87,7 @@ def init_db():
                 status            TEXT DEFAULT 'invited',
                 token_hash        TEXT NOT NULL,
                 emergency_contact TEXT,
+                welcome           TEXT,
                 created_at        TEXT
             );
             CREATE INDEX IF NOT EXISTS idx_messages_user ON messages(user_id, id);
@@ -94,6 +95,11 @@ def init_db():
             CREATE INDEX IF NOT EXISTS idx_reminders_due ON reminders(sent, due_at);
             CREATE INDEX IF NOT EXISTS idx_actions_user ON pending_actions(user_id, status);
         """)
+        # Migração leve: bancos criados antes da coluna welcome
+        try:
+            conn.execute("ALTER TABLE family_members ADD COLUMN welcome TEXT")
+        except sqlite3.OperationalError:
+            pass  # coluna já existe
 
 
 def _now():
@@ -251,16 +257,16 @@ def _hash_token(token):
     return hashlib.sha256(token.encode()).hexdigest()
 
 
-def add_member(user_id, name, role="member", emergency_contact=None):
+def add_member(user_id, name, role="member", emergency_contact=None, welcome=None):
     """Registra um membro da família. Retorna o token pessoal (mostrado UMA vez)."""
     token = secrets.token_urlsafe(32)
     with _conn() as conn:
         conn.execute(
-            """INSERT INTO family_members (user_id, name, role, status, token_hash, emergency_contact, created_at)
-               VALUES (?,?,?,?,?,?,?)
+            """INSERT INTO family_members (user_id, name, role, status, token_hash, emergency_contact, welcome, created_at)
+               VALUES (?,?,?,?,?,?,?,?)
                ON CONFLICT(user_id) DO UPDATE SET name=excluded.name, role=excluded.role,
-                 emergency_contact=excluded.emergency_contact""",
-            (user_id, name, role, "invited", _hash_token(token), emergency_contact, _now()),
+                 emergency_contact=excluded.emergency_contact, welcome=excluded.welcome""",
+            (user_id, name, role, "invited", _hash_token(token), emergency_contact, welcome, _now()),
         )
     return token
 
@@ -268,7 +274,7 @@ def add_member(user_id, name, role="member", emergency_contact=None):
 def get_member(user_id):
     with _conn() as conn:
         row = conn.execute(
-            "SELECT user_id, name, role, status, emergency_contact FROM family_members WHERE user_id=?",
+            "SELECT user_id, name, role, status, emergency_contact, welcome FROM family_members WHERE user_id=?",
             (user_id,),
         ).fetchone()
     return dict(row) if row else None
