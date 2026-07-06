@@ -29,6 +29,21 @@ Em exatamente duas situações:
    **nunca** o conteúdo das suas conversas. Toda ação dessas fica registrada
    e você pode ver depois.
 
+## Quando você fala por áudio (voz)
+
+Você pode conversar com a Giu **por escrito ou por voz** — como preferir, e você
+escolhe. Quando você manda um áudio:
+
+- Para **entender** o que você disse, esse áudio é transcrito (virado texto) por
+  um provedor de inteligência artificial (hoje, a OpenAI) — o mesmo que a Giu usa
+  para pensar. É o único jeito de ela te ouvir.
+- **A gravação em si não fica guardada.** Depois de transcrito, o que permanece é
+  o texto da sua mensagem, no seu perfil — junto do resto da conversa, e só seu.
+- **A escolha é sua e muda quando quiser.** No começo, a Giu pergunta se você
+  prefere receber as respostas por voz, por escrito, ou os dois — e respeita isso.
+  Você pode dizer "me responde só por escrito" a qualquer momento, e ela para de
+  mandar áudio. É uma preferência de relacionamento, não uma configuração escondida.
+
 ## Seus direitos (a qualquer momento)
 
 - **Ver tudo**: pergunte "o que você sabe sobre mim?" ou use seu token pessoal

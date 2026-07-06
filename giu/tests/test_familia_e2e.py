@@ -414,3 +414,86 @@ def test_voice_config_e_configuravel():
     assert config.VOICE_NAME == "shimmer"
     assert 0.5 <= config.VOICE_SPEED <= 1.5
     assert config.TTS_MODEL and config.STT_MODEL
+
+
+# ─── Lapidação da voz (bloqueadores das auditorias + preferência de relação) ──
+
+def test_voice_vocefy_protege_dado_sensivel():
+    from giu import voice
+    # Valor: mantém a unidade (não some com o número, não fica mudo)
+    assert "50 reais" in voice.vocefy("são R$ 50 no total")
+    assert "1500 reais" in voice.vocefy("custa R$ 1.500,00")
+    # Data: inclui o ANO quando existe (antes ele sumia do áudio)
+    assert "de 2025" in voice.vocefy("consulta em 19/07/2025")
+    # SEGURANÇA: fração de remédio NUNCA vira data ("1/2 comprimido" ≠ "dia 1 do 2")
+    falado = voice.vocefy("tome 1/2 comprimido")
+    assert "dia 1 do 2" not in falado
+    assert "1/2" in falado
+
+
+def test_voice_preferencia_governa_audio_determinista():
+    import server
+    U = "u_pref_audio"
+    memory.set_profile(U, name="P")
+    # Sem preferência escolhida: espelha o canal (voz→áudio, texto→só texto)
+    assert server._should_send_audio(U, "voice") is True
+    assert server._should_send_audio(U, "text") is False
+    # "Só texto": NUNCA áudio, mesmo em turno de voz — determinístico, cumprido sempre
+    memory.set_profile(U, voice_pref="text")
+    assert server._should_send_audio(U, "voice") is False
+    # "Voz"/"ambos": sempre áudio, mesmo quando ela escreveu
+    memory.set_profile(U, voice_pref="voice")
+    assert server._should_send_audio(U, "text") is True
+
+
+def test_voice_definir_preferencia_e_flag_deterministico():
+    U = "u_pref_tool"
+    memory.set_profile(U, name="P", consentimento=True)
+    r = tools.execute_tool("definir_preferencia_voz", {"preferencia": "texto"}, U)
+    assert memory.voice_pref(U) == "text"
+    # marca que já perguntou → nunca re-pergunta (isso seria cobrança)
+    assert memory.get_profile(U)["data"]["voice_pref_asked"] is True
+    # a preferência entra na memória de comunicação (o "Blueprint" da pessoa)
+    assert any(f["category"] == "comunicacao" for f in memory.get_facts(U))
+    # a Giu é instruída a confirmar em voz alta e ensinar que dá pra mudar
+    assert "mudar" in r.lower()
+
+
+def test_voice_fallback_de_stt_nao_e_beco(monkeypatch):
+    # Bloqueador de acessibilidade: quando o STT falha, quem SÓ usa voz não pode
+    # ficar sem saída. O aviso convida a tentar DE NOVO por voz (e vai em áudio também).
+    import server
+    from giu.channels import whatsapp as wa
+    from giu import voice
+    enviados = []
+    monkeypatch.setattr(wa, "download_media", lambda mid: b"bytes")
+    monkeypatch.setattr(voice, "transcrever", lambda b: None)          # STT falha
+    monkeypatch.setattr(wa, "send_message_sync", lambda to, t: enviados.append(t) or True)
+    monkeypatch.setattr(voice, "sintetizar", lambda t: None)           # sem API: TTS None
+    server._audio_turn_blocking("u_voz_falha", "MEDIA")
+    assert len(enviados) == 1
+    msg = enviados[0].lower()
+    assert "de novo" in msg                       # convida a repetir por voz
+    assert "escrev" in msg                         # texto é alternativa, não a única porta
+    assert msg != "não consegui entender o áudio. pode me mandar por escrito?"  # não é a antiga parede
+
+
+def test_voice_guidance_texto_acompanha_e_vinculo():
+    from giu import brain
+    g = brain._VOICE_GUIDANCE
+    assert "SERÁ OUVIDA EM ÁUDIO" in g
+    assert "peguei certo" in g                 # read-back de ação sensível preservado
+    assert "saudade" in g                      # anti-dependência preservado
+    assert "TEXTO SEMPRE ACOMPANHA" in g       # promessa "por escrito" cumprida (já vai junto)
+    assert "não uma pessoa" in g               # âncora de identidade na voz
+    assert "AINDA NÃO ESCOLHEU" in brain._VOICE_ASK_PREF  # oferta de preferência no 1º turno
+
+
+def test_persona_lapidacao_no_prompt():
+    prompt = brain._system_prompt(IAN, "oi")
+    assert "A informação serve à relação" in prompt    # item 9
+    assert "interpretei isso errado" in prompt         # item 3 (pedir desculpas)
+    assert "hoje eu não sei" in prompt                 # item 5 (saber não saber)
+    assert "ainda faz sentido eu te ajudar" in prompt  # item 2 (direito ao silêncio)
+    assert "pequenas coisas" in prompt                 # item 7 (pequenas lembranças)
+    assert "sem tarefa" in prompt                      # item 8 (presença/surpresa)

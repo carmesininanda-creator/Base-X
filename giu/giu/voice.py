@@ -22,7 +22,32 @@ from . import config
 
 _URL = re.compile(r"https?://\S+")
 _HORA = re.compile(r"\b(\d{1,2}):(\d{2})\b")
-_DATA = re.compile(r"\b(\d{1,2})/(\d{1,2})(?:/(\d{2,4}))?\b")
+_MOEDA = re.compile(r"R\$\s?(\d[\d.]*)(?:,(\d{2}))?")
+# Unidades de medida/remédio logo após "n/n" → NÃO é data (protege "1/2 comprimido"
+# de virar "dia 1 do 2"). Segurança primeiro: dose nunca pode ser lida como data.
+_MEDIDA = (r"(?!\s*(?:comprimidos?|comp\b|c[áa]psulas?|caps?\b|colher(?:es)?|colh|"
+           r"doses?|g[oa]tas?|ml|mg|g\b|un(?:idades?)?|x[íi]caras?|copos?))")
+_DATA = re.compile(r"\b([0-3]?\d)/([01]?\d)(?:/(\d{2,4}))?\b" + _MEDIDA, re.IGNORECASE)
+
+
+def _fala_moeda(m):
+    """R$ 1.500,00 → '1500 reais'; R$ 50,90 → '50 reais e 90 centavos'."""
+    inteiro = m.group(1).replace(".", "")
+    cent = m.group(2)
+    txt = f"{inteiro} reais"
+    if cent and cent != "00":
+        txt += f" e {int(cent)} centavos"
+    return txt
+
+
+def _fala_data(m):
+    """19/07 → 'dia 19 do 7'; 19/07/2025 → 'dia 19 do 7 de 2025'. Só quando é
+    data plausível (dia 1–31, mês 1–12); senão deixa como está (não corrompe)."""
+    d, mth, y = int(m.group(1)), int(m.group(2)), m.group(3)
+    if not (1 <= d <= 31 and 1 <= mth <= 12):
+        return m.group(0)
+    base = f"dia {d} do {mth}"
+    return f"{base} de {int(y)}" if y else base
 
 
 def _client():
@@ -71,12 +96,14 @@ def vocefy(texto):
     t = _remove_emoji(t)
     t = t.replace("**", "").replace("*", "").replace("`", "").replace("#", "")
     t = _URL.sub("(link enviado por mensagem)", t)
+    # Valor: "R$ 50" → "50 reais" (mantém a unidade; não some com o número)
+    t = _MOEDA.sub(_fala_moeda, t)
     t = t.replace("R$", "").replace("%", " por cento")
     # Horas: 15:00 → "15 horas"; 15:30 → "15 e 30"
     t = _HORA.sub(lambda m: f"{int(m.group(1))} horas" if m.group(2) == "00"
                   else f"{int(m.group(1))} e {int(m.group(2))}", t)
-    # Datas: 19/07 → "dia 19 do 7"
-    t = _DATA.sub(lambda m: f"dia {int(m.group(1))} do {int(m.group(2))}", t)
+    # Datas: 19/07 → "dia 19 do 7" (com ano quando houver; nunca sobre dose)
+    t = _DATA.sub(_fala_data, t)
     # Espaços redundantes
     return re.sub(r"[ \t]{2,}", " ", t).strip()
 

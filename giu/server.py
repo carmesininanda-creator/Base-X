@@ -292,11 +292,28 @@ def whatsapp_verify(request: Request):
 _bg_tasks = set()
 
 
+def _should_send_audio(number, via):
+    """Decide o áudio de forma DETERMINÍSTICA (não pelo modelo), respeitando a
+    preferência de relacionamento da pessoa:
+    - 'text'  → nunca áudio (ela pediu só escrito; cumprido 100% das vezes)
+    - 'voice'/'both' → sempre áudio (ela escolheu ouvir a Giu)
+    - None (ainda não escolheu) → espelha o canal: só manda áudio se o turno veio por voz.
+    O texto SEMPRE acompanha (em _reply_blocking); isto decide apenas o áudio."""
+    if not (config.VOICE_ENABLED and config.VOICE_REPLIES):
+        return False
+    pref = memory.voice_pref(number)
+    if pref == "text":
+        return False
+    if pref in ("voice", "both"):
+        return True
+    return via == "voice"
+
+
 def _reply_blocking(number, reply, via):
-    """Envia a resposta: sempre texto (registro relegível + fallback se o TTS
-    falhar) e, se o turno foi por voz, também o áudio."""
+    """Envia a resposta: SEMPRE texto (registro relegível + fallback se o TTS
+    falhar) e, conforme a preferência da pessoa, também o áudio."""
     whatsapp.send_message_sync(number, reply)
-    if via == "voice" and config.VOICE_ENABLED and config.VOICE_REPLIES:
+    if _should_send_audio(number, via):
         audio = voice.sintetizar(reply)
         if audio:
             whatsapp.send_audio(number, audio)
@@ -315,14 +332,21 @@ def _turn_blocking(number, text, via):
 
 
 def _audio_turn_blocking(number, media_id):
-    """Baixa o áudio, transcreve e processa como turno normal (SÍNCRONO)."""
+    """Baixa o áudio, transcreve e processa como turno normal (SÍNCRONO).
+    Falha NUNCA é um beco sem saída para quem só usa voz: o aviso vai também em
+    áudio (via _reply_blocking) e convida a tentar DE NOVO por voz — escrever é
+    uma alternativa oferecida, jamais a única porta."""
     audio_bytes = whatsapp.download_media(media_id)
     if not audio_bytes:
-        whatsapp.send_message_sync(number, "Não consegui baixar seu áudio agora. Pode mandar de novo ou escrever?")
+        _reply_blocking(number,
+            "Acho que seu áudio não chegou inteiro. Pode mandar de novo? Se for mais "
+            "fácil, pode escrever também — como for melhor pra você.", via="voice")
         return
     text = voice.transcrever(audio_bytes)
     if not text:
-        whatsapp.send_message_sync(number, "Não consegui entender o áudio. Pode me mandar por escrito?")
+        _reply_blocking(number,
+            "Desculpa, não consegui te ouvir direito dessa vez. Tenta de novo, pertinho e "
+            "devagar, que eu te escuto. Se preferir, pode escrever — o que for mais fácil.", via="voice")
         return
     _turn_blocking(number, text, via="voice")
 

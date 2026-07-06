@@ -235,6 +235,14 @@ def last_modality(user_id):
     return row["modality"] if row else "text"
 
 
+def voice_pref(user_id):
+    """Preferência de MODALIDADE de resposta, escolhida pela pessoa (não pelo
+    sistema): 'voice' | 'text' | 'both' | None (ainda não escolheu). Guardada no
+    perfil e consultada de forma DETERMINÍSTICA no envio — não depende do modelo,
+    para que 'me responde só por escrito' seja cumprido 100% das vezes."""
+    return get_profile(user_id)["data"].get("voice_pref")
+
+
 def get_history(user_id, limit=16):
     with _conn() as conn:
         rows = conn.execute(

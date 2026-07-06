@@ -148,6 +148,26 @@ TOOL_DEFINITIONS = [
     {
         "type": "function",
         "function": {
+            "name": "definir_preferencia_voz",
+            "description": (
+                "Registra como a pessoa prefere RECEBER as respostas daqui pra frente: "
+                "'voz', 'texto' ou 'ambos'. É uma preferência de RELACIONAMENTO (a decisão "
+                "é dela, não uma configuração), respeitada de forma determinística. Use "
+                "quando ela disser como prefere (ex.: 'me responde só por escrito', "
+                "'pode mandar áudio'). Ela pode mudar quando quiser."
+            ),
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "preferencia": {"type": "string", "enum": ["voz", "texto", "ambos"]},
+                },
+                "required": ["preferencia"],
+            },
+        },
+    },
+    {
+        "type": "function",
+        "function": {
             "name": "resumo_do_dia",
             "description": (
                 "Resumo do dia da pessoa: pendências, lembretes, agenda, saúde e uma sugestão "
@@ -385,6 +405,21 @@ def execute_tool(name, arguments, user_id, channel="web"):
 
     if name == "registrar_onboarding":
         return onboarding.register(user_id, args["campo"], args["valor"])
+
+    if name == "definir_preferencia_voz":
+        pref = {"voz": "voice", "texto": "text", "ambos": "both"}.get(args["preferencia"])
+        if not pref:
+            return "Preferência inválida. Use 'voz', 'texto' ou 'ambos'."
+        # Flag determinístico no perfil (consultado no envio) + marca que já
+        # perguntamos, para nunca re-perguntar (isso seria cobrança).
+        memory.set_profile(user_id, voice_pref=pref, voice_pref_asked=True)
+        rotulo = {"voice": "por voz", "text": "só por escrito", "both": "por voz e escrito"}[pref]
+        memory.remember_fact(user_id, f"Prefere receber as respostas {rotulo}", "comunicacao")
+        return (
+            f"Preferência registrada: responder {rotulo}. Confirme isso em voz alta para a "
+            "pessoa e ENSINE o gesto — que ela pode mudar quando quiser, é só falar "
+            "(ex.: 'fechado, te respondo assim; quando quiser trocar, é só me dizer')."
+        )
 
     if name == "resumo_do_dia":
         from . import routines
