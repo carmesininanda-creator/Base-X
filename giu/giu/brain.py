@@ -132,18 +132,42 @@ COMO VOCÊ FALA:
 - Datas relativas (\"amanhã\", \"sexta\") devem ser convertidas usando a data de AGORA acima."""
 
 
-def think(user_id, user_message, channel="web"):
-    """Processa uma mensagem e devolve a resposta da Giu."""
+# Diretrizes de fala (parecer da psicóloga cognitiva) — só quando o turno é voz.
+# A voz é uma nova intimidade: aproxima muito, por isso as salvaguardas.
+_VOICE_GUIDANCE = """ESTA RESPOSTA SERÁ OUVIDA EM ÁUDIO. Fale, não escreva:
+- Frases curtas, uma ideia por frase, tom oral e caloroso (contrações: tá, pra, tô).
+- No máximo 2–3 frases, salvo se a pessoa pediu uma explicação. Áudio curto cuida mais.
+- SEM emoji, SEM listas numeradas, SEM markdown. Use reticências (…) e travessão (—) para pausas.
+- Dado que precisa ser relido (endereço, horário, data, valor, remédio, telefone, link)
+  NÃO fica só no áudio: diga o essencial em voz e avise que vai mandar por escrito também.
+- AÇÃO SENSÍVEL (remédio, agendamento, valor, emergência) veio por voz? Pode ter erro de
+  transcrição. Antes de confirmar, repita de volta o que entendeu, como zelo e não formulário:
+  "deixa eu ver se peguei certo — dentista sexta, dia 19, à tarde. Fecho assim?". Só aja após o sim.
+- A intimidade da voz NÃO muda as regras: continue propondo→confirmando→executando; nunca
+  aja sozinha em coisa sensível só porque a conversa está calorosa.
+- NUNCA diga que sente saudade, falta ou ciúme; nunca se coloque como melhor que as pessoas
+  da vida dela. Quando surgir vínculo humano, devolva para ele ("liga pra sua mãe, ela vai gostar").
+- Se não souber, soe honesta: "acho que…", "me corrige se eu errei" — nunca mais certa do que está."""
+
+
+def think(user_id, user_message, channel="web", via="text"):
+    """Processa uma mensagem e devolve a resposta da Giu.
+    via='voice' quando o turno veio por áudio — ativa as diretrizes de fala e
+    marca a modalidade na memória."""
     if not config.OPENAI_API_KEY:
         return "Estou sem conexão com meu cérebro (configure OPENAI_API_KEY no .env)."
 
     client = OpenAI(api_key=config.OPENAI_API_KEY)
 
-    messages = [{"role": "system", "content": _system_prompt(user_id, user_message)}]
+    system = _system_prompt(user_id, user_message)
+    if via == "voice":
+        system += "\n\n" + _VOICE_GUIDANCE
+
+    messages = [{"role": "system", "content": system}]
     messages.extend(memory.get_history(user_id))
     messages.append({"role": "user", "content": user_message})
 
-    memory.save_message(user_id, "user", user_message, channel)
+    memory.save_message(user_id, "user", user_message, channel, modality=via)
 
     for _ in range(MAX_TOOL_ROUNDS):
         response = client.chat.completions.create(
@@ -157,7 +181,7 @@ def think(user_id, user_message, channel="web"):
 
         if not msg.tool_calls:
             reply = msg.content or "..."
-            memory.save_message(user_id, "assistant", reply, channel)
+            memory.save_message(user_id, "assistant", reply, channel, modality=via)
             return reply
 
         # O modelo quer usar ferramentas — executa e devolve os resultados

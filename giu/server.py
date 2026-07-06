@@ -23,7 +23,7 @@ from pydantic import BaseModel
 from datetime import datetime
 from zoneinfo import ZoneInfo
 
-from giu import brain, config, memory, routines
+from giu import brain, config, memory, routines, voice
 from giu.channels import telegram, whatsapp
 
 logging.basicConfig(level=logging.INFO)
@@ -287,6 +287,53 @@ def whatsapp_verify(request: Request):
     return Response(status_code=403)
 
 
+# Processamento em BACKGROUND (opção B): o webhook responde 200 na hora e o
+# turno pesado (pensar + STT/TTS) roda numa thread, sem travar os outros membros.
+_bg_tasks = set()
+
+
+def _reply_blocking(number, reply, via):
+    """Envia a resposta: sempre texto (registro relegível + fallback se o TTS
+    falhar) e, se o turno foi por voz, também o áudio."""
+    whatsapp.send_message_sync(number, reply)
+    if via == "voice" and config.VOICE_ENABLED and config.VOICE_REPLIES:
+        audio = voice.sintetizar(reply)
+        if audio:
+            whatsapp.send_audio(number, audio)
+
+
+def _turn_blocking(number, text, via):
+    """Um turno inteiro (SÍNCRONO — roda numa thread do background)."""
+    welcome = pending_welcome(number)
+    if welcome:
+        memory.save_message(number, "user", text, "whatsapp", modality=via)
+        memory.save_message(number, "assistant", welcome, "whatsapp")
+        _reply_blocking(number, welcome, via)
+        return
+    reply = brain.think(number, text, channel="whatsapp", via=via)
+    _reply_blocking(number, reply, via)
+
+
+def _audio_turn_blocking(number, media_id):
+    """Baixa o áudio, transcreve e processa como turno normal (SÍNCRONO)."""
+    audio_bytes = whatsapp.download_media(media_id)
+    if not audio_bytes:
+        whatsapp.send_message_sync(number, "Não consegui baixar seu áudio agora. Pode mandar de novo ou escrever?")
+        return
+    text = voice.transcrever(audio_bytes)
+    if not text:
+        whatsapp.send_message_sync(number, "Não consegui entender o áudio. Pode me mandar por escrito?")
+        return
+    _turn_blocking(number, text, via="voice")
+
+
+def _dispatch(fn, *args):
+    """Roda uma função bloqueante numa thread, em background, sem travar o loop."""
+    task = asyncio.create_task(asyncio.to_thread(fn, *args))
+    _bg_tasks.add(task)
+    task.add_done_callback(_bg_tasks.discard)
+
+
 @app.post("/webhook/whatsapp")
 async def whatsapp_webhook(request: Request):
     body = await request.body()
@@ -300,29 +347,31 @@ async def whatsapp_webhook(request: Request):
             log.warning("Webhook WhatsApp com assinatura inválida — descartado")
             return Response(status_code=403)
     payload = json.loads(body)
+
+    # Texto ou áudio?
     parsed = whatsapp.parse_incoming(payload)
+    audio = whatsapp.parse_incoming_audio(payload) if not parsed else None
+    if not parsed and not audio:
+        return {"status": "ok"}
+
+    number, msg_id = (parsed[0], parsed[2]) if parsed else (audio[0], audio[2])
+
+    # Dedup: a Meta reenvia webhooks; idempotência por id da mensagem (wamid).
+    if msg_id and memory.already_processed(f"wa:{msg_id}"):
+        log.info("WhatsApp: mensagem duplicada ignorada")
+        return {"status": "ok"}
+    if not family_gate(number):
+        log.info("WhatsApp de número não registrado — recusado sem processar")
+        await whatsapp.send_message(number, DECLINE_MESSAGE)
+        return {"status": "ok"}
+
     if parsed:
-        number, text, msg_id = parsed
-        # Dedup: a Meta reenvia webhooks; processar duas vezes duplicaria
-        # fatos e ações. Idempotência por id da mensagem do canal (wamid).
-        if msg_id and memory.already_processed(f"wa:{msg_id}"):
-            log.info("WhatsApp: mensagem duplicada ignorada")
-            return {"status": "ok"}
-        if not family_gate(number):
-            log.info("WhatsApp de número não registrado — recusado sem processar")
-            await whatsapp.send_message(number, DECLINE_MESSAGE)
-            return {"status": "ok"}
-        # Metadados apenas — conteúdo de conversa NUNCA vai para logs
+        text = parsed[1]
         log.info("WhatsApp: mensagem de %s (%d caracteres)", number, len(text))
-        welcome = pending_welcome(number)
-        if welcome:
-            memory.save_message(number, "user", text, "whatsapp")
-            memory.save_message(number, "assistant", welcome, "whatsapp")
-            await whatsapp.send_message(number, welcome)
-            return {"status": "ok"}
-        # O número de telefone é a identidade da pessoa no cérebro
-        reply = brain.think(number, text, channel="whatsapp")
-        await whatsapp.send_message(number, reply)
+        _dispatch(_turn_blocking, number, text, "text")
+    else:
+        log.info("WhatsApp: áudio de %s", number)
+        _dispatch(_audio_turn_blocking, number, audio[1])
     return {"status": "ok"}
 
 

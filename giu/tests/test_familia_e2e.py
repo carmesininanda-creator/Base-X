@@ -360,3 +360,57 @@ def test_remover_membro_preserva_memoria(client):
     r = client.delete("/family/members/5511955555555", headers=ADMIN)
     assert r.status_code == 200
     assert memory.get_member("5511955555555") is None
+
+
+# ─── Voz no WhatsApp (canal, não motor) ───────────────────────────────────────
+
+def test_voice_vocefy_prepara_texto_para_ouvido():
+    from giu import voice
+    t = voice.vocefy("**Dentista** sexta às 14:30, R$120 https://x.com 😀")
+    assert "**" not in t and "😀" not in t          # sem markdown, sem emoji
+    assert "14 e 30" in t                            # hora falada
+    assert "120" in t and "R$" not in t              # símbolo removido
+    assert "link enviado" in t                       # url não é lida
+    # reticências e travessão viram pausa — preservados
+    assert "…" in voice.vocefy("acontece… tá?")
+
+
+def test_voice_modalidade_salva_na_memoria():
+    # requisito: a memória sabe que o turno foi por voz
+    memory.save_message("u_voz", "user", "oi por voz", "whatsapp", modality="voice")
+    assert memory.last_modality("u_voz") == "voice"
+    memory.save_message("u_voz", "user", "agora escrito", "whatsapp", modality="text")
+    assert memory.last_modality("u_voz") == "text"
+
+
+def test_voice_stt_tts_degradam_sem_quebrar():
+    # sem OPENAI_API_KEY configurada no teste, STT/TTS retornam None (nunca levantam)
+    from giu import voice
+    assert voice.transcrever(b"bytes") is None
+    assert voice.sintetizar("oi") is None
+
+
+def test_voice_prompt_de_voz_so_entra_no_turno_de_voz():
+    from giu import brain
+    assert "SERÁ OUVIDA EM ÁUDIO" in brain._VOICE_GUIDANCE
+    # read-back de ação sensível e anti-dependência estão nas diretrizes
+    assert "peguei certo" in brain._VOICE_GUIDANCE
+    assert "saudade" in brain._VOICE_GUIDANCE
+
+
+def test_voice_parse_incoming_audio(client):
+    from giu.channels import whatsapp
+    # o webhook distingue áudio de texto
+    payload_audio = {"entry": [{"changes": [{"value": {"messages": [
+        {"from": "5511900000000", "type": "audio", "id": "wamid.AUDIO",
+         "audio": {"id": "MEDIA123"}}]}}]}]}
+    assert whatsapp.parse_incoming_audio(payload_audio) == ("5511900000000", "MEDIA123", "wamid.AUDIO")
+    assert whatsapp.parse_incoming(payload_audio) is None  # não é texto
+
+
+def test_voice_config_e_configuravel():
+    from giu import config
+    # a identidade sonora é 100% configurável (padrão do piloto = shimmer)
+    assert config.VOICE_NAME == "shimmer"
+    assert 0.5 <= config.VOICE_SPEED <= 1.5
+    assert config.TTS_MODEL and config.STT_MODEL

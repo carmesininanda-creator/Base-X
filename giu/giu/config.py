@@ -40,6 +40,18 @@ GOOGLE_CLIENT_SECRET = os.getenv("GOOGLE_CLIENT_SECRET", "")
 GOOGLE_REFRESH_TOKEN = os.getenv("GOOGLE_REFRESH_TOKEN", "")
 GOOGLE_CALENDAR_ID = os.getenv("GOOGLE_CALENDAR_ID", "primary")
 
+# ─── Voz (identidade sonora — 100% configurável) ──────────────────────────────
+# A voz definitiva da Giu será decidida por teste de percepção com usuários.
+# 'shimmer' é apenas o PADRÃO DO PILOTO — o mais alinhado ao parecer da
+# psicóloga (calor contido, calma, presença). Trocar = mudar só estas variáveis.
+VOICE_ENABLED = os.getenv("GIU_VOICE_ENABLED", "1") == "1"
+VOICE_NAME = os.getenv("GIU_VOICE", "shimmer")           # timbre do TTS
+VOICE_SPEED = float(os.getenv("GIU_VOICE_SPEED", "0.92"))  # ~0,9x: "tenho tempo pra você"
+TTS_MODEL = os.getenv("GIU_TTS_MODEL", "tts-1")
+STT_MODEL = os.getenv("GIU_STT_MODEL", "whisper-1")
+# Quando a pessoa manda áudio, a Giu responde em áudio (espelha o canal)
+VOICE_REPLIES = os.getenv("GIU_VOICE_REPLIES", "1") == "1"
+
 # ─── Geral ────────────────────────────────────────────────────────────────────
 TIMEZONE = os.getenv("GIU_TIMEZONE", "America/Sao_Paulo")
 

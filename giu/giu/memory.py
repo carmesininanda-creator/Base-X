@@ -103,6 +103,7 @@ def init_db():
         for stmt in (
             "ALTER TABLE family_members ADD COLUMN welcome TEXT",
             "ALTER TABLE reminders ADD COLUMN attempts INTEGER DEFAULT 0",
+            "ALTER TABLE messages ADD COLUMN modality TEXT DEFAULT 'text'",
         ):
             try:
                 conn.execute(stmt)
@@ -213,12 +214,25 @@ def search_facts(user_id, query, limit=10):
 
 # ─── Conversas (memória episódica) ────────────────────────────────────────────
 
-def save_message(user_id, role, content, channel="web"):
+def save_message(user_id, role, content, channel="web", modality="text"):
+    """Registra uma mensagem. modality='voice' marca que o turno foi por voz
+    (o canal continua 'whatsapp' para o roteamento de push não quebrar)."""
     with _conn() as conn:
         conn.execute(
-            "INSERT INTO messages (user_id, channel, role, content, created_at) VALUES (?,?,?,?,?)",
-            (user_id, channel, role, content, _now()),
+            "INSERT INTO messages (user_id, channel, role, content, created_at, modality) VALUES (?,?,?,?,?,?)",
+            (user_id, channel, role, content, _now(), modality),
         )
+
+
+def last_modality(user_id):
+    """Modalidade da última mensagem DA PESSOA (voice/text) — para a Giu saber
+    se a última interação foi por voz."""
+    with _conn() as conn:
+        row = conn.execute(
+            "SELECT modality FROM messages WHERE user_id=? AND role='user' ORDER BY id DESC LIMIT 1",
+            (user_id,),
+        ).fetchone()
+    return row["modality"] if row else "text"
 
 
 def get_history(user_id, limit=16):
