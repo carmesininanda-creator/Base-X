@@ -31,10 +31,13 @@ log = logging.getLogger("giu")
 
 
 async def reminder_loop():
-    """Proatividade: a cada 60s, envia lembretes vencidos pelo canal de origem."""
+    """Proatividade: a cada 60s, envia lembretes vencidos pelo canal de origem.
+    Cada lembrete é isolado: a falha de um NUNCA aborta a fila dos outros, e uma
+    falha persistente (ex.: janela de 24h do WhatsApp fechada) desiste após N
+    tentativas em vez de retentar para sempre."""
     while True:
-        try:
-            for r in memory.due_reminders():
+        for r in memory.due_reminders():
+            try:
                 text = f"✦ Lembrete: {r['text']}"
                 if r["channel"] == "whatsapp" and whatsapp.is_configured():
                     await whatsapp.send_message(r["user_id"], text)
@@ -49,8 +52,11 @@ async def reminder_loop():
                     memory.save_message(r["user_id"], "assistant", text, r["channel"])
                     memory.mark_reminder_sent(r["id"])
                     log.info("Lembrete %s registrado no histórico", r["id"])
-        except Exception:
-            log.exception("Erro no loop de lembretes")
+            except Exception:
+                # Falha de entrega (ex.: 24h fechada): conta a tentativa e segue
+                desistiu = memory.mark_reminder_failed(r["id"])
+                log.warning("Lembrete %s falhou (%s)", r["id"],
+                            "desistido após N tentativas" if desistiu else "vai retentar")
         await asyncio.sleep(60)
 
 
@@ -77,8 +83,9 @@ async def checkin_loop():
                 for user_id, channel in memory.push_users():
                     profile = memory.get_profile(user_id)
                     data = profile["data"]
-                    # Só após onboarding completo, com check-in não desativado, 1x por dia
-                    if not data.get("onboarding", {}).get("consentimento"):
+                    # Só com CONSENTIMENTO de fato concedido (o valor, não a etapa):
+                    # quem recusou não recebe proativo. E onboarding precisa estar completo.
+                    if data.get("consentimento") is not True:
                         continue
                     if data.get("checkin") is False or data.get(f"checkin_{period}") == today:
                         continue
@@ -213,6 +220,15 @@ def delete_memory(user_id: str, fact_id: int):
     return {"deleted": fact_id}
 
 
+@app.delete("/memories/{user_id}", dependencies=[Depends(require_self)])
+def delete_all_memories(user_id: str):
+    """Apagamento total: fatos, conversas, agenda, lembretes e ações. 'Apagou,
+    sumiu' de verdade — inclusive o histórico episódico, que antes reentrava no
+    contexto. Não remove o cadastro de membro (isso é feito à parte)."""
+    counts = memory.forget_user(user_id)
+    return {"apagado": counts}
+
+
 @app.get("/pending-actions/{user_id}", dependencies=[Depends(require_self)])
 def pending_actions(user_id: str):
     return {"pending": memory.list_pending_actions(user_id)}
@@ -286,7 +302,12 @@ async def whatsapp_webhook(request: Request):
     payload = json.loads(body)
     parsed = whatsapp.parse_incoming(payload)
     if parsed:
-        number, text = parsed
+        number, text, msg_id = parsed
+        # Dedup: a Meta reenvia webhooks; processar duas vezes duplicaria
+        # fatos e ações. Idempotência por id da mensagem do canal (wamid).
+        if msg_id and memory.already_processed(f"wa:{msg_id}"):
+            log.info("WhatsApp: mensagem duplicada ignorada")
+            return {"status": "ok"}
         if not family_gate(number):
             log.info("WhatsApp de número não registrado — recusado sem processar")
             await whatsapp.send_message(number, DECLINE_MESSAGE)

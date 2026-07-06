@@ -44,6 +44,19 @@ async def send_message(chat_id, text):
         return resp.json()
 
 
+def send_message_sync(chat_id, text):
+    """Envio síncrono para fluxos que não podem esperar o scheduler (emergência).
+    Retorna True se entregue, False em qualquer falha — nunca levanta exceção."""
+    if not is_configured():
+        return False
+    try:
+        resp = httpx.post(_api("sendMessage"), json={"chat_id": chat_id, "text": text}, timeout=30)
+        resp.raise_for_status()
+        return True
+    except Exception:
+        return False
+
+
 async def set_webhook(url):
     """Registra a URL do webhook no Telegram (chamar uma vez após o deploy)."""
     body = {"url": url}

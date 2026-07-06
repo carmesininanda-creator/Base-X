@@ -70,6 +70,22 @@ não apresente lista de funcionalidades. Se a pessoa mudar de assunto, atenda o 
 precisa primeiro e retome o onboarding depois, com delicadeza."""
 
 
+_NEG_PALAVRAS = ("nao", "não", "no", "nunca", "negativo")
+_POS_PALAVRAS = ("sim", "s", "yes", "pode", "claro", "autorizo", "aceito",
+                 "concordo", "uhum", "ok", "tá", "ta", "beleza", "isso", "positivo")
+
+
+def _interpret_consent(valor):
+    """Normaliza a resposta de consentimento no CÓDIGO — não depende do modelo.
+    Negação tem prioridade (na dúvida entre sim e não, vence o não — privacidade
+    decide empates). Sem sinal claro de 'sim', o padrão é NÃO consentido."""
+    import re
+    palavras = re.findall(r"[a-zà-ú]+", str(valor).strip().lower())  # ignora pontuação/emoji
+    if any(n in palavras for n in _NEG_PALAVRAS):
+        return False
+    return any(p in palavras for p in _POS_PALAVRAS)
+
+
 def register(user_id, campo, valor):
     """Grava a resposta de uma etapa e marca o progresso no perfil."""
     profile = memory.get_profile(user_id)
@@ -87,7 +103,7 @@ def register(user_id, campo, valor):
         return f"Nome guardado: {valor}. Continue para a próxima etapa do onboarding."
 
     if campo == "consentimento":
-        consent = str(valor).strip().lower() in ("sim", "s", "yes", "pode", "claro", "true")
+        consent = _interpret_consent(valor)
         memory.set_profile(user_id, onboarding=done, consentimento=consent)
         memory.remember_fact(
             user_id,

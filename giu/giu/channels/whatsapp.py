@@ -23,15 +23,20 @@ def is_configured():
 
 
 def parse_incoming(payload):
-    """Extrai (numero, texto) de um webhook da Meta. Retorna None se não for mensagem de texto."""
+    """Extrai (numero, texto, msg_id) de um webhook da Meta.
+    msg_id (wamid) permite deduplicar reenvios. Retorna None se não for texto."""
     try:
         change = payload["entry"][0]["changes"][0]["value"]
         message = change["messages"][0]
         if message.get("type") != "text":
             return None
-        return message["from"], message["text"]["body"]
+        return message["from"], message["text"]["body"], message.get("id")
     except (KeyError, IndexError):
         return None
+
+
+def _payload(to, text):
+    return {"messaging_product": "whatsapp", "to": to, "type": "text", "text": {"body": text}}
 
 
 async def send_message(to, text):
@@ -40,13 +45,26 @@ async def send_message(to, text):
         resp = await client.post(
             f"{GRAPH_URL}/{config.WHATSAPP_PHONE_ID}/messages",
             headers={"Authorization": f"Bearer {config.WHATSAPP_TOKEN}"},
-            json={
-                "messaging_product": "whatsapp",
-                "to": to,
-                "type": "text",
-                "text": {"body": text},
-            },
+            json=_payload(to, text),
             timeout=30,
         )
         resp.raise_for_status()
         return resp.json()
+
+
+def send_message_sync(to, text):
+    """Envio síncrono, para fluxos que não podem esperar o scheduler (emergência).
+    Retorna True se entregue, False em qualquer falha — nunca levanta exceção."""
+    if not is_configured():
+        return False
+    try:
+        resp = httpx.post(
+            f"{GRAPH_URL}/{config.WHATSAPP_PHONE_ID}/messages",
+            headers={"Authorization": f"Bearer {config.WHATSAPP_TOKEN}"},
+            json=_payload(to, text),
+            timeout=30,
+        )
+        resp.raise_for_status()
+        return True
+    except Exception:
+        return False
