@@ -14,7 +14,21 @@ from datetime import datetime
 from zoneinfo import ZoneInfo
 
 from . import config, memory, onboarding
+from .channels import telegram, whatsapp
 from .integrations import google_calendar
+
+
+def _send_now_sync(target_user_id, text):
+    """Entrega SÍNCRONA e verificada a um destino, pelo canal com push dele.
+    Retorna True se entregue. Para fluxos que não podem esperar o scheduler."""
+    channel = memory.last_push_channel(target_user_id)
+    if channel == "whatsapp":
+        return whatsapp.send_message_sync(target_user_id, text)
+    if channel == "telegram":
+        return telegram.send_message_sync(target_user_id, text)
+    # Sem canal com push conhecido: tenta WhatsApp direto (contato de emergência
+    # externo que ainda não conversou com a Giu)
+    return whatsapp.send_message_sync(target_user_id, text)
 
 log = logging.getLogger("giu.tools")
 
@@ -102,8 +116,11 @@ TOOL_DEFINITIONS = [
                     "fato": {"type": "string", "description": "O fato, escrito de forma clara e completa. Ex: 'Pauline é filha da Nanda'"},
                     "categoria": {
                         "type": "string",
+                        # 'limites' é reservada aos registros internos de consentimento/
+                        # permissão (escritos por código confiável) — fora do enum, o modelo
+                        # não pode usá-la para contornar o gate de consentimento.
                         "enum": ["identidade", "comunicacao", "preferencias", "saude", "rotina",
-                                 "familia", "pendencias", "limites", "afeto", "geral"],
+                                 "familia", "pendencias", "afeto", "geral"],
                     },
                 },
                 "required": ["fato"],
@@ -453,13 +470,25 @@ def execute_tool(name, arguments, user_id, channel="web"):
             )
         name_str = member["name"] if member else "Um membro da família"
         # Template FIXO e determinístico: o texto do modelo (motivo) NUNCA é
-        # enviado ao contato — vai apenas para a trilha de auditoria interna
-        _deliver_now(contact, f"🚨 EMERGÊNCIA (pela Giu): {name_str} precisa de ajuda AGORA. Entre em contato imediatamente.")
+        # enviado ao contato — vai apenas para a trilha de auditoria interna.
+        # Entrega SÍNCRONA e verificada: o alerta de risco nunca pode silenciar.
+        entregue = _send_now_sync(
+            contact,
+            f"🚨 EMERGÊNCIA (pela Giu): {name_str} precisa de ajuda AGORA. Entre em contato imediatamente.",
+        )
         aid = memory.add_pending_action(
-            user_id, "emergencia", f"Contato de emergência acionado: {args['motivo']}", args, "alto"
+            user_id, "emergencia",
+            f"Contato de emergência acionado: {args['motivo']} — entregue={entregue}", args, "alto",
         )
         memory.mark_action_executed(user_id, aid)
-        return "Contato de emergência avisado com o mínimo necessário. Fique com a pessoa."
+        if entregue:
+            return "Contato de emergência avisado agora. Fique com a pessoa e, se precisar, ligue 192 (SAMU)."
+        # Falha honesta: NÃO fingir que avisou
+        return (
+            "NÃO consegui avisar o contato de emergência automaticamente. "
+            "Oriente a pessoa a ligar AGORA para 192 (SAMU), 193 (Bombeiros) ou 190 (Polícia), "
+            "e avise você mesma alguém de confiança."
+        )
 
     if name == "propor_acao":
         action_id = memory.add_pending_action(

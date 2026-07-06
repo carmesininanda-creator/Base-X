@@ -242,33 +242,115 @@ def test_liberar_escopo_e_registrado():
 
 # ─── 8. Emergência: mínimo necessário + auditoria ─────────────────────────────
 
-def test_emergencia_avisa_contato_com_template_fixo():
+def test_emergencia_entrega_sincrona_com_template_fixo(monkeypatch):
+    # B1: a emergência envia DIRETO e SÍNCRONO, verifica a entrega e nunca vaza o motivo
+    enviados = []
+    def fake_sync(to, text):
+        enviados.append((to, text))
+        return True  # simula entrega bem-sucedida
+    monkeypatch.setattr("giu.tools.whatsapp.send_message_sync", fake_sync)
     memory.save_message(NANDA, "user", "oi", "whatsapp")  # canal de push da Nanda
+
     motivo_do_modelo = "pediu ajuda depois de contar detalhe íntimo X"
     r = tools.execute_tool("acionar_emergencia", {"motivo": motivo_do_modelo}, IAN)
-    assert "avisado" in r
-    entregues = [x for x in memory.due_reminders() if x["user_id"] == NANDA]
-    assert len(entregues) == 1
-    texto = entregues[0]["text"]
+    assert "avisado agora" in r  # sucesso honesto
+    assert len(enviados) == 1
+    to, texto = enviados[0]
+    assert to == NANDA
     # Template determinístico: identifica a pessoa e a urgência...
     assert "Ian" in texto and "precisa de ajuda AGORA" in texto
     # ...e NUNCA contém o texto livre do modelo nem histórico de conversa
     assert motivo_do_modelo not in texto and "íntimo" not in texto
     assert "prova de matemática" not in texto
-    # O motivo fica APENAS na trilha de auditoria interna, executada e de risco alto
+    # O motivo fica só na trilha de auditoria, com o resultado da entrega
     with memory._conn() as conn:
         row = conn.execute(
             "SELECT status, risk_level, summary FROM pending_actions WHERE user_id=? AND type='emergencia'",
             (IAN,),
         ).fetchone()
     assert row["status"] == "executed" and row["risk_level"] == "alto"
-    assert motivo_do_modelo in row["summary"]
+    assert motivo_do_modelo in row["summary"] and "entregue=True" in row["summary"]
+
+
+def test_emergencia_falha_honesta_quando_nao_entrega(monkeypatch):
+    # B1: se o envio falha, a Giu NÃO finge que avisou — orienta a ligar 192
+    monkeypatch.setattr("giu.tools.whatsapp.send_message_sync", lambda to, text: False)
+    monkeypatch.setattr("giu.tools.telegram.send_message_sync", lambda to, text: False)
+    r = tools.execute_tool("acionar_emergencia", {"motivo": "queda"}, IAN)
+    assert "NÃO consegui avisar" in r and "192" in r
 
 
 def test_emergencia_sem_contato_orienta():
     memory.add_member("5511944444444", "SemContato")
     r = tools.execute_tool("acionar_emergencia", {"motivo": "x"}, "5511944444444")
     assert "192" in r
+
+
+# ─── Correções dos bloqueadores do piloto (B1–B5) ─────────────────────────────
+
+def test_b2_dedup_de_mensagem_do_canal():
+    # B2: a mesma mensagem do canal (wamid) só é processada uma vez
+    assert memory.already_processed("wa:ABC123") is False  # 1ª vez
+    assert memory.already_processed("wa:ABC123") is True    # reenvio → duplicata
+    assert memory.already_processed("wa:OUTRA") is False    # id diferente é novo
+
+
+def test_b3_consentimento_nao_bloqueia_preferencias():
+    # B3: quem recusa consentimento não tem preferências guardadas...
+    memory.set_profile("u_negou", name="X", consentimento=False)
+    assert memory.remember_fact("u_negou", "gosta de café", "preferencias") is False
+    assert memory.get_facts("u_negou") == []
+    # ...mas o registro de consentimento (categoria limites) SEMPRE persiste
+    assert memory.remember_fact("u_negou", "recusou guardar preferências", "limites") is True
+    # e quem consentiu, guarda normalmente
+    memory.set_profile("u_ok", name="Y", consentimento=True)
+    assert memory.remember_fact("u_ok", "gosta de chá", "preferencias") is True
+
+
+def test_b3_parser_de_consentimento_normalizado():
+    from giu.onboarding import _interpret_consent
+    for sim in ("sim", "pode sim", "claro que pode", "uhum", "autorizo", "SIM!"):
+        assert _interpret_consent(sim) is True, sim
+    for nao in ("não", "nao", "prefiro que não", "n", "nunca"):
+        assert _interpret_consent(nao) is False, nao
+    # ambíguo/sem sinal claro → padrão NÃO consentido (privacidade decide empate)
+    assert _interpret_consent("sei lá") is False
+
+
+def test_b4_apagamento_total_varre_tudo(client):
+    memory.set_profile("u_apaga", name="Z", consentimento=True)
+    memory.remember_fact("u_apaga", "fato", "geral")
+    memory.save_message("u_apaga", "user", "mensagem que não pode voltar", "web")
+    memory.add_agenda("u_apaga", "compromisso")
+    memory.add_reminder("u_apaga", "lembrete", memory._now())
+    counts = memory.forget_user("u_apaga")
+    assert counts["facts"] == 1 and counts["messages"] == 1
+    assert memory.get_facts("u_apaga") == []
+    assert memory.get_history("u_apaga") == []   # o episódico NÃO reentra no contexto
+    assert memory.get_agenda("u_apaga") == []
+    # apagamento total inclui o perfil: nome e consentimento somem (recomeça do zero)
+    assert memory.get_profile("u_apaga")["name"] is None
+    assert memory.get_profile("u_apaga")["data"] == {}
+
+
+def test_b3_gate_nao_e_contornavel_pelo_modelo():
+    # Furo fechado: 'limites' saiu do enum de lembrar_fato, então o modelo não
+    # pode rotular uma preferência como 'limites' para driblar a recusa
+    from giu import tools
+    enum = tools.TOOL_DEFINITIONS[0]["function"]["parameters"]["properties"]["categoria"]["enum"]
+    assert "limites" not in enum
+    # e as categorias legítimas continuam disponíveis
+    assert {"preferencias", "saude", "afeto"}.issubset(set(enum))
+
+
+def test_b5_lembrete_falho_nao_trava_a_fila_e_desiste():
+    # B5: uma falha de entrega não aborta os outros e desiste após N tentativas
+    rid = memory.add_reminder("u_lemb", "tomar remédio", memory._now(), "whatsapp")
+    for _ in range(4):
+        assert memory.mark_reminder_failed(rid) is False  # ainda vai retentar
+        assert rid in [x["id"] for x in memory.due_reminders()]  # continua na fila
+    assert memory.mark_reminder_failed(rid) is True  # 5ª tentativa → desiste
+    assert rid not in [x["id"] for x in memory.due_reminders()]  # sai da fila
 
 
 # ─── 9. Remoção de membro não apaga memória (só a pedido) ────────────────────

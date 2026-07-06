@@ -90,16 +90,42 @@ def init_db():
                 welcome           TEXT,
                 created_at        TEXT
             );
+            CREATE TABLE IF NOT EXISTS processed_messages (
+                channel_msg_id TEXT PRIMARY KEY,
+                created_at     TEXT
+            );
             CREATE INDEX IF NOT EXISTS idx_messages_user ON messages(user_id, id);
             CREATE INDEX IF NOT EXISTS idx_facts_user ON facts(user_id, id);
             CREATE INDEX IF NOT EXISTS idx_reminders_due ON reminders(sent, due_at);
             CREATE INDEX IF NOT EXISTS idx_actions_user ON pending_actions(user_id, status);
         """)
-        # Migração leve: bancos criados antes da coluna welcome
+        # Migrações leves: colunas adicionadas depois da criação original
+        for stmt in (
+            "ALTER TABLE family_members ADD COLUMN welcome TEXT",
+            "ALTER TABLE reminders ADD COLUMN attempts INTEGER DEFAULT 0",
+        ):
+            try:
+                conn.execute(stmt)
+            except sqlite3.OperationalError:
+                pass  # coluna já existe
+
+
+# ─── Deduplicação de mensagens do canal (bloqueador: webhook reenviado) ───────
+
+def already_processed(channel_msg_id):
+    """Registra o id da mensagem do canal e diz se ela JÁ havia sido processada.
+    Idempotente: a Meta reenvia webhooks; isto impede fato/ação em dobro."""
+    if not channel_msg_id:
+        return False
+    with _conn() as conn:
         try:
-            conn.execute("ALTER TABLE family_members ADD COLUMN welcome TEXT")
-        except sqlite3.OperationalError:
-            pass  # coluna já existe
+            conn.execute(
+                "INSERT INTO processed_messages (channel_msg_id, created_at) VALUES (?,?)",
+                (channel_msg_id, _now()),
+            )
+            return False
+        except sqlite3.IntegrityError:
+            return True  # já existia → duplicata
 
 
 def _now():
@@ -132,11 +158,19 @@ def set_profile(user_id, name=None, **data):
 # ─── Fatos (memória semântica) ────────────────────────────────────────────────
 
 def remember_fact(user_id, content, category="geral"):
+    # Portão de consentimento: se a pessoa recusou/revogou, não guardamos
+    # preferências. A categoria 'limites' (registros de consentimento/permissão)
+    # é sempre gravada — é a prova governamental da própria recusa.
+    if category != "limites":
+        profile = get_profile(user_id)
+        if profile["data"].get("consentimento") is False:
+            return False
     with _conn() as conn:
         conn.execute(
             "INSERT INTO facts (user_id, category, content, created_at) VALUES (?,?,?,?)",
             (user_id, category, content, _now()),
         )
+    return True
 
 
 def get_facts(user_id, limit=40):
@@ -152,6 +186,20 @@ def delete_fact(user_id, fact_id):
     with _conn() as conn:
         cur = conn.execute("DELETE FROM facts WHERE user_id=? AND id=?", (user_id, fact_id))
         return cur.rowcount > 0
+
+
+def forget_user(user_id):
+    """Apagamento total dos dados pessoais desta pessoa — 'apagou, sumiu' de
+    verdade: fatos, conversas, agenda, lembretes, ações pendentes E o perfil
+    (nome, consentimento, permissões, preferências). Não toca o cadastro de
+    membro (isso é remoção de membro, feita à parte). Após isto, a pessoa
+    recomeça do zero, inclusive o onboarding."""
+    counts = {}
+    with _conn() as conn:
+        for table in ("facts", "messages", "agenda", "reminders", "pending_actions", "profile"):
+            cur = conn.execute(f"DELETE FROM {table} WHERE user_id=?", (user_id,))
+            counts[table] = cur.rowcount
+    return counts
 
 
 def search_facts(user_id, query, limit=10):
@@ -238,6 +286,18 @@ def due_reminders():
 def mark_reminder_sent(reminder_id):
     with _conn() as conn:
         conn.execute("UPDATE reminders SET sent=1 WHERE id=?", (reminder_id,))
+
+
+def mark_reminder_failed(reminder_id, max_attempts=5):
+    """Conta uma tentativa falha. Após max_attempts, encerra (sent=1) para não
+    retentar para sempre — impede o loop infinito quando a entrega não é possível."""
+    with _conn() as conn:
+        conn.execute("UPDATE reminders SET attempts = attempts + 1 WHERE id=?", (reminder_id,))
+        row = conn.execute("SELECT attempts FROM reminders WHERE id=?", (reminder_id,)).fetchone()
+        if row and row["attempts"] >= max_attempts:
+            conn.execute("UPDATE reminders SET sent=1 WHERE id=?", (reminder_id,))
+            return True  # desistiu
+    return False
 
 
 def reminders_today(user_id):
