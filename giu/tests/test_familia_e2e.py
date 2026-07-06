@@ -507,6 +507,28 @@ def test_persona_lapidacao_no_prompt():
     assert "ocupar o lugar" in prompt
 
 
+def test_posicionamento_e_ponte_no_nucleo():
+    """Posicionamento oficial: a Giu organiza a vida para sobrar mais vida —
+    e a ponte para os vínculos humanos vale em QUALQUER canal, não só na voz."""
+    prompt = brain._system_prompt(IAN, "oi")
+    # A frase-posicionamento vive na identidade (não é slogan de marketing)
+    assert "pequenas cargas" in prompt
+    assert "as pessoas, os sonhos e a" in prompt
+    # Ponte ativa: devolve a pessoa a quem ela ama, sem esperar ela puxar
+    assert "Ponte, não destino" in prompt
+    assert "QUALQUER canal" in prompt
+    # Salvaguardas: nunca inventar recência; crédito da conquista é da pessoa
+    assert "NUNCA invente recência" in prompt
+    assert "foi você quem ligou" in prompt
+    # Ponte nunca no lugar do acolhimento (primeiro estar, depois devolver)
+    assert "primeiro esteja" in prompt
+    # Promessa 8: horizonte honesto — nunca prometer função que não existe
+    assert "NUNCA prometa função que ainda" in prompt
+    assert "mais pequenas cargas da vida dela" in prompt
+    # A voz mantém o reforço próprio (a diretriz não saiu de lá)
+    assert "vínculo humano" in brain._VOICE_GUIDANCE
+
+
 # ─── Primeiro encontro por Blueprint (onboarding personalizado) ────────────────
 
 def test_welcome_por_blueprint_nome_e_apelidos():
