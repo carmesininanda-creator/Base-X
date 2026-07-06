@@ -118,13 +118,18 @@ def test_abertura_personalizada_por_membro(client):
     )
     assert r.status_code == 200
     # Primeiro contato: o texto aprovado pela operadora, verbatim
+    # (welcome explícito na API tem prioridade sobre a abertura do Blueprint)
     assert pending_welcome(RAFAEL) == texto
     # Depois da primeira troca, o cérebro assume — nunca repete o script
     memory.save_message(RAFAEL, "user", "oi", "whatsapp")
     memory.save_message(RAFAEL, "assistant", texto, "whatsapp")
     assert pending_welcome(RAFAEL) is None
-    # Membro sem texto aprovado: sem script, cérebro desde a primeira mensagem
-    assert pending_welcome(IAN) is None
+    # Membro do piloto sem texto explícito: recebe a abertura do Blueprint pelo nome
+    from giu import welcomes
+    assert pending_welcome(IAN) == welcomes.welcome_for("Ian")
+    # Nome fora do piloto: sem script, cérebro desde a primeira mensagem
+    memory.add_member("5511966666666", "Visitante")
+    assert pending_welcome("5511966666666") is None
 
 
 # ─── 4. Isolamento de memória entre membros ───────────────────────────────────
@@ -497,3 +502,59 @@ def test_persona_lapidacao_no_prompt():
     assert "ainda faz sentido eu te ajudar" in prompt  # item 2 (direito ao silêncio)
     assert "pequenas coisas" in prompt                 # item 7 (pequenas lembranças)
     assert "sem tarefa" in prompt                      # item 8 (presença/surpresa)
+    # Diretriz conceitual: a Giu soma, nunca substitui os vínculos humanos
+    assert "SOMA, nunca substitui" in prompt
+    assert "ocupar o lugar" in prompt
+
+
+# ─── Primeiro encontro por Blueprint (onboarding personalizado) ────────────────
+
+def test_welcome_por_blueprint_nome_e_apelidos():
+    from giu import welcomes
+    # As quatro pessoas do piloto têm abertura própria
+    for nome in ("Nanda", "Ian", "Pauline", "Rafael"):
+        assert welcomes.welcome_for(nome), nome
+    # Case-insensitive e apelidos do cadastro
+    assert welcomes.welcome_for("ian") == welcomes.welcome_for("IAN")
+    assert welcomes.welcome_for("Nine") == welcomes.welcome_for("Pauline")
+    assert welcomes.welcome_for("Rafa") == welcomes.welcome_for("Rafael")
+    # Fora do piloto: sem script (o cérebro assume desde a primeira mensagem)
+    assert welcomes.welcome_for("Fulano") is None
+    assert welcomes.welcome_for(None) is None
+
+
+def test_welcome_uma_giu_quatro_portas():
+    from giu import welcomes
+    w = {n: welcomes.welcome_for(n) for n in ("Nanda", "Ian", "Pauline", "Rafael")}
+    # As quatro são DIFERENTES (a primeira batida de cada um é memorável)
+    assert len(set(w.values())) == 4
+    # Identidade única: apresenta-se como Giulieta (exceto para a Nanda, que a criou)
+    for nome in ("Ian", "Pauline", "Rafael"):
+        assert "Eu sou a Giulieta" in w[nome], nome
+    assert "Eu sou a Giulieta" not in w["Nanda"]
+    assert "sonhou comigo" in w["Nanda"]
+    # Confidencialidade explícita em todas
+    for nome, texto in w.items():
+        assert "só entre" in texto, nome
+    # Anti-substituição: o alívio tem destino humano (Nanda e Nine, onde o tom permite)
+    assert "ocupar o lugar das pessoas importantes" in w["Nanda"]
+    assert "pra quem você ama" in w["Nanda"]
+    assert "que você ama" in w["Pauline"]
+    # Nine: companhia sem reciprocidade ("uma pra outra" foi vetado pelas revisoras)
+    assert "uma pra outra" not in w["Pauline"]
+    # Ian e Rafael: sem discurso de vínculo forçado (Blueprints respeitados)
+    assert "não vim te cobrar" in w["Ian"].lower()
+    assert "não decidir por você" in w["Rafael"]
+
+
+def test_welcome_aplicado_no_cadastro_automaticamente():
+    from giu import welcomes
+    # Cadastro sem welcome explícito → abertura do Blueprint pelo nome
+    memory.add_member("5511988888801", "Nanda", role="admin")
+    assert memory.get_member("5511988888801")["welcome"] == welcomes.welcome_for("Nanda")
+    # Welcome explícito na API sempre vence (override da operadora)
+    memory.add_member("5511988888802", "Ian", welcome="Texto aprovado à parte")
+    assert memory.get_member("5511988888802")["welcome"] == "Texto aprovado à parte"
+    # Nome fora do piloto → sem welcome
+    memory.add_member("5511988888803", "Convidado")
+    assert memory.get_member("5511988888803")["welcome"] is None

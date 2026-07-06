@@ -340,7 +340,13 @@ def _hash_token(token):
 
 
 def add_member(user_id, name, role="member", emergency_contact=None, welcome=None):
-    """Registra um membro da família. Retorna o token pessoal (mostrado UMA vez)."""
+    """Registra um membro da família. Retorna o token pessoal (mostrado UMA vez).
+    Sem texto explícito de boas-vindas, aplica a abertura do Relationship
+    Blueprint pelo nome (welcomes.py) — o primeiro encontro é personalizado;
+    um welcome passado explicitamente sempre tem prioridade."""
+    if welcome is None:
+        from . import welcomes
+        welcome = welcomes.welcome_for(name)
     token = secrets.token_urlsafe(32)
     with _conn() as conn:
         conn.execute(
