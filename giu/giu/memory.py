@@ -190,11 +190,13 @@ def delete_fact(user_id, fact_id):
 
 def forget_user(user_id):
     """Apagamento total dos dados pessoais desta pessoa — 'apagou, sumiu' de
-    verdade: fatos, conversas, agenda, lembretes e ações pendentes. Não toca
-    o cadastro de membro (isso é remoção de membro, feita à parte)."""
+    verdade: fatos, conversas, agenda, lembretes, ações pendentes E o perfil
+    (nome, consentimento, permissões, preferências). Não toca o cadastro de
+    membro (isso é remoção de membro, feita à parte). Após isto, a pessoa
+    recomeça do zero, inclusive o onboarding."""
     counts = {}
     with _conn() as conn:
-        for table in ("facts", "messages", "agenda", "reminders", "pending_actions"):
+        for table in ("facts", "messages", "agenda", "reminders", "pending_actions", "profile"):
             cur = conn.execute(f"DELETE FROM {table} WHERE user_id=?", (user_id,))
             counts[table] = cur.rowcount
     return counts

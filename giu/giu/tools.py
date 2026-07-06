@@ -116,8 +116,11 @@ TOOL_DEFINITIONS = [
                     "fato": {"type": "string", "description": "O fato, escrito de forma clara e completa. Ex: 'Pauline é filha da Nanda'"},
                     "categoria": {
                         "type": "string",
+                        # 'limites' é reservada aos registros internos de consentimento/
+                        # permissão (escritos por código confiável) — fora do enum, o modelo
+                        # não pode usá-la para contornar o gate de consentimento.
                         "enum": ["identidade", "comunicacao", "preferencias", "saude", "rotina",
-                                 "familia", "pendencias", "limites", "afeto", "geral"],
+                                 "familia", "pendencias", "afeto", "geral"],
                     },
                 },
                 "required": ["fato"],

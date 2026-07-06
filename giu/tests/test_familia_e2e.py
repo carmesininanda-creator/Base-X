@@ -328,6 +328,19 @@ def test_b4_apagamento_total_varre_tudo(client):
     assert memory.get_facts("u_apaga") == []
     assert memory.get_history("u_apaga") == []   # o episódico NÃO reentra no contexto
     assert memory.get_agenda("u_apaga") == []
+    # apagamento total inclui o perfil: nome e consentimento somem (recomeça do zero)
+    assert memory.get_profile("u_apaga")["name"] is None
+    assert memory.get_profile("u_apaga")["data"] == {}
+
+
+def test_b3_gate_nao_e_contornavel_pelo_modelo():
+    # Furo fechado: 'limites' saiu do enum de lembrar_fato, então o modelo não
+    # pode rotular uma preferência como 'limites' para driblar a recusa
+    from giu import tools
+    enum = tools.TOOL_DEFINITIONS[0]["function"]["parameters"]["properties"]["categoria"]["enum"]
+    assert "limites" not in enum
+    # e as categorias legítimas continuam disponíveis
+    assert {"preferencias", "saude", "afeto"}.issubset(set(enum))
 
 
 def test_b5_lembrete_falho_nao_trava_a_fila_e_desiste():
