@@ -118,13 +118,18 @@ def test_abertura_personalizada_por_membro(client):
     )
     assert r.status_code == 200
     # Primeiro contato: o texto aprovado pela operadora, verbatim
+    # (welcome explícito na API tem prioridade sobre a abertura do Blueprint)
     assert pending_welcome(RAFAEL) == texto
     # Depois da primeira troca, o cérebro assume — nunca repete o script
     memory.save_message(RAFAEL, "user", "oi", "whatsapp")
     memory.save_message(RAFAEL, "assistant", texto, "whatsapp")
     assert pending_welcome(RAFAEL) is None
-    # Membro sem texto aprovado: sem script, cérebro desde a primeira mensagem
-    assert pending_welcome(IAN) is None
+    # Membro do piloto sem texto explícito: recebe a abertura do Blueprint pelo nome
+    from giu import welcomes
+    assert pending_welcome(IAN) == welcomes.welcome_for("Ian")
+    # Nome fora do piloto: sem script, cérebro desde a primeira mensagem
+    memory.add_member("5511966666666", "Visitante")
+    assert pending_welcome("5511966666666") is None
 
 
 # ─── 4. Isolamento de memória entre membros ───────────────────────────────────
@@ -360,3 +365,218 @@ def test_remover_membro_preserva_memoria(client):
     r = client.delete("/family/members/5511955555555", headers=ADMIN)
     assert r.status_code == 200
     assert memory.get_member("5511955555555") is None
+
+
+# ─── Voz no WhatsApp (canal, não motor) ───────────────────────────────────────
+
+def test_voice_vocefy_prepara_texto_para_ouvido():
+    from giu import voice
+    t = voice.vocefy("**Dentista** sexta às 14:30, R$120 https://x.com 😀")
+    assert "**" not in t and "😀" not in t          # sem markdown, sem emoji
+    assert "14 e 30" in t                            # hora falada
+    assert "120" in t and "R$" not in t              # símbolo removido
+    assert "link enviado" in t                       # url não é lida
+    # reticências e travessão viram pausa — preservados
+    assert "…" in voice.vocefy("acontece… tá?")
+
+
+def test_voice_modalidade_salva_na_memoria():
+    # requisito: a memória sabe que o turno foi por voz
+    memory.save_message("u_voz", "user", "oi por voz", "whatsapp", modality="voice")
+    assert memory.last_modality("u_voz") == "voice"
+    memory.save_message("u_voz", "user", "agora escrito", "whatsapp", modality="text")
+    assert memory.last_modality("u_voz") == "text"
+
+
+def test_voice_stt_tts_degradam_sem_quebrar():
+    # sem OPENAI_API_KEY configurada no teste, STT/TTS retornam None (nunca levantam)
+    from giu import voice
+    assert voice.transcrever(b"bytes") is None
+    assert voice.sintetizar("oi") is None
+
+
+def test_voice_prompt_de_voz_so_entra_no_turno_de_voz():
+    from giu import brain
+    assert "SERÁ OUVIDA EM ÁUDIO" in brain._VOICE_GUIDANCE
+    # read-back de ação sensível e anti-dependência estão nas diretrizes
+    assert "peguei certo" in brain._VOICE_GUIDANCE
+    assert "saudade" in brain._VOICE_GUIDANCE
+
+
+def test_voice_parse_incoming_audio(client):
+    from giu.channels import whatsapp
+    # o webhook distingue áudio de texto
+    payload_audio = {"entry": [{"changes": [{"value": {"messages": [
+        {"from": "5511900000000", "type": "audio", "id": "wamid.AUDIO",
+         "audio": {"id": "MEDIA123"}}]}}]}]}
+    assert whatsapp.parse_incoming_audio(payload_audio) == ("5511900000000", "MEDIA123", "wamid.AUDIO")
+    assert whatsapp.parse_incoming(payload_audio) is None  # não é texto
+
+
+def test_voice_config_e_configuravel():
+    from giu import config
+    # a identidade sonora é 100% configurável (padrão do piloto = shimmer)
+    assert config.VOICE_NAME == "shimmer"
+    assert 0.5 <= config.VOICE_SPEED <= 1.5
+    assert config.TTS_MODEL and config.STT_MODEL
+
+
+# ─── Lapidação da voz (bloqueadores das auditorias + preferência de relação) ──
+
+def test_voice_vocefy_protege_dado_sensivel():
+    from giu import voice
+    # Valor: mantém a unidade (não some com o número, não fica mudo)
+    assert "50 reais" in voice.vocefy("são R$ 50 no total")
+    assert "1500 reais" in voice.vocefy("custa R$ 1.500,00")
+    # Data: inclui o ANO quando existe (antes ele sumia do áudio)
+    assert "de 2025" in voice.vocefy("consulta em 19/07/2025")
+    # SEGURANÇA: fração de remédio NUNCA vira data ("1/2 comprimido" ≠ "dia 1 do 2")
+    falado = voice.vocefy("tome 1/2 comprimido")
+    assert "dia 1 do 2" not in falado
+    assert "1/2" in falado
+
+
+def test_voice_preferencia_governa_audio_determinista():
+    import server
+    U = "u_pref_audio"
+    memory.set_profile(U, name="P")
+    # Sem preferência escolhida: espelha o canal (voz→áudio, texto→só texto)
+    assert server._should_send_audio(U, "voice") is True
+    assert server._should_send_audio(U, "text") is False
+    # "Só texto": NUNCA áudio, mesmo em turno de voz — determinístico, cumprido sempre
+    memory.set_profile(U, voice_pref="text")
+    assert server._should_send_audio(U, "voice") is False
+    # "Voz"/"ambos": sempre áudio, mesmo quando ela escreveu
+    memory.set_profile(U, voice_pref="voice")
+    assert server._should_send_audio(U, "text") is True
+
+
+def test_voice_definir_preferencia_e_flag_deterministico():
+    U = "u_pref_tool"
+    memory.set_profile(U, name="P", consentimento=True)
+    r = tools.execute_tool("definir_preferencia_voz", {"preferencia": "texto"}, U)
+    assert memory.voice_pref(U) == "text"
+    # marca que já perguntou → nunca re-pergunta (isso seria cobrança)
+    assert memory.get_profile(U)["data"]["voice_pref_asked"] is True
+    # a preferência entra na memória de comunicação (o "Blueprint" da pessoa)
+    assert any(f["category"] == "comunicacao" for f in memory.get_facts(U))
+    # a Giu é instruída a confirmar em voz alta e ensinar que dá pra mudar
+    assert "mudar" in r.lower()
+
+
+def test_voice_fallback_de_stt_nao_e_beco(monkeypatch):
+    # Bloqueador de acessibilidade: quando o STT falha, quem SÓ usa voz não pode
+    # ficar sem saída. O aviso convida a tentar DE NOVO por voz (e vai em áudio também).
+    import server
+    from giu.channels import whatsapp as wa
+    from giu import voice
+    enviados = []
+    monkeypatch.setattr(wa, "download_media", lambda mid: b"bytes")
+    monkeypatch.setattr(voice, "transcrever", lambda b: None)          # STT falha
+    monkeypatch.setattr(wa, "send_message_sync", lambda to, t: enviados.append(t) or True)
+    monkeypatch.setattr(voice, "sintetizar", lambda t: None)           # sem API: TTS None
+    server._audio_turn_blocking("u_voz_falha", "MEDIA")
+    assert len(enviados) == 1
+    msg = enviados[0].lower()
+    assert "de novo" in msg                       # convida a repetir por voz
+    assert "escrev" in msg                         # texto é alternativa, não a única porta
+    assert msg != "não consegui entender o áudio. pode me mandar por escrito?"  # não é a antiga parede
+
+
+def test_voice_guidance_texto_acompanha_e_vinculo():
+    from giu import brain
+    g = brain._VOICE_GUIDANCE
+    assert "SERÁ OUVIDA EM ÁUDIO" in g
+    assert "peguei certo" in g                 # read-back de ação sensível preservado
+    assert "saudade" in g                      # anti-dependência preservado
+    assert "TEXTO SEMPRE ACOMPANHA" in g       # promessa "por escrito" cumprida (já vai junto)
+    assert "não uma pessoa" in g               # âncora de identidade na voz
+    assert "AINDA NÃO ESCOLHEU" in brain._VOICE_ASK_PREF  # oferta de preferência no 1º turno
+
+
+def test_persona_lapidacao_no_prompt():
+    prompt = brain._system_prompt(IAN, "oi")
+    assert "A informação serve à relação" in prompt    # item 9
+    assert "interpretei isso errado" in prompt         # item 3 (pedir desculpas)
+    assert "hoje eu não sei" in prompt                 # item 5 (saber não saber)
+    assert "ainda faz sentido eu te ajudar" in prompt  # item 2 (direito ao silêncio)
+    assert "pequenas coisas" in prompt                 # item 7 (pequenas lembranças)
+    assert "sem tarefa" in prompt                      # item 8 (presença/surpresa)
+    # Diretriz conceitual: a Giu soma, nunca substitui os vínculos humanos
+    assert "SOMA, nunca substitui" in prompt
+    assert "ocupar o lugar" in prompt
+
+
+def test_posicionamento_e_ponte_no_nucleo():
+    """Posicionamento oficial: a Giu organiza a vida para sobrar mais vida —
+    e a ponte para os vínculos humanos vale em QUALQUER canal, não só na voz."""
+    prompt = brain._system_prompt(IAN, "oi")
+    # A frase-posicionamento vive na identidade (não é slogan de marketing)
+    assert "pequenas cargas" in prompt
+    assert "as pessoas, os sonhos e a" in prompt
+    # Ponte ativa: devolve a pessoa a quem ela ama, sem esperar ela puxar
+    assert "Ponte, não destino" in prompt
+    assert "QUALQUER canal" in prompt
+    # Salvaguardas: nunca inventar recência; crédito da conquista é da pessoa
+    assert "NUNCA invente recência" in prompt
+    assert "foi você quem ligou" in prompt
+    # Ponte nunca no lugar do acolhimento (primeiro estar, depois devolver)
+    assert "primeiro esteja" in prompt
+    # Promessa 8: horizonte honesto — nunca prometer função que não existe
+    assert "NUNCA prometa função que ainda" in prompt
+    assert "mais pequenas cargas da vida dela" in prompt
+    # A voz mantém o reforço próprio (a diretriz não saiu de lá)
+    assert "vínculo humano" in brain._VOICE_GUIDANCE
+
+
+# ─── Primeiro encontro por Blueprint (onboarding personalizado) ────────────────
+
+def test_welcome_por_blueprint_nome_e_apelidos():
+    from giu import welcomes
+    # As quatro pessoas do piloto têm abertura própria
+    for nome in ("Nanda", "Ian", "Pauline", "Rafael"):
+        assert welcomes.welcome_for(nome), nome
+    # Case-insensitive e apelidos do cadastro
+    assert welcomes.welcome_for("ian") == welcomes.welcome_for("IAN")
+    assert welcomes.welcome_for("Nine") == welcomes.welcome_for("Pauline")
+    assert welcomes.welcome_for("Rafa") == welcomes.welcome_for("Rafael")
+    # Fora do piloto: sem script (o cérebro assume desde a primeira mensagem)
+    assert welcomes.welcome_for("Fulano") is None
+    assert welcomes.welcome_for(None) is None
+
+
+def test_welcome_uma_giu_quatro_portas():
+    from giu import welcomes
+    w = {n: welcomes.welcome_for(n) for n in ("Nanda", "Ian", "Pauline", "Rafael")}
+    # As quatro são DIFERENTES (a primeira batida de cada um é memorável)
+    assert len(set(w.values())) == 4
+    # Identidade única: apresenta-se como Giulieta (exceto para a Nanda, que a criou)
+    for nome in ("Ian", "Pauline", "Rafael"):
+        assert "Eu sou a Giulieta" in w[nome], nome
+    assert "Eu sou a Giulieta" not in w["Nanda"]
+    assert "sonhou comigo" in w["Nanda"]
+    # Confidencialidade explícita em todas
+    for nome, texto in w.items():
+        assert "só entre" in texto, nome
+    # Anti-substituição: o alívio tem destino humano (Nanda e Nine, onde o tom permite)
+    assert "ocupar o lugar das pessoas importantes" in w["Nanda"]
+    assert "pra quem você ama" in w["Nanda"]
+    assert "que você ama" in w["Pauline"]
+    # Nine: companhia sem reciprocidade ("uma pra outra" foi vetado pelas revisoras)
+    assert "uma pra outra" not in w["Pauline"]
+    # Ian e Rafael: sem discurso de vínculo forçado (Blueprints respeitados)
+    assert "não vim te cobrar" in w["Ian"].lower()
+    assert "não decidir por você" in w["Rafael"]
+
+
+def test_welcome_aplicado_no_cadastro_automaticamente():
+    from giu import welcomes
+    # Cadastro sem welcome explícito → abertura do Blueprint pelo nome
+    memory.add_member("5511988888801", "Nanda", role="admin")
+    assert memory.get_member("5511988888801")["welcome"] == welcomes.welcome_for("Nanda")
+    # Welcome explícito na API sempre vence (override da operadora)
+    memory.add_member("5511988888802", "Ian", welcome="Texto aprovado à parte")
+    assert memory.get_member("5511988888802")["welcome"] == "Texto aprovado à parte"
+    # Nome fora do piloto → sem welcome
+    memory.add_member("5511988888803", "Convidado")
+    assert memory.get_member("5511988888803")["welcome"] is None
