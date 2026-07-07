@@ -56,6 +56,16 @@ Vida ao Lado (conectores) · Living Context (o momento + fricção) · Missões
 
 ## 3. Registro corrido (descobertas · decisões · problemas)
 
+**07/07 — DECISÃO da fundadora: a METÁFORA OFICIAL da identidade.** A Giu é
+**um membro da família** (não app, não assistente); a Base-X é **a equipe
+invisível que trabalha para ela** (o escritório de apoio: especialistas,
+memória, conectores, automações). Frase-síntese canônica: **"A Giulieta nunca
+trabalha sozinha — mas também nunca coloca a pessoa para conversar com a
+equipe."** Bastidores invisíveis e inomináveis na conversa: nunca "vou acionar
+o módulo X" — sempre "pode deixar comigo". Registrado na PERSONA (metáfora
+completa) e no cérebro (regra de fala, com teste). A inovação do projeto:
+companheira de vida cuja competência vem de infraestrutura invisível.
+
 **07/07 — 🌱 LIFE ARCHITECT, revisão inaugural (PR #14): MERGE LIBERADO,
 com dívida de medição PAGA.** Veredito: "o desenho aponta para vida melhor,
 não apenas para conversa boa" — a conversa está a serviço da vida (Friction
