@@ -53,10 +53,21 @@ roadmap P1/P2/P3 na PERSONA item 5 — zero integração implementada.
 | H3 | ~~Nanda → Code~~ | PR #12 mergeado pelo Code em 07/07, sob delegação noturna da fundadora ("faz tudo para mim") — especificação era dela, verbatim; 46/46 testes | ✅ fechado |
 | H4 | ~~Despacho~~ | Deploy automático GitHub→Railway ATIVO (main "carta da Giulieta" no ar); 4 membros registrados com Blueprints e welcomes; Nanda reconhecida pelo nome na 1ª mensagem, onboarding completo, preferência de voz registrada | ✅ fechado |
 | H5 | Despacho | Checklist: fumaça conversacional ✅ (14 msgs com a Nanda). FALTA: **ciclo de voz (H2)** — Nanda escolheu VOZ; confirmar áudio chegando + "só por escrito" respeitado. E OAuth do Google (§6) para a capacidade de agenda | 🟡 parcial |
-| H6 | Manus | Validação de experiência do piloto — roteiro completo: BRIEFING-MANUS.md (protocolo, 9 dimensões, pulso, atritos a caçar) | ⏳ aberto |
+| H6 | Manus | Validação de experiência do piloto — roteiro completo: BRIEFING-MANUS.md (protocolo, 9 dimensões, pulso, atritos a caçar). **X5 ✅ FECHADO** (painel de presença: PASSA; endurecimento de 1 linha aplicado, PR #19) | 🟡 X5 ✅ · semana ⏳ |
 | H7 | Nanda | **GO do piloto** — só ela dá, após H1–H5 verdes no diário | ⏳ aberto |
 
 ## 3. Registro corrido (descobertas · decisões · problemas)
+
+**08/07 — X5 FECHADO (painel de presença, verificação-relâmpago pré-GO):
+PASSA — o desabafo segue protegido; endurecimento de 1 linha aplicado e
+mergeado (PR #19, main 89741df, 60/60).** Simulação do pior caso (Nine 22h30,
+3 gatilhos de domínio dentro da emoção): duas primeiras respostas só presença;
+UMA oferta, escolhida por ela; despedida em ponto final; zero missões nascidas
+do desabafo. Ponto apertado: modo_noite manda ofertar e o catálogo de 21
+domínios não lembrava a exceção — agora o cabeçalho do catálogo declara "EM
+DESABAFO OU EMOÇÃO QUENTE, ESTE CATÁLOGO FICA MUDO". Confiança 80%→~92%.
+**GO da fundadora agora depende só de: (a) H2 — ela mandar um áudio e
+confirmar o ciclo de voz; (b) alarme de saldo OpenAI (Despacho).**
 
 **08/07 — DESPACHO: RELATÓRIO OPERACIONAL v2 — A GIULIETA ESTÁ VIVA.** Deploy
 automático ativo (main "carta" no ar); OpenAI resolvido — **CAUSA RAIZ: quota
