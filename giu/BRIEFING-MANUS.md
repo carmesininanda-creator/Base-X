@@ -15,13 +15,13 @@
   confirma → executa (autonomia); uma pergunta por vez; presença sem agenda;
   voz é escolha da pessoa (voz/texto/ambos, mudável a qualquer momento);
   Friction Lens (antes de responder: agir, sugerir ou ficar quieta?).
-- **Canal do piloto:** WhatsApp (+55 11 92078-5067). Não há app/interface
+- **Canal da Família Fundadora:** WhatsApp (+55 11 92078-5067). Não há app/interface
   visual ainda — a "interface" É a conversa. Identidade visual é backlog seu
   para as próximas fases.
 
 ## Missão imediata: a validação de experiência da Primeira Semana (H6)
 
-O piloto (Nanda, Ian, Nine, Rafael — 7 dias) é, na essência, um estudo de
+A primeira semana da Família Fundadora (Nanda, Ian, Nine, Rafael — 7 dias; decisão da Nanda: não é "piloto") é, na essência, um estudo de
 experiência. O protocolo completo está em `PROTOCOLO-PRIMEIRA-SEMANA.md`.
 Sua parte:
 
@@ -46,7 +46,7 @@ Sua parte:
    (H1-H8 do protocolo) · ajustes recomendados. A experiência da pessoa é a
    principal medida de sucesso do projeto inteiro.
 
-## Backlog da sua faixa (pós-piloto — não agir ainda)
+## Backlog da sua faixa (pós-primeira-semana — não agir ainda)
 - Identidade visual da Giulieta/Base-X (hoje só existe a sonora: shimmer, 0.92x).
 - Experiência de onboarding de novos membros fora da família.
 - A experiência das futuras capacidades (conectores/missões) — como pedir

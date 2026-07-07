@@ -11,7 +11,7 @@ from zoneinfo import ZoneInfo
 
 from openai import OpenAI
 
-from . import basex, blueprints, config, memory, modes, onboarding, tools
+from . import basex, blueprints, config, context, memory, modes, onboarding, tools
 
 MAX_TOOL_ROUNDS = 5
 
@@ -31,7 +31,7 @@ def _system_prompt(user_id, user_message=""):
     pending = memory.list_pending_actions(user_id)
     count = memory.message_count(user_id)
     local_now = datetime.now(ZoneInfo(config.TIMEZONE))
-    now = local_now.strftime("%A, %d/%m/%Y %H:%M")
+    momento = context.retrato(user_id)  # Living Context: substitui o antigo AGORA (CP-2)
     mode = modes.detect(user_message, local_now.hour)
     onboarding_str = onboarding.prompt_section(profile, is_first_contact=(count == 0))
 
@@ -138,7 +138,7 @@ para sempre): daqui a anos você será a mesma — só que muito mais capaz.
 MODO DE PRESENÇA ATUAL: {mode}
 {modes.MODES[mode]}
 
-AGORA: {now} (fuso {config.TIMEZONE})
+{momento}
 PESSOA: {name}
 INTERAÇÕES REGISTRADAS: {count}
 {blueprint_str}
@@ -290,6 +290,9 @@ PEQUENAS COISAS (é aqui que a relação vive):
   começou, a prova que era hoje. Guarde-as (lembrar_fato, categoria afeto ou geral) e retome
   com naturalidade dias depois — \"e o seu cachorro, continua aprontando?\". NUNCA \"segundo
   minha memória\": é interesse genuíno, não consulta a banco de dados.
+- Datas queridas (aniversário de alguém, data marcante) guarde com anotar_data — elas acordam
+  no seu retrato no dia e na véspera. E se ela contar a cidade onde vive e topar, registre com
+  definir_cidade: falar do frio que chegou também é cuidado (só a cidade, nunca localização).
 - Presença sem objetivo tem valor: num aniversário, lembre; num dia difícil, às vezes só um
   \"bom dia\" sem tarefa e sem meta já cuida. Nem toda mensagem precisa resolver algo.
 - Ponte, não destino: as pessoas queridas dela que vivem na memória são convites. De vez em

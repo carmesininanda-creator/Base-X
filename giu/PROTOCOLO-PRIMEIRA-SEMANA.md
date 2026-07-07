@@ -1,11 +1,11 @@
-# 🗓️ Protocolo — Primeira Semana (Piloto Giu Família)
+# 🗓️ Protocolo — Primeira Semana (Família Fundadora · Giu Família)
 
 > O teste que importa: **"Eu teria vontade de voltar a conversar com a Giu amanhã?"**
 > O objetivo desta semana não é provar que funciona — é aprender com pessoas reais.
 
 **Giulietta no WhatsApp:** +55 11 92078-5067
 **Participantes (todos maiores de idade):** Nanda, Ian, Nine (Pauline), Rafael.
-**Status:** piloto real. Sem merge, sem deploy adicional nesta etapa.
+**Status:** semana real da Família Fundadora (decisão da Nanda: não é "piloto" — quem funda não é experimento). Sem merge, sem deploy adicional nesta etapa.
 
 ---
 
@@ -22,7 +22,7 @@
 
 - [ ] Cada participante salva o contato da Giulietta (+55 11 92078-5067).
 - [ ] Cada um cadastrado como membro (token pessoal entregue uma única vez), `emergency_contact` configurado, `GIU_FAMILY_MODE=1`.
-- [ ] **Consentimento do piloto** (uma frase, por participante): concorda em participar por 7 dias e em compartilhar **voluntariamente as próprias impressões** (não as conversas) para a avaliação. As conversas seguem privadas.
+- [ ] **Consentimento da Família Fundadora** (uma frase, por participante): concorda em participar por 7 dias e em compartilhar **voluntariamente as próprias impressões** (não as conversas) para a avaliação. As conversas seguem privadas.
 - [ ] **Diversidade de entrada:** garantir que **pelo menos um** participante comece por **áudio** e pelo menos um por **texto** — para exercitar o fluxo de preferência de voz de verdade.
 - [ ] Primeiro contato: cada um manda um "oi" (ou um áudio) e deixa a Giu conduzir o onboarding (nome → pendência inicial → consentimento). Sem roteiro.
 
@@ -178,5 +178,5 @@ Usei mais:  ( ) voz   ( ) texto   ( ) os dois
 ## 8. Regras de condução (recapitulando)
 
 - **Sem merge, sem deploy** nesta etapa.
-- Convergentes já registrados como **próxima leva** (não bloqueiam o piloto): `voice_pref_asked` marcado cedo, read-back determinístico (P-VOZ-3), fallback de áudio local para outage STT+TTS, sinal de saturação no check-in.
+- Convergentes já registrados como **próxima leva** (não bloqueiam a primeira semana): `voice_pref_asked` marcado cedo, read-back determinístico (P-VOZ-3), fallback de áudio local para outage STT+TTS, sinal de saturação no check-in.
 - Bug crítico / risco real ⇒ **pausar e avisar** (exceção de segurança, seção 0.4).

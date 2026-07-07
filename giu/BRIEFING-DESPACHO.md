@@ -4,7 +4,7 @@
 > registre lá o resultado de cada item. Sua faixa: infraestrutura, deploy,
 > integrações, operação, validação em produção.
 
-## Missão imediata: colocar a Giulieta completa no ar e liberar o piloto
+## Missão imediata: colocar a Giulieta completa no ar e liberar a Família Fundadora
 
 A `main` (`9933b97`) contém a Giulieta inteira: voz como preferência de
 relacionamento, primeiro encontro por Blueprint, Blueprints no cérebro
@@ -40,14 +40,14 @@ Mesmo `POST /family/members` com token de operadora, **SEM o campo `welcome`**:
 
 ### 4. Validação (CHECKLIST-VALIDACAO-DESPACHO.md — completo)
 Fumaça SEMPRE com membro `"Teste"` (nunca com a família; limpe depois).
-Destaque para o **ciclo de voz (H2 — bloqueador do piloto, decisão da Nanda):**
+Destaque para o **ciclo de voz (H2 — bloqueador da primeira semana, decisão da Nanda):**
 1. Mandar áudio → ela entende e responde **áudio + texto**;
 2. Dizer "me responde só por escrito" → mandar OUTRO áudio → resposta **só texto**;
 3. Áudio incompreensível → convite gentil para repetir por voz (nunca só "escreva").
 
 ### 5. Reportar
 Atualize o `DIARIO-EQUIPE.md`: H1 (causa raiz nomeada), H2 (ciclo de voz ✅/❌
-com evidência), H4/H5 (deploy + validação). **Só a Nanda dá o go do piloto** —
+com evidência), H4/H5 (deploy + validação). **Só a Nanda dá o go da Família Fundadora** —
 seu papel termina em "tudo verde, evidências no diário".
 
 ## 6. Conector Google Calendar por pessoa (PR #18 — provisionamento)

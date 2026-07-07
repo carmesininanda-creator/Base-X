@@ -304,6 +304,52 @@ def oauth_state_take(state):
     return user_id
 
 
+# ─── Datas queridas e cidade (Time Provider — Living Context, Fase 2) ────────
+
+def dates_add(user_id, titulo, data, recorrente=True):
+    """Guarda uma data que a PESSOA pediu para lembrar (aniversário, evento).
+    data: 'YYYY-MM-DD' (única) ou 'MM-DD' (recorrente anual). Respeita o mesmo
+    portão de consentimento da memória: recusa registrada → nada é guardado."""
+    titulo = (titulo or "").strip()
+    data = (data or "").strip()
+    if not titulo or not data:
+        return False
+    try:  # validação real, não de comprimento: 'MM-DD' anual ou 'YYYY-MM-DD' única
+        if len(data) == 5:
+            datetime.strptime(data, "%m-%d")
+        else:
+            datetime.strptime(data, "%Y-%m-%d")
+    except ValueError:
+        return False
+    profile = get_profile(user_id)
+    if profile["data"].get("consentimento") is False:
+        return False
+    datas = [d for d in profile["data"].get("datas", [])
+             if not (d.get("titulo") == titulo and d.get("data") == data)]
+    datas.append({"titulo": titulo[:120], "data": data, "recorrente": bool(recorrente)})
+    set_profile(user_id, datas=datas[-40:])
+    return True
+
+
+def dates_all(user_id):
+    return get_profile(user_id)["data"].get("datas", [])
+
+
+def city_set(user_id, nome, lat=None, lon=None):
+    """Cidade AUTORIZADA pela pessoa (nível cidade, nunca localização precisa)
+    — permite clima e sol no retrato. Opt-in explícito, revogável (city_clear)."""
+    set_profile(user_id, cidade={"nome": nome, "lat": lat, "lon": lon})
+
+
+def city_get(user_id):
+    return get_profile(user_id)["data"].get("cidade")
+
+
+def city_clear(user_id):
+    """Revogação imediata e determinística — 'esquece minha cidade' é lei."""
+    set_profile(user_id, cidade=None)
+
+
 # ─── Conversation Spine (a espinha da conversa ATUAL — não é memória de longo
 #     prazo: fatos permanentes continuam em remember_fact; a spine expira) ─────
 
