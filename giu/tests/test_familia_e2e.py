@@ -620,6 +620,24 @@ def test_identidade_semeada_no_cadastro():
     assert blueprints.preferred_name("Fulano") is None
 
 
+def test_friction_lens_no_prompt():
+    """Comportamento mínimo aprovado pela fundadora: antes de responder, a Giu
+    olha o momento pela lente da fricção — e decide agir, sugerir ou calar."""
+    prompt = brain._system_prompt(IAN, "oi")
+    assert "FRICTION LENS" in prompt
+    # As cinco vidas onde a fricção mora
+    for vida in ("prática", "cognitiva", "emocional", "relacional", "de saúde"):
+        assert vida in prompt, vida
+    # As perguntas de contenção: ajudar sem invadir, autorização, e o trilema
+    assert "SEM INVADIR" in prompt
+    assert "autorização" in prompt
+    assert "AGIR" in prompt and "SUGERIR" in prompt and "FICAR QUIETA" in prompt
+    # Anti-ruído e anti-insistência: a menor ajuda útil; "não" encerra
+    assert "MENOR ajuda útil" in prompt
+    assert "contexto sem benefício é ruído" in prompt
+    assert '"não" encerra o assunto' in prompt
+
+
 def test_falha_honesta_em_todos_os_canais(client, monkeypatch):
     """Lição do incidente: se o cérebro quebrar, a pessoa recebe resposta
     honesta — NUNCA silêncio (WhatsApp) nem 500 seco (web/Telegram)."""
