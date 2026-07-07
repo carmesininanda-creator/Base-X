@@ -56,6 +56,29 @@ Vida ao Lado (conectores) · Living Context (o momento + fricção) · Missões
 
 ## 3. Registro corrido (descobertas · decisões · problemas)
 
+**07/07 — 🌱 LIFE ARCHITECT, revisão inaugural (PR #14): MERGE LIBERADO,
+com dívida de medição PAGA.** Veredito: "o desenho aponta para vida melhor,
+não apenas para conversa boa" — a conversa está a serviço da vida (Friction
+Lens), e o desenho protege contra os dois jeitos de piorar uma vida
+(dependência e invasão). Dívida cobrada e quitada: o protocolo media a
+RELAÇÃO e quase nada da VIDA → **5 sondas de vida adicionadas ao fecho**
+(§3.1 do protocolo): carga mental, vida prática, vida relacional, fricção
+remanescente (escolhe o Ciclo 2) e o teste definitivo ("se a Giu desaparecesse
+amanhã, o que pioraria?" — 'quase nada' na semana 1 é linha de base saudável).
+**Risco a vigiar (não bloqueia):** o vão entre a missão do tamanho da vida e
+as mãos do tamanho de uma agenda — termômetro: a frequência da resposta
+canônica por pessoa (volta a pedir OUTRA coisa = inspirou; para de pedir =
+frustrou). **3 fricções previstas:** Nanda — a Giu virar mais uma coisa para
+gerenciar (ela delegou UMA carga real ou só administrou o piloto?); Ian —
+proatividade lida como cobrança (silêncio pode ser sucesso; ele VOLTA
+sozinho?); Rafael — o primeiro a esbarrar no vão missão×mãos. **Prioridade
+nº 1 pós-piloto (aposta a priori, a vida vivida vence):** fechar o ciclo da
+pequena carga — de "eu seguro isso" até "isso foi RESOLVIDO" (a consulta
+aconteceu?); hoje ela lembra mas não confere, e a Nanda segue como follow-up
+ambulante da família. **Nota de sequência:** o piloto deve rodar COM o #14 em
+produção (senão a sonda de expectativa perde o objeto) → H4 atualizado:
+redeploy da main PÓS-merge do #14.
+
 **07/07 — DECISÃO da fundadora: criada a 🌱 LIFE ARCHITECT — guardiã
 permanente da missão da Base-X.** Ela não revisa tecnologia; revisa A VIDA da
 pessoa, com a pergunta permanente "depois de conviver com a Giulieta, a vida
