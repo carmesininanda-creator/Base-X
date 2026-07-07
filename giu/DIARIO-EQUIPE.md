@@ -58,6 +58,21 @@ roadmap P1/P2/P3 na PERSONA item 5 — zero integração implementada.
 
 ## 3. Registro corrido (descobertas · decisões · problemas)
 
+**08/07 — 🌱 LIFE ARCHITECT (PR #18): MERGE LIBERADO (87%) — D1+D2 pagas
+antes do merge; PR #18 MERGEADO (main c66e5c5, 60/60).** Veredito: "o desenho
+por pessoa (opt-in, uso único, revogação-lei, escopo mínimo, fallback honesto)
+é o mais fiel à missão que já vi num conector real". **D1 (achado de vida):**
+turno pessoal caía no token/calendário GLOBAL quando a pessoa não tinha
+conectado — evento na agenda errada / agenda da casa vazando; corrigido e
+testado. **D2:** a Giu agora diz em voz alta o que passa a ver e fazer.
+**Dívidas em aberto:** D3 (Code, 1 semana) — desconectar também revoga no
+Google (/revoke); D4 (fundadora+Code, 2 semanas) — cifrar ou nomear a "chave
+da agenda" na política; D5 (fundadora, semana-laboratório) — a tela "app não
+verificado" do Google assusta a mãe? Critério de CONCLUSÃO do conector
+(o da fundadora): ela conectar a própria agenda SÓ conversando, sem ajuda
+técnica; 1 compromisso ditado à Giu aparecendo no celular dela; "desconecta
+minha agenda" funcionando na primeira. Provisionamento: BRIEFING-DESPACHO §6.
+
 **08/07 — DECISÃO da fundadora (novo método oficial) + Code (PR #18, 1º
 conector real novo).** MÉTODO: a família vira o laboratório vivo; a Base-X
 cresce pela vida ("qual dificuldade real apareceu hoje e como a Giulieta cuida
