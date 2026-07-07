@@ -46,7 +46,9 @@ GOOGLE_CALENDAR_ID = os.getenv("GOOGLE_CALENDAR_ID", "primary")
 # psicóloga (calor contido, calma, presença). Trocar = mudar só estas variáveis.
 VOICE_ENABLED = os.getenv("GIU_VOICE_ENABLED", "1") == "1"
 VOICE_NAME = os.getenv("GIU_VOICE", "shimmer")           # timbre do TTS
-VOICE_SPEED = float(os.getenv("GIU_VOICE_SPEED", "0.92"))  # ~0,9x: "tenho tempo pra você"
+# Energia Vital (decisão da fundadora): 0.92 uniforme soava melancólico/sedado —
+# calma é variação e fôlego, não lentidão. A velocidade natural volta a 1.0.
+VOICE_SPEED = float(os.getenv("GIU_VOICE_SPEED", "1.0"))
 TTS_MODEL = os.getenv("GIU_TTS_MODEL", "tts-1")
 STT_MODEL = os.getenv("GIU_STT_MODEL", "whisper-1")
 # Quando a pessoa manda áudio, a Giu responde em áudio (espelha o canal)

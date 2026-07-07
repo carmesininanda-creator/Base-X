@@ -64,6 +64,7 @@ Para cada dimensão: o sinal a buscar (relato) + a pergunta-sonda da entrevista.
 ### 5. Preferência voz × texto
 - **Sinal:** a pessoa escolheu voz/texto/ambos? A escolha foi **respeitada** (pediu "só texto" e ainda veio áudio? — nunca deveria)? O 1º turno por voz soou natural ou soou "configuração"?
 - **Sonda:** "Você usou voz, texto ou os dois? A escolha foi respeitada 100%? A voz combinou com ela?"
+- **Teste emocional da voz (Energia Vital — decisão da fundadora):** "A voz dela te passa o quê: esperança, tranquilidade, alegria serena, curiosidade, cuidado — ou tristeza, monotonia, cansaço, distanciamento?" E o portão: "depois de ouvir a voz dela por cinco minutos, você sente MAIS energia para viver, ou menos?"
 
 ### 6. Silêncio (quando a Giu deve ficar quieta) — *testa o risco de saturação*
 - **Sinal:** quando a pessoa sumiu/não respondeu, a Giu **insistiu ou cobrou**? Os check-ins de manhã/noite foram bem-vindos ou invasivos/demais?

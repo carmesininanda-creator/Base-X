@@ -552,6 +552,12 @@ def test_posicionamento_e_ponte_no_nucleo():
     assert "mais pequenas cargas da vida dela" in prompt
     # A voz mantém o reforço próprio (a diretriz não saiu de lá)
     assert "vínculo humano" in brain._VOICE_GUIDANCE
+    # ENERGIA VITAL (decisão da fundadora): a voz de quem gosta da vida
+    assert "ENERGIA VITAL" in brain._VOICE_GUIDANCE
+    assert "GOSTA da vida" in brain._VOICE_GUIDANCE
+    assert "Calma não é lentidão" in brain._VOICE_GUIDANCE
+    from giu import config as _cfg
+    assert _cfg.VOICE_SPEED >= 0.96  # nunca mais o arrastado uniforme por padrão
 
 
 # ─── Primeiro encontro por Blueprint (onboarding personalizado) ────────────────
