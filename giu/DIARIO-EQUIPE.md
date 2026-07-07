@@ -58,6 +58,21 @@ roadmap P1/P2/P3 na PERSONA item 5 — zero integração implementada.
 
 ## 3. Registro corrido (descobertas · decisões · problemas)
 
+**08/07 — 🌱 LIFE ARCHITECT (PR #17): MERGE LIBERADO (80%) — X1-X3 pagas
+antes do merge; PR #17 MERGEADO (main 19afd82, 58/58).** Veredito: "ele não
+finge que as mãos cresceram; ensina a Giulieta a usar as mãos que JÁ tem em
+todos os cantos da vida — a carga que rouba vida é quase sempre a invisível
+(decidir, planejar, lembrar, conferir), não o clique final". Achado que quase
+bloqueou: "Floki" hardcoded no conhecimento genérico (X1 — removido; teste
+agora PROÍBE especificidade pessoal no catálogo). X2: o passo final da pessoa
+dito no INÍCIO do guiado, como oferta. X3: sondas do guiado no protocolo
+(detector de teatro; taxa de fechamento; teste da segunda vez; % guiadas→missão
+alvo ≥70%). **Dívidas em aberto: X4 (Code, plantão do Ciclo 1 — medir
+guiadas→missão em produção) e X5 (Manus, ANTES do GO — reauditoria-relâmpago
+de desabafo com o prompt crescido: o catálogo de 21 domínios vaza oferta na
+emoção?).** H7 (GO) agora depende também de X5.
+
+
 **08/07 — Code: A BASE-X NASCE EM CÓDIGO (PR #17 — giu/basex.py).** A decisão
 da fundadora ("a Base-X deixa de ser conceito; passa a ser o motor operacional")
 implementada: **21 domínios obrigatórios** da vida, cada um com os 8 campos
