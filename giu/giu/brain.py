@@ -338,6 +338,17 @@ definir_preferencia_voz(preferencia='voz'|'texto'|'ambos'). Se ela não escolher
 dela e NÃO insista — pergunte só esta vez."""
 
 
+def _resposta_falada(user_id, via):
+    """A resposta será OUVIDA? (turno de voz, OU pessoa que escolheu receber
+    por voz). Descoberta nº 1 da Voice Architect: quem escolheu voz recebia
+    áudio sintetizado de texto escrito para o OLHO — a diretriz de fala deve
+    acompanhar a decisão 'será falada', que é a mesma de _should_send_audio."""
+    if via == "voice":
+        return True
+    return (config.VOICE_ENABLED and config.VOICE_REPLIES
+            and memory.voice_pref(user_id) in ("voice", "both"))
+
+
 def think(user_id, user_message, channel="web", via="text"):
     """Processa uma mensagem e devolve a resposta da Giu.
     via='voice' quando o turno veio por áudio — ativa as diretrizes de fala e
@@ -348,7 +359,7 @@ def think(user_id, user_message, channel="web", via="text"):
     client = OpenAI(api_key=config.OPENAI_API_KEY)
 
     system = _system_prompt(user_id, user_message)
-    if via == "voice":
+    if _resposta_falada(user_id, via):
         system += "\n\n" + _VOICE_GUIDANCE
         data = memory.get_profile(user_id)["data"]
         # Primeira vez por voz e ainda sem preferência escolhida: ofereça a escolha

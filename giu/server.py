@@ -63,6 +63,14 @@ async def reminder_loop():
 async def _send_push(user_id, channel, text):
     if channel == "whatsapp" and whatsapp.is_configured():
         await whatsapp.send_message(user_id, text)
+        # Descoberta nº 2 da Voice Architect: o gesto mais de-família (o
+        # check-in que chega sem ser chamado) era MUDO até para quem escolheu
+        # voz. Agora o "bom dia" também fala — texto sempre primeiro, como manda a lei.
+        if (config.VOICE_ENABLED and config.VOICE_REPLIES
+                and memory.voice_pref(user_id) in ("voice", "both")):
+            audio = await asyncio.to_thread(voice.sintetizar, text)
+            if audio:
+                await asyncio.to_thread(whatsapp.send_audio, user_id, audio)
     elif channel == "telegram" and telegram.is_configured():
         await telegram.send_message(user_id, text)
     else:

@@ -961,6 +961,54 @@ def test_agenda_conexao_por_pessoa(client, monkeypatch):
     assert gc.is_configured(U) is False
 
 
+def test_voz_diretriz_acompanha_resposta_falada(monkeypatch):
+    """Descoberta nº 1 da Voice Architect: a diretriz de fala segue a decisão
+    'esta resposta SERÁ FALADA' — não 'este turno veio por áudio'."""
+    from giu import config as cfg
+    U = "u_fala"
+    memory.set_profile(U, name="F")
+    # Turno de voz: sempre falada
+    assert brain._resposta_falada(U, "voice") is True
+    # Turno de TEXTO de quem escolheu VOZ: a resposta será falada → diretriz entra
+    memory.set_profile(U, voice_pref="voice")
+    assert brain._resposta_falada(U, "text") is True
+    # Quem escolheu só texto: nunca
+    memory.set_profile(U, voice_pref="text")
+    assert brain._resposta_falada(U, "text") is False
+    # Sem preferência: espelha o canal (texto → não falada)
+    memory.set_profile(U, voice_pref=None)
+    assert brain._resposta_falada(U, "text") is False
+    # Voz global desligada: nunca falada em turno de texto
+    memory.set_profile(U, voice_pref="voice")
+    monkeypatch.setattr(cfg, "VOICE_REPLIES", False)
+    assert brain._resposta_falada(U, "text") is False
+
+
+def test_voz_checkin_fala_para_quem_escolheu_voz(monkeypatch):
+    """Descoberta nº 2: o check-in proativo ganha voz para quem escolheu voz
+    (texto sempre primeiro; áudio aditivo)."""
+    import asyncio as aio
+    import server
+    from giu import voice as v
+    U = "u_checkin_voz"
+    memory.set_profile(U, name="C", voice_pref="voice")
+    textos, audios = [], []
+    async def fake_send(uid, t):
+        textos.append(t)
+    monkeypatch.setattr(server.whatsapp, "send_message", fake_send)
+    monkeypatch.setattr(server.whatsapp, "is_configured", lambda: True)
+    monkeypatch.setattr(server.whatsapp, "send_audio", lambda uid, a: audios.append(a) or True)
+    monkeypatch.setattr(v, "sintetizar", lambda t: b"OGG")
+    assert aio.run(server._send_push(U, "whatsapp", "Bom dia, C")) is True
+    assert textos == ["Bom dia, C"]           # texto SEMPRE primeiro
+    assert audios == [b"OGG"]                  # e a voz junto, para quem escolheu
+    # Quem escolheu só texto: check-in continua mudo (respeito determinístico)
+    memory.set_profile(U, voice_pref="text")
+    audios.clear()
+    aio.run(server._send_push(U, "whatsapp", "Boa noite, C"))
+    assert audios == []
+
+
 def test_basex_regra_de_ouro_no_prompt():
     prompt = brain._system_prompt(IAN, "oi")
     assert "qual aplicativo devo usar" in prompt
