@@ -56,6 +56,36 @@ Vida ao Lado (conectores) · Living Context (o momento + fricção) · Missões
 
 ## 3. Registro corrido (descobertas · decisões · problemas)
 
+**07/07 — DECISÃO DE ARQUITETURA da fundadora (marco do PR #13): abre a
+segunda frente — Base-X — evoluindo JUNTO com a Giulieta.** Oficializados os
+**cinco pilares permanentes da Base-X**: Identity · Living Context ·
+Relationship · Friction Lens · Mission Engine. Toda integração futura existe
+APENAS para fortalecer um pilar — nunca funcionalidades isoladas; a Base-X
+nunca conecta APIs, resolve partes da vida. **Filtro duplo obrigatório** em
+toda implementação (perspectiva Giulieta: relação/confiança/companhia ×
+perspectiva Base-X: fricção/tempo/carga/organização/autonomia/qualidade de
+vida). **Filosofia oficial do ecossistema:** "A Giulieta nunca responde
+apenas ao prompt — responde à pessoa, ao relacionamento, ao momento, à missão
+e ao propósito de melhorar concretamente a vida daquela pessoa" (agora também
+no cérebro, brain.py). Registro completo: DECISOES-ARQUITETURA.md e
+GOVERNANCA.md (fora do git); PERSONA.md (no git).
+
+**07/07 — Code (implementação aprovada pela fundadora): presença natural +
+Conversation Spine (PR #13).** Eixo 1 — os 5 ajustes da auditoria de presença
+aplicados (regra de desabafo sem oferta; pergunta não-obrigatória e despedida
+em ponto final; EMOÇÃO vence palavra-chave no modes.detect — o bug da Nine;
+teto de emoji; textura/respostas mínimas; pergunta de preferência de voz
+respeita pressa/emoção). Eixo 2 — **Conversation Spine**: a espinha da
+conversa ATUAL (decisões, frases fortes, hipóteses, mudanças de direção,
+compromissos) anotada pelo modelo via `anotar_fio`, guardada no perfil
+(expira em 24h, máx. 10 itens) e injetada em todo turno com as 4 perguntas de
+continuidade. **DISTINÇÃO CONCEITUAL (registro obrigatório): Conversation
+Spine ≠ memória de longo prazo** — a spine é a linha viva da conversa atual e
+EXPIRA; o permanente continua entrando por lembrar_fato (consentimento e
+categorias de sempre). Simulação em teste: insight do início + mudança de
+prioridade no meio sobrevivem até o fim de uma conversa de 120 mensagens,
+com o histórico cru (16 msgs) já estourado. 50/50 testes.
+
 **07/07 — Auditoria de PRESENÇA (painel conjunto Psicologia + Rel. Architect,
 método: 3 conversas de 5min simuladas fiéis ao prompt real).** Veredito:
 **ENTRE OS DOIS — do lado certo da fronteira, mas com o crachá aparecendo.**

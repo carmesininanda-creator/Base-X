@@ -49,6 +49,16 @@ _EMERGENCY_WORDS = (
     "passando mal", "não consigo respirar", "nao consigo respirar", "me ajuda urgente",
     "quero morrer", "me machuquei",
 )
+# Emoção quente VENCE palavra de tarefa (auditoria de presença): "não aguento
+# mais, amanhã tenho que resolver mil coisas" é desabafo, não pendência — a
+# palavra "resolver" não pode sequestrar o modo no meio da emoção.
+_EMOTION_WORDS = (
+    "não aguento", "nao aguento", "esgotada", "esgotado", "exausta", "exausto",
+    "sobrecarregada", "sobrecarregado", "ansiosa", "ansioso", "angustiada",
+    "angustiado", "triste", "chorando", "chorar", "desabafar", "péssimo dia",
+    "pessimo dia", "dia horrível", "dia horrivel", "me sentindo um lixo",
+    "não tô bem", "nao to bem", "sozinha demais", "sozinho demais",
+)
 _HEALTH_WORDS = (
     "remédio", "remedio", "medicamento", "dor", "médico", "medico", "consulta",
     "pressão", "pressao", "dormi", "sono", "enjoo", "febre", "água", "agua",
@@ -60,10 +70,15 @@ _TASK_WORDS = (
 
 
 def detect(text, hour):
-    """Escolhe o modo de presença pelo que a pessoa disse e pela hora local."""
+    """Escolhe o modo de presença pelo que a pessoa disse e pela hora local.
+    Precedência: emergência > EMOÇÃO (desabafo acolhe antes de organizar) >
+    saúde > tarefa > hora do dia."""
     lowered = (text or "").lower()
     if any(w in lowered for w in _EMERGENCY_WORDS):
         return "modo_emergencia"
+    if any(w in lowered for w in _EMOTION_WORDS):
+        # Desabafo: companhia primeiro — tarefas esperam a pessoa terminar de contar
+        return "modo_noite" if (hour >= 20 or hour < 5) else "modo_companhia"
     if any(w in lowered for w in _HEALTH_WORDS):
         return "modo_saude"
     if any(w in lowered for w in _TASK_WORDS):

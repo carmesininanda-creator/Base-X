@@ -148,6 +148,27 @@ TOOL_DEFINITIONS = [
     {
         "type": "function",
         "function": {
+            "name": "anotar_fio",
+            "description": (
+                "Anota um item na ESPINHA DA CONVERSA ATUAL (Conversation Spine) para "
+                "não perder o fio em conversas longas. Use na hora em que surgir: decisão "
+                "importante, frase forte da pessoa, hipótese nova, mudança de direção, "
+                "insight, preferência revelada, compromisso assumido, tema que não pode se "
+                "perder. NÃO é memória permanente (isso é lembrar_fato): a espinha expira; "
+                "serve para você acompanhar ESTA conversa do início ao fim."
+            ),
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "nota": {"type": "string", "description": "O item do fio, curto e claro. Ex: 'DECISÃO: prioridade da semana é o prazo do projeto, não a mudança' ou 'Ela disse: \"eu só queria uma pausa\"'"},
+                },
+                "required": ["nota"],
+            },
+        },
+    },
+    {
+        "type": "function",
+        "function": {
             "name": "definir_preferencia_voz",
             "description": (
                 "Registra como a pessoa prefere RECEBER as respostas daqui pra frente: "
@@ -405,6 +426,11 @@ def execute_tool(name, arguments, user_id, channel="web"):
 
     if name == "registrar_onboarding":
         return onboarding.register(user_id, args["campo"], args["valor"])
+
+    if name == "anotar_fio":
+        ok = memory.spine_add(user_id, args["nota"])
+        return ("Anotado no fio da conversa." if ok
+                else "Nota vazia — nada anotado.")
 
     if name == "definir_preferencia_voz":
         pref = {"voz": "voice", "texto": "text", "ambos": "both"}.get(args["preferencia"])

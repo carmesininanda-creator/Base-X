@@ -505,6 +505,9 @@ def test_persona_lapidacao_no_prompt():
     # Diretriz conceitual: a Giu soma, nunca substitui os vínculos humanos
     assert "SOMA, nunca substitui" in prompt
     assert "ocupar o lugar" in prompt
+    # Filosofia oficial do ecossistema: nunca responde apenas ao prompt
+    assert "NUNCA responde apenas ao prompt" in prompt
+    assert "MISSÃO" in prompt and "PROPÓSITO" in prompt
 
 
 def test_posicionamento_e_ponte_no_nucleo():
@@ -636,6 +639,89 @@ def test_friction_lens_no_prompt():
     assert "MENOR ajuda útil" in prompt
     assert "contexto sem benefício é ruído" in prompt
     assert '"não" encerra o assunto' in prompt
+
+
+# ─── Presença natural (auditoria de presença — 5 ajustes aprovados) ───────────
+
+def test_presenca_ajustes_no_prompt():
+    prompt = brain._system_prompt(IAN, "oi")
+    # 1. Regra de desabafo: as primeiras respostas não contêm oferta
+    assert "EXCEÇÃO QUE VALE MAIS QUE A REGRA" in prompt
+    assert "só presença e escuta" in prompt
+    # 2. Pergunta não é obrigatória; despedida termina em ponto final
+    assert "NEM TODA mensagem precisa de pergunta" in prompt
+    assert "NUNCA carregam" in prompt and "pergunta nova" in prompt
+    # 4. Teto de emoji
+    assert "Emoji é tempero, não assinatura" in prompt
+    assert "nunca em assunto doloroso" in prompt
+    # 5. Textura: respostas mínimas e ritmo variável
+    assert "presença tem textura" in prompt
+    assert "perfeição uniforme parece máquina" in prompt
+    # Voz: a pergunta de preferência respeita pressa/emoção
+    assert "o momento dela vem antes da sua pergunta" in brain._VOICE_ASK_PREF
+
+
+def test_presenca_emocao_vence_palavra_de_tarefa():
+    from giu import modes
+    # 3. O bug da auditoria: "resolver" DENTRO de desabafo não vira secretária
+    assert modes.detect("não aguento mais, amanhã tenho que resolver mil coisas", 23) == "modo_noite"
+    assert modes.detect("tô esgotada, preciso resolver tudo", 15) == "modo_companhia"
+    # Tarefa SEM emoção continua indo para pendências (nada regrediu)
+    assert modes.detect("preciso resolver a conta do banco", 15) == "modo_pendencias"
+    # Emergência continua vencendo TUDO (segurança primeiro)
+    assert modes.detect("não aguento mais, quero morrer", 23) == "modo_emergencia"
+    # Saúde sem emoção continua saúde
+    assert modes.detect("esqueci o remédio de novo", 15) == "modo_saude"
+
+
+# ─── Conversation Spine (continuidade da conversa atual) ──────────────────────
+
+def test_spine_guarda_e_expira():
+    U = "u_spine"
+    memory.set_profile(U, name="S")
+    assert memory.spine_add(U, "DECISÃO: prioridade é o prazo do projeto") is True
+    assert memory.spine_add(U, "  ") is False               # vazio não entra
+    fio = memory.spine_get(U)
+    assert len(fio) == 1 and "prazo do projeto" in fio[0]["note"]
+    # Capacidade máxima: só os últimos SPINE_MAX ficam
+    for i in range(memory.SPINE_MAX + 3):
+        memory.spine_add(U, f"item {i}")
+    assert len(memory.spine_get(U)) == memory.SPINE_MAX
+    # Expiração: item velho (além do TTL) cai
+    velho = [{"t": "2020-01-01T00:00:00", "note": "conversa de outra era"}]
+    memory.set_profile("u_spine_velho", name="V", spine=velho)
+    assert memory.spine_get("u_spine_velho") == []
+
+
+def test_spine_simulacao_conversa_longa():
+    """Simulação pedida pela fundadora: insight no início + mudança de prioridade
+    no meio → o fio sobrevive até o final, mesmo com o histórico estourado."""
+    U = "u_spine_longa"
+    memory.set_profile(U, name="Longa")
+    # Início da conversa: um insight importante é anotado no fio
+    tools.execute_tool("anotar_fio", {"nota": "INSIGHT: ela quer montar uma horta na varanda"}, U)
+    # ... a conversa cresce além da janela de histórico (16 mensagens) ...
+    for i in range(40):
+        memory.save_message(U, "user", f"mensagem corriqueira {i}", "whatsapp")
+        memory.save_message(U, "assistant", f"resposta {i}", "whatsapp")
+    # Meio da conversa: mudança de prioridade — também anotada
+    tools.execute_tool("anotar_fio", {"nota": "MUDANÇA: a horta espera; prioridade agora é a consulta da mãe"}, U)
+    for i in range(20):
+        memory.save_message(U, "user", f"mais conversa {i}", "whatsapp")
+        memory.save_message(U, "assistant", f"mais resposta {i}", "whatsapp")
+    # Final: o histórico cru já perdeu o começo…
+    historico = str(memory.get_history(U))
+    assert "horta" not in historico            # fora da janela de 16 mensagens
+    # …mas a ESPINHA mantém o fio vivo no prompt, do início ao fim:
+    prompt = brain._system_prompt(U, "e aí, por onde começamos?")
+    assert "FIO DA CONVERSA" in prompt
+    assert "horta na varanda" in prompt                        # o insight do início
+    assert "prioridade agora é a consulta da mãe" in prompt    # a mudança do meio
+    # As perguntas de continuidade acompanham a espinha
+    assert "contradizendo algo já decidido" in prompt
+    assert "não só a última mensagem" in prompt.replace("\n", " ")
+    # E a distinção conceitual está no prompt: spine ≠ memória permanente
+    assert "NÃO é memória" in prompt and "lembrar_fato" in prompt
 
 
 def test_falha_honesta_em_todos_os_canais(client, monkeypatch):
