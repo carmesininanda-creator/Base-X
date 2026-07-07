@@ -56,6 +56,19 @@ Vida ao Lado (conectores) · Living Context (o momento + fricção) · Missões
 
 ## 3. Registro corrido (descobertas · decisões · problemas)
 
+**07/07 — Auditoria de PRESENÇA (painel conjunto Psicologia + Rel. Architect,
+método: 3 conversas de 5min simuladas fiéis ao prompt real).** Veredito:
+**ENTRE OS DOIS — do lado certo da fronteira, mas com o crachá aparecendo.**
+Nenhuma conversa soa a atendente; o que denuncia a IA é a PRONTIDÃO PERFEITA
+(toda resposta completa, polida, terminando em pergunta/oferta). Bug de
+presença mais grave: palavra-chave de tarefa ("resolver") sequestra o modo
+DENTRO de um desabafo às 23h — a companhia vira secretária no meio da emoção.
+5 ajustes de alta alavancagem propostos (regra de desabafo sem oferta;
+pergunta não-obrigatória + despedida em ponto final; emoção/horário vencem
+palavra-chave no modo; teto de emoji; textura/respostas mínimas). NADA
+implementado — decisão da Nanda pendente. Impacto Manus: as dimensões desta
+auditoria são as mesmas da validação da Primeira Semana.
+
 **07/07 — DECISÃO da fundadora (roadmap):** "Capability Connectors" morre;
 nasce **LIFE CONNECTORS** — cada conector existe para tornar uma ÁREA DA VIDA
 mais leve, nunca para integrar um app. Pergunta-definição: *"que parte da
