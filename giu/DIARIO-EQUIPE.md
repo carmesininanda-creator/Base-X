@@ -58,6 +58,23 @@ roadmap P1/P2/P3 na PERSONA item 5 — zero integração implementada.
 
 ## 3. Registro corrido (descobertas · decisões · problemas)
 
+**08/07 — DECISÃO da fundadora: INCORPORAÇÃO COMPLETA DA BASE-X.** A Base-X é
+a inteligência operacional da Giulieta (nunca produto separado); o **Despacho
+é oficializado como a camada de EXECUÇÃO** (fluxo: Pessoa → Giulieta → Base-X
+→ Especialistas → Mission Engine → Life Connectors → Despacho → volta). A
+Giulieta nunca executa diretamente. **Sistema FECHADO desde o piloto**: toda
+área da vida responde pela cadeia de executores real → interno →
+manual-guiado → honestidade canônica — pedido nunca morre no vazio. Critério
+de sucesso: CICLOS COMPLETOS (até a carga sair da vida, medida pela Life
+Architect). Entrega do Code: **MAPA-OPERACIONAL-BASE-X.md** (fora do git) —
+12 domínios da vida cobrindo as 29 áreas, cada um com objetivo, especialistas,
+conectores, executores, estado, prioridade, dependências e estratégia; 7
+especialistas de bastidor nomeados; contrato de conector com 8 campos; ondas
+E0→E3. **Estado honesto:** D1-D4, D9, D11, D12 já operacionais
+(interno/manual); conectores reais = só canais (WhatsApp/Telegram) + Calendar
+pela metade. Proposta E0 (pré-piloto, 1 leva pequena): formalizar o
+MANUAL-GUIADO no cérebro — aguardando aprovação do mapa pela fundadora.
+
 **07/07 — 🌱 LIFE ARCHITECT (PR #16): MERGE LIBERADO (82%) — 4 dívidas
 cobradas e PAGAS antes do merge.** Veredito: "ataca a prioridade nº 1 do jeito
 certo — não como gerenciador de tarefas, mas como cuidado com começo, meio e
