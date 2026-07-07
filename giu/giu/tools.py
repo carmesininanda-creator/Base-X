@@ -248,6 +248,66 @@ TOOL_DEFINITIONS = [
     {
         "type": "function",
         "function": {
+            "name": "anotar_data",
+            "description": (
+                "Guarda uma DATA QUERIDA ou importante que a pessoa contou (aniversário de "
+                "alguém, data marcante, evento anual) para você lembrar NO DIA e na véspera "
+                "com carinho — nunca como notificação. Use quando ela contar uma data que "
+                "importa para a vida dela. Datas de compromisso com hora marcada continuam "
+                "na agenda (agendar); aqui vivem as datas do coração e do calendário dela."
+            ),
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "titulo": {"type": "string", "description": "O que é a data, em linguagem de vida. Ex: 'Aniversário da mãe dela (dona Cida)'"},
+                    "data": {"type": "string", "description": "'MM-DD' = repete todo ano (aniversários; ex: '09-21'). 'YYYY-MM-DD' = data única (não volta no ano seguinte)"},
+                    "recorrente": {"type": "boolean", "description": "Só para 'YYYY-MM-DD' com ano conhecido que deva repetir todo ano (ex: aniversário '1967-09-21'). 'MM-DD' já é sempre anual"},
+                },
+                "required": ["titulo", "data"],
+            },
+        },
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "esquecer_data",
+            "description": (
+                "ESQUECE uma data guardada, imediatamente — 'esquece essa data' tem a mesma "
+                "dignidade de 'esquece minha cidade'. Use quando a pessoa pedir para não "
+                "lembrar mais de uma data (ou quando registrou errado e vai corrigir)."
+            ),
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "titulo": {"type": "string", "description": "Título (ou parte dele) da data a esquecer. Ex: 'aniversário do ex'"},
+                },
+                "required": ["titulo"],
+            },
+        },
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "definir_cidade",
+            "description": (
+                "Registra a CIDADE da pessoa (nível cidade, NUNCA localização precisa) — "
+                "permite você falar do clima, do frio que chegou e do pôr do sol com "
+                "naturalidade. SÓ use depois que ela contar a cidade E topar que você "
+                "acompanhe o tempo de lá (opt-in explícito; é opcional e revogável). "
+                "Para ESQUECER a cidade quando ela pedir, chame com cidade vazia ''."
+            ),
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "cidade": {"type": "string", "description": "Nome da cidade (ex: 'São Paulo'). String vazia '' = esquecer a cidade agora"},
+                },
+                "required": ["cidade"],
+            },
+        },
+    },
+    {
+        "type": "function",
+        "function": {
             "name": "definir_preferencia_voz",
             "description": (
                 "Registra como a pessoa prefere RECEBER as respostas daqui pra frente: "
@@ -577,6 +637,56 @@ def execute_tool(name, arguments, user_id, channel="web"):
         ok = memory.spine_add(user_id, args["nota"])
         return ("Anotado no fio da conversa." if ok
                 else "Nota vazia — nada anotado.")
+
+    if name == "anotar_data":
+        ok = memory.dates_add(user_id, args["titulo"], args["data"],
+                              args.get("recorrente"))
+        if not ok:
+            return ("Não consegui guardar (data em formato inválido ou memória "
+                    "recusada pela pessoa). Formato: 'MM-DD' anual ou 'YYYY-MM-DD' única.")
+        return ("Data guardada. Você vai revê-la no retrato do dia e da véspera — "
+                "quando chegar, toque no assunto com carinho e no momento certo, "
+                "nunca como notificação.")
+
+    if name == "esquecer_data":
+        removidas = memory.dates_remove(user_id, args["titulo"])
+        if not removidas:
+            return "Não encontrei data guardada com esse título — nada foi esquecido."
+        return ("Data esquecida AGORA. Confirme com leveza — e sem drama: "
+                "esquecer também é cuidar.")
+
+    if name == "definir_cidade":
+        cidade = (args.get("cidade") or "").strip()
+        if not cidade:
+            memory.city_clear(user_id)
+            return ("Cidade esquecida AGORA. Confirme com leveza e ensine o gesto "
+                    "de volta: quando quiser que você acompanhe o tempo de novo, é só dizer.")
+        lat = lon = None
+        nome = cidade
+        try:
+            import httpx
+            resp = httpx.get(
+                "https://geocoding-api.open-meteo.com/v1/search",
+                params={"name": cidade, "count": 1, "language": "pt", "format": "json"},
+                timeout=6,
+            )
+            resultados = resp.json().get("results") or []
+            if resultados:
+                nome = resultados[0].get("name", cidade)
+                lat, lon = resultados[0]["latitude"], resultados[0]["longitude"]
+        except Exception:
+            pass  # sem geocodificação agora: guarda o nome; o clima chega depois
+        if not memory.city_set(user_id, nome, lat, lon):
+            return ("A pessoa recusou memória (consentimento) — a cidade NÃO foi "
+                    "guardada. Respeite: sem registro, sem clima; a conversa segue normal.")
+        if lat is None:
+            return (f"Cidade registrada: {nome} — mas não consegui localizar o tempo de lá "
+                    "agora (o clima fica de fora por enquanto). Se fizer sentido, confirme "
+                    "a grafia com a pessoa e registre de novo; não transforme isso em problema dela.")
+        return (f"Cidade registrada: {nome}. Agora o clima e o sol de lá entram no seu "
+                "retrato do momento — use com naturalidade, só quando fizer bem. E lembre "
+                "a ela, em uma frase leve, que é só a cidade (nada de localização) e que "
+                "pode pedir para esquecer quando quiser.")
 
     if name == "definir_preferencia_voz":
         pref = {"voz": "voice", "texto": "text", "ambos": "both"}.get(args["preferencia"])

@@ -304,6 +304,76 @@ def oauth_state_take(state):
     return user_id
 
 
+# ─── Datas queridas e cidade (Time Provider — Living Context, Fase 2) ────────
+
+def dates_add(user_id, titulo, data, recorrente=None):
+    """Guarda uma data que a PESSOA pediu para lembrar (aniversário, evento).
+    data: 'MM-DD' (SEMPRE anual) ou 'YYYY-MM-DD' (única por padrão; recorrente
+    =True explícito a torna anual — aniversário com ano conhecido). A
+    recorrência deriva do formato (T2 da Life Architect): data única de ano
+    passado JAMAIS volta a acordar; 'MM-DD' jamais morre muda. Respeita o
+    mesmo portão de consentimento da memória."""
+    titulo = (titulo or "").strip()
+    data = (data or "").strip()
+    if not titulo or not data:
+        return False
+    try:  # validação real, em ano BISSEXTO — 29/02 é aniversário como qualquer
+        if len(data) == 5:  # (T1 da Life Architect)
+            datetime.strptime(f"2000-{data}", "%Y-%m-%d")
+            recorrente = True                      # MM-DD é anual por definição
+        else:
+            datetime.strptime(data, "%Y-%m-%d")
+            recorrente = bool(recorrente)          # única, salvo pedido explícito
+    except ValueError:
+        return False
+    profile = get_profile(user_id)
+    if profile["data"].get("consentimento") is False:
+        return False
+    datas = [d for d in profile["data"].get("datas", [])
+             if not (d.get("titulo") == titulo and d.get("data") == data)]
+    datas.append({"titulo": titulo[:120], "data": data, "recorrente": recorrente})
+    set_profile(user_id, datas=datas[-40:])
+    return True
+
+
+def dates_all(user_id):
+    return get_profile(user_id)["data"].get("datas", [])
+
+
+def dates_remove(user_id, titulo):
+    """'Esquece essa data' tem a mesma dignidade de 'esquece minha cidade':
+    remoção imediata pelo título (T3 da Life Architect). Retorna quantas saíram."""
+    alvo = (titulo or "").strip().lower()
+    if not alvo:
+        return 0
+    datas = dates_all(user_id)
+    vivas = [d for d in datas if alvo not in d.get("titulo", "").lower()]
+    if len(vivas) == len(datas):
+        return 0
+    set_profile(user_id, datas=vivas)
+    return len(datas) - len(vivas)
+
+
+def city_set(user_id, nome, lat=None, lon=None):
+    """Cidade AUTORIZADA pela pessoa (nível cidade, nunca localização precisa)
+    — permite clima e sol no retrato. Opt-in explícito, revogável (city_clear).
+    Respeita o portão de consentimento (T6): recusa de memória vale para a
+    cidade também."""
+    if get_profile(user_id)["data"].get("consentimento") is False:
+        return False
+    set_profile(user_id, cidade={"nome": nome, "lat": lat, "lon": lon})
+    return True
+
+
+def city_get(user_id):
+    return get_profile(user_id)["data"].get("cidade")
+
+
+def city_clear(user_id):
+    """Revogação imediata e determinística — 'esquece minha cidade' é lei."""
+    set_profile(user_id, cidade=None)
+
+
 # ─── Conversation Spine (a espinha da conversa ATUAL — não é memória de longo
 #     prazo: fatos permanentes continuam em remember_fact; a spine expira) ─────
 

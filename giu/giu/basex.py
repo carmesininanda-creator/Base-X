@@ -5,10 +5,14 @@ A Base-X não é uma coleção de componentes: é a ORGANIZAÇÃO OPERACIONAL da
 Giulieta — quem pensa, organiza, pesquisa, cria missões, acompanha, registra,
 fecha ciclos e executa, para que a Giulieta só precise cuidar das pessoas.
 
-Fluxo oficial (decisão da fundadora, 08/07/2026):
-  Pessoa → Giulieta → Base-X → Especialistas → Mission Engine
-         → Life Connectors → DESPACHO (execução) → Resposta
-         → Base-X → Giulieta → Pessoa
+Fluxo oficial ÚNICO (unificado com a arquitetura dos Context Providers,
+aprovada pela fundadora em 08/07/2026 — substitui o fluxo de 08/07):
+  Pessoa → Giulieta
+    → PERCEBER E DECIDIR: Identity → Relationship Blueprint
+      → Living Context (10 Providers) → Memória → Friction Lens → Mission Engine
+    → ORGANIZAR E EXECUTAR (invisível): Base-X/Especialistas
+      → Life Connectors → Despacho
+  → Giulieta → Pessoa
 
 Quem conversa é a Giulieta. Quem pensa é a Base-X. Quem executa é o Despacho.
 A família nunca conversa com a Base-X, com especialistas, com conectores nem

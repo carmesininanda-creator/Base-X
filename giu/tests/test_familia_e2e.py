@@ -1057,3 +1057,226 @@ def test_welcome_aplicado_no_cadastro_automaticamente():
     # Nome fora do piloto → sem welcome
     memory.add_member("5511988888803", "Convidado")
     assert memory.get_member("5511988888803")["welcome"] is None
+
+
+# ─── Living Context: Time Provider (Fase 2 — garantias do contrato) ───────────
+# As 12 garantias da ARQUITETURA-CONTEXT-PROVIDERS.md aplicáveis ao primeiro
+# Provider: nunca levanta, piso interno, silêncio, orçamento, confidencialidade,
+# língua de vida, efêmero, teto de tempo, substituição (um único AGORA).
+
+from giu import context  # noqa: E402
+from giu.context import tempo  # noqa: E402
+
+
+class _RespostaClima:
+    """Resposta falsa do conector de clima (nenhum teste toca a rede)."""
+    def raise_for_status(self):
+        pass
+
+    def json(self):
+        return {
+            "current": {"temperature_2m": 17.6, "weather_code": 51},
+            "daily": {"temperature_2m_max": [21.3], "temperature_2m_min": [12.9],
+                      "sunrise": ["2026-07-08T06:48"], "sunset": ["2026-07-08T17:32"]},
+        }
+
+
+def _hoje():
+    from datetime import datetime
+    from zoneinfo import ZoneInfo
+    from giu import config as _cfg
+    return datetime.now(ZoneInfo(_cfg.TIMEZONE))
+
+
+def test_retrato_piso_interno_nunca_nasce_vazio():
+    # Pessoa desconhecida, banco sem nada dela, zero conectores: o retrato existe
+    r = context.retrato("5511900009999")
+    assert "O MOMENTO DE AGORA" in r
+    assert "AGORA:" in r
+    # Dia da semana em PORTUGUÊS (vida, não locale do servidor) + estação
+    assert any(dia in r for dia in tempo.DIAS_SEMANA)
+    assert any(e in r for e in ("verão", "outono", "inverno", "primavera"))
+
+
+def test_retrato_silencio_sem_cidade_e_sem_datas():
+    # Silêncio é resposta válida: sem autorizações, nada de clima nem datas
+    r = context.retrato("5511900009999")
+    assert "Lá fora" not in r
+    assert "DATAS QUERIDAS" not in r
+
+
+def test_retrato_e_efemero_nao_escreve_vida_no_banco():
+    u = "5511900009998"
+    with memory._conn() as conn:
+        antes = {t: conn.execute(f"SELECT COUNT(*) FROM {t}").fetchone()[0]
+                 for t in ("profile", "facts", "messages", "agenda", "missions")}
+    context.retrato(u)
+    with memory._conn() as conn:
+        depois = {t: conn.execute(f"SELECT COUNT(*) FROM {t}").fetchone()[0]
+                  for t in ("profile", "facts", "messages", "agenda", "missions")}
+    assert antes == depois
+
+
+def test_datas_queridas_acordam_no_dia_e_na_vespera():
+    from datetime import timedelta
+    hoje = _hoje()
+    assert memory.dates_add(IAN, "Aniversário da avó dele", hoje.strftime("%m-%d"))
+    assert memory.dates_add(IAN, "Entrega do projeto",
+                            (hoje + timedelta(days=1)).strftime("%Y-%m-%d"),
+                            recorrente=False)
+    r = context.retrato(IAN)
+    assert "DATAS QUERIDAS" in r
+    assert "Aniversário da avó dele" in r          # acorda HOJE
+    assert "Entrega do projeto" in r               # véspera (amanhã)
+    assert "nunca como notificação" in r           # o tom vai junto com o dado
+
+
+def test_retrato_confidencialidade_nada_atravessa_membros():
+    # A data querida do Ian JAMAIS aparece no retrato da Pauline
+    r = context.retrato(PAULINE)
+    assert "Aniversário da avó dele" not in r
+    assert "Entrega do projeto" not in r
+
+
+def test_consentimento_recusado_bloqueia_datas():
+    u = "5511900009997"
+    memory.set_profile(u, consentimento=False)
+    assert memory.dates_add(u, "Data qualquer", "01-01") is False
+    assert memory.dates_all(u) == []
+
+
+def test_clima_degrada_em_silencio_quando_conector_falha(monkeypatch):
+    u = "5511900009996"
+    memory.city_set(u, "São Paulo", -23.55, -46.63)
+    tempo._clima_cache.clear()
+
+    def explode(*a, **k):
+        raise RuntimeError("conector fora do ar")
+    monkeypatch.setattr(tempo.httpx, "get", explode)
+    r = context.retrato(u)                          # não levanta
+    assert "AGORA:" in r                            # o piso continua inteiro
+    assert "Lá fora" not in r                       # o clima simplesmente cala
+    assert "erro" not in r.lower() and "falha" not in r.lower()
+
+
+def test_clima_lingua_de_vida_e_teto_por_snapshot(monkeypatch):
+    u = "5511900009995"
+    memory.city_set(u, "São Paulo", -23.55, -46.63)
+    tempo._clima_cache.clear()
+    monkeypatch.setattr(tempo.httpx, "get", lambda *a, **k: _RespostaClima())
+    snap = tempo.snapshot(u)
+    assert "Lá fora em São Paulo" in snap and "18°C" in snap and "garoa" in snap
+    assert "sol" in snap                            # nascer/pôr do sol junto
+    assert len(snap.splitlines()) <= 3              # teto de 3 linhas por Provider
+    # Língua de vida: nenhum fornecedor, jargão ou módulo aparece no retrato
+    baixo = snap.lower()
+    for proibido in ("open-meteo", "api", "provider", "conector", "http"):
+        assert proibido not in baixo
+    # Teto de TEMPO: conector lento é conector mudo — a conversa nunca espera
+    assert tempo._CLIMA_TIMEOUT <= 3
+
+
+def test_prompt_tem_um_unico_agora_e_nao_cresceu():
+    # CP-2 (substituição, não soma): o retrato ASSUME o lugar do antigo AGORA —
+    # nada aparece em dobro, e o prompt não incha com a chegada do Living Context.
+    prompt = brain._system_prompt("5511900009994", "oi")
+    assert prompt.count("AGORA:") == 1
+    assert "O MOMENTO DE AGORA" in prompt
+    assert len(prompt) < 21500  # orçamento global (medido em 07/2026: ~20.6k)
+
+
+def test_tool_anotar_data_valida_e_guarda():
+    r = tools.execute_tool("anotar_data",
+                           {"titulo": "Aniversário do padrinho", "data": "21-09-1967"},
+                           RAFAEL)
+    assert "inválido" in r or "Não consegui" in r   # formato errado não entra
+    r = tools.execute_tool("anotar_data",
+                           {"titulo": "Aniversário do padrinho", "data": "09-21"},
+                           RAFAEL)
+    assert "Data guardada" in r
+    assert any(d["titulo"] == "Aniversário do padrinho" for d in memory.dates_all(RAFAEL))
+
+
+def test_tool_definir_cidade_esquecer_e_lei():
+    u = "5511900009993"
+    memory.city_set(u, "Campinas", -22.9, -47.06)
+    assert memory.city_get(u)["nome"] == "Campinas"
+    r = tools.execute_tool("definir_cidade", {"cidade": ""}, u)
+    assert "esquecida AGORA" in r
+    assert memory.city_get(u) is None
+
+
+# ─── Time Provider: dívidas da Life Architect pagas (T1–T6) ───────────────────
+
+def test_t1_aniversario_29_fevereiro_existe_e_acorda():
+    from datetime import datetime as _dt
+    u = "5511900009992"
+    # 29/02 é aniversário como qualquer outro — a Giu não recusa (T1)
+    assert memory.dates_add(u, "Aniversário do afilhado", "02-29") is True
+    d = memory.dates_all(u)[0]
+    # Em ano bissexto acorda em 29/02; em ano comum, em 28/02
+    assert tempo._bate(d, _dt(2028, 2, 29)) is True
+    assert tempo._bate(d, _dt(2026, 2, 28)) is True
+    assert tempo._bate(d, _dt(2026, 3, 1)) is False
+
+
+def test_t2_recorrencia_deriva_do_formato():
+    from datetime import datetime as _dt
+    u = "5511900009991"
+    # Data única de ano passado JAMAIS volta a acordar (a cobrança fantasma morre)
+    assert memory.dates_add(u, "Entrega antiga", "2025-07-10")
+    unica = [d for d in memory.dates_all(u) if d["titulo"] == "Entrega antiga"][0]
+    assert unica["recorrente"] is False
+    assert tempo._bate(unica, _dt(2026, 7, 10)) is False
+    assert tempo._bate(unica, _dt(2025, 7, 10)) is True
+    # MM-DD é SEMPRE anual — mesmo se alguém passar recorrente=False (nada morre mudo)
+    assert memory.dates_add(u, "Dia dos avós", "07-26", recorrente=False)
+    anual = [d for d in memory.dates_all(u) if d["titulo"] == "Dia dos avós"][0]
+    assert anual["recorrente"] is True
+    # YYYY-MM-DD com recorrente=True explícito vira aniversário anual
+    assert memory.dates_add(u, "Aniversário da Nanda", "1967-09-21", recorrente=True)
+    aniv = [d for d in memory.dates_all(u) if "Nanda" in d["titulo"]][0]
+    assert tempo._bate(aniv, _dt(2026, 9, 21)) is True
+
+
+def test_t3_esquecer_data_e_lei():
+    u = "5511900009990"
+    memory.dates_add(u, "Aniversário do ex", "03-15")
+    memory.dates_add(u, "Consulta anual", "05-10")
+    r = tools.execute_tool("esquecer_data", {"titulo": "aniversário do ex"}, u)
+    assert "esquecida AGORA" in r
+    titulos = [d["titulo"] for d in memory.dates_all(u)]
+    assert "Aniversário do ex" not in titulos and "Consulta anual" in titulos
+    # Título inexistente: honestidade, não silêncio
+    assert "Não encontrei" in tools.execute_tool("esquecer_data", {"titulo": "nada"}, u)
+
+
+def test_t4_trocar_de_cidade_mata_o_ceu_antigo(monkeypatch):
+    u = "5511900009989"
+    memory.city_set(u, "São Paulo", -23.55, -46.63)
+    tempo._clima_cache.clear()
+    monkeypatch.setattr(tempo.httpx, "get", lambda *a, **k: _RespostaClima())
+    assert "São Paulo" in tempo.snapshot(u)
+    # Mudou para Campinas: o cache é por coordenada — a linha antiga não volta
+    memory.city_set(u, "Campinas", -22.90, -47.06)
+    assert "Lá fora em Campinas" in tempo.snapshot(u)
+
+
+def test_t5_o_nao_encerra_esta_no_retrato():
+    from datetime import datetime as _dt
+    u = "5511900009988"
+    memory.dates_add(u, "Dia da vovó", _dt.now().strftime("%m-%d"))
+    linha = tempo._linha_datas(u, tempo._agora())
+    assert "ENCERRA" in linha and "silêncio" in linha  # anti-repetição vai com o dado
+
+
+def test_t6_consentimento_recusado_bloqueia_cidade(monkeypatch):
+    import httpx as _httpx
+    monkeypatch.setattr(_httpx, "get",
+                        lambda *a, **k: (_ for _ in ()).throw(RuntimeError("sem rede")))
+    u = "5511900009987"
+    memory.set_profile(u, consentimento=False)
+    assert memory.city_set(u, "Santos", -23.9, -46.3) is False
+    assert memory.city_get(u) is None
+    r = tools.execute_tool("definir_cidade", {"cidade": "Santos"}, u)
+    assert "NÃO foi" in r or "recusou" in r
