@@ -160,6 +160,22 @@ DECLINE_MESSAGE = (
     "membros cadastrados. Não vou guardar nada do que você enviou. 💛"
 )
 
+# Falha honesta (lição do incidente do piloto): se o cérebro quebrar, a pessoa
+# recebe uma resposta honesta — NUNCA silêncio, em NENHUM canal.
+HONEST_FAILURE = (
+    "Me perdi agora por um instante… pode mandar de novo? "
+    "Se eu continuar assim, me chama daqui a pouquinho que eu volto."
+)
+
+
+def _think_safe(user_id, message, channel, via="text"):
+    """brain.think com falha honesta — o caminho único de TODOS os canais."""
+    try:
+        return brain.think(user_id, message, channel=channel, via=via)
+    except Exception:
+        log.exception("Turno falhou para %s (conteúdo não vai ao log)", user_id)
+        return HONEST_FAILURE
+
 
 def pending_welcome(user_id):
     """Texto de boas-vindas aprovado pela operadora, se for o primeiro contato.
@@ -200,8 +216,7 @@ class ChatRequest(BaseModel):
 def chat(req: ChatRequest, authorization: str = Header(default="")):
     # Em modo família, só a própria pessoa conversa em seu nome (token pessoal)
     require_self(req.user_id, authorization)
-    reply = brain.think(req.user_id, req.message, channel="web")
-    return {"reply": reply}
+    return {"reply": _think_safe(req.user_id, req.message, "web")}
 
 
 # ─── Governança da memória (os dados pertencem à pessoa) ─────────────────────
@@ -320,15 +335,16 @@ def _reply_blocking(number, reply, via):
 
 
 def _turn_blocking(number, text, via):
-    """Um turno inteiro (SÍNCRONO — roda numa thread do background)."""
+    """Um turno inteiro (SÍNCRONO — roda numa thread do background).
+    FALHA HONESTA: se o cérebro quebrar (ex.: provedor de IA fora), a pessoa
+    recebe uma resposta honesta — nunca silêncio (lição do incidente do piloto)."""
     welcome = pending_welcome(number)
     if welcome:
         memory.save_message(number, "user", text, "whatsapp", modality=via)
         memory.save_message(number, "assistant", welcome, "whatsapp")
         _reply_blocking(number, welcome, via)
         return
-    reply = brain.think(number, text, channel="whatsapp", via=via)
-    _reply_blocking(number, reply, via)
+    _reply_blocking(number, _think_safe(number, text, "whatsapp", via), via)
 
 
 def _audio_turn_blocking(number, media_id):
@@ -419,7 +435,7 @@ async def telegram_webhook(request: Request):
             return {"status": "ok"}
         # Metadados apenas — conteúdo de conversa NUNCA vai para logs
         log.info("Telegram: mensagem de %s (%d caracteres)", chat_id, len(text))
-        # O chat_id é a identidade da pessoa no cérebro
-        reply = brain.think(chat_id, text, channel="telegram")
+        # O chat_id é a identidade da pessoa no cérebro (com falha honesta)
+        reply = _think_safe(chat_id, text, "telegram")
         await telegram.send_message(chat_id, reply)
     return {"status": "ok"}

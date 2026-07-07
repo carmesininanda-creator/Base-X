@@ -343,10 +343,15 @@ def add_member(user_id, name, role="member", emergency_contact=None, welcome=Non
     """Registra um membro da família. Retorna o token pessoal (mostrado UMA vez).
     Sem texto explícito de boas-vindas, aplica a abertura do Relationship
     Blueprint pelo nome (welcomes.py) — o primeiro encontro é personalizado;
-    um welcome passado explicitamente sempre tem prioridade."""
+    um welcome passado explicitamente sempre tem prioridade.
+    IDENTIDADE SEMEADA: membro com Blueprint nasce com o apelido conhecido no
+    perfil e a etapa 'nome' do onboarding concluída — a Giu não pergunta o que
+    já sabe. Se a própria pessoa já escolheu um nome, o recadastro NÃO mexe."""
     if welcome is None:
         from . import welcomes
         welcome = welcomes.welcome_for(name)
+    from . import blueprints
+    apelido = blueprints.preferred_name(name)
     token = secrets.token_urlsafe(32)
     with _conn() as conn:
         conn.execute(
@@ -356,6 +361,12 @@ def add_member(user_id, name, role="member", emergency_contact=None, welcome=Non
                  emergency_contact=excluded.emergency_contact, welcome=excluded.welcome""",
             (user_id, name, role, "invited", _hash_token(token), emergency_contact, welcome, _now()),
         )
+    if apelido:
+        profile = get_profile(user_id)
+        if not profile["name"]:  # nunca sobrescreve um nome que a pessoa escolheu
+            done = profile["data"].get("onboarding", {})
+            done["nome"] = True
+            set_profile(user_id, name=apelido, onboarding=done)
     return token
 
 

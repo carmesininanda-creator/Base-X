@@ -92,18 +92,18 @@ def test_status_expoe_modo_familia(client):
 # ─── 3. Onboarding individual e independente ──────────────────────────────────
 
 def test_onboarding_individual():
-    # A ordem da primeira conversa: NOME primeiro (decisão da Nanda), depois
-    # a pendência inicial, depois o consentimento
-    assert onboarding.current_step(memory.get_profile(IAN)) == "nome"
-    tools.execute_tool("registrar_onboarding", {"campo": "nome", "valor": "Ian"}, IAN)
+    # IDENTIDADE SEMEADA (decisão da Nanda): membro com Blueprint nasce com o
+    # apelido conhecido — a Giu NÃO pergunta o nome que já sabe. O onboarding
+    # começa direto na pendência inicial; consentimento continua sendo da pessoa.
+    assert memory.get_profile(IAN)["name"] == "Ian"
     assert onboarding.current_step(memory.get_profile(IAN)) == "pendencia_inicial"
     tools.execute_tool("registrar_onboarding", {"campo": "pendencia_inicial", "valor": "devolver livros"}, IAN)
     tools.execute_tool("registrar_onboarding", {"campo": "consentimento", "valor": "sim"}, IAN)
     assert onboarding.current_step(memory.get_profile(IAN)) is None
 
-    # Pauline ainda está no começo do dela — progresso NÃO vazou
-    assert onboarding.current_step(memory.get_profile(PAULINE)) == "nome"
-    tools.execute_tool("registrar_onboarding", {"campo": "nome", "valor": "Nine"}, PAULINE)
+    # Pauline: apelido do Blueprint ("Nine") já conhecido; progresso NÃO vazou
+    assert memory.get_profile(PAULINE)["name"] == "Nine"
+    assert onboarding.current_step(memory.get_profile(PAULINE)) == "pendencia_inicial"
     tools.execute_tool("registrar_onboarding", {"campo": "pendencia_inicial", "valor": "agendar dentista"}, PAULINE)
     tools.execute_tool("registrar_onboarding", {"campo": "consentimento", "valor": "sim"}, PAULINE)
 
@@ -567,6 +567,81 @@ def test_welcome_uma_giu_quatro_portas():
     # Ian e Rafael: sem discurso de vínculo forçado (Blueprints respeitados)
     assert "não vim te cobrar" in w["Ian"].lower()
     assert "não decidir por você" in w["Rafael"]
+
+
+def test_blueprint_e_garantia_arquitetural():
+    """Princípio estrutural: a Giulieta pensa ATRAVÉS dos Blueprints. O fluxo
+    número → identidade → Blueprint → memória → contexto é garantido por
+    construção: membro identificado NUNCA recebe prompt sem a camada."""
+    prompt_ian = brain._system_prompt(IAN, "oi")
+    # A camada está presente e é do Ian
+    assert "Relationship Blueprint" in prompt_ian
+    assert "hipótese viva" in prompt_ian
+    assert "parceria" in prompt_ian.lower()          # comunicação do Ian
+    assert "Zero ironia" in prompt_ian               # o que nunca fazer com ele
+    # Os princípios de preservação estão NA camada, não em documentação
+    assert "NUNCA rótulo" in prompt_ian
+    assert "sempre prevalece" in prompt_ian          # a pessoa > Blueprint
+    assert "quem ensina quem ela é, é ela mesma" in prompt_ian
+    # A camada é da pessoa certa (a da Pauline fala do jeito DELA)
+    prompt_nine = brain._system_prompt(PAULINE, "oi")
+    assert "NÃO se sente errada" in prompt_nine
+    assert "consertando a vida dela" in prompt_nine
+    # NÃO-VAZAMENTO: o conteúdo do Blueprint do Ian jamais entra no prompt da Nine
+    assert "Zero ironia" not in prompt_nine
+    assert "rejeitar cobranças" not in prompt_nine
+    # Salvaguardas das revisoras, NA camada: fonte nunca vira argumento;
+    # Blueprint nunca é citado nem lido como veredito; evidência atualiza hipótese
+    assert "sua mãe disse que você" in prompt_ian     # a frase proibida, nomeada
+    assert "nem a palavra \"Blueprint\" na conversa" in prompt_ian
+    assert "não O QUE você diz" in prompt_ian
+    assert "é a memória dela que atualiza a hipótese" in prompt_ian
+    # Membro SEM Blueprint (fora do piloto): degrada com naturalidade, sem camada
+    memory.add_member("5511977777701", "Visita")
+    prompt_visita = brain._system_prompt("5511977777701", "oi")
+    assert "Relationship Blueprint" not in prompt_visita
+    # Não-membro (ex.: web fora do modo família): também sem camada, sem erro
+    assert "Relationship Blueprint" not in brain._system_prompt("desconhecido", "oi")
+
+
+def test_identidade_semeada_no_cadastro():
+    from giu import blueprints
+    # Cadastro com nome de Blueprint semeia o APELIDO e pula a pergunta do nome
+    memory.add_member("5511977777702", "Rafael")
+    p = memory.get_profile("5511977777702")
+    assert p["name"] == "Rafa"                       # apelido, não o nome formal
+    assert onboarding.current_step(p) == "pendencia_inicial"
+    # Recadastro NÃO sobrescreve um nome que a própria pessoa escolheu
+    memory.set_profile("5511977777702", name="Rafinha")
+    memory.add_member("5511977777702", "Rafael")
+    assert memory.get_profile("5511977777702")["name"] == "Rafinha"
+    # Apelidos resolvem: Nine → Blueprint da Pauline
+    assert blueprints.preferred_name("nine") == "Nine"
+    assert blueprints.preferred_name("Fulano") is None
+
+
+def test_falha_honesta_em_todos_os_canais(client, monkeypatch):
+    """Lição do incidente: se o cérebro quebrar, a pessoa recebe resposta
+    honesta — NUNCA silêncio (WhatsApp) nem 500 seco (web/Telegram)."""
+    import server
+
+    def explode(*a, **k):
+        raise RuntimeError("provedor de IA fora do ar")
+
+    monkeypatch.setattr(brain, "think", explode)
+    # Conversa já iniciada (senão o turno entregaria a boas-vindas, que é o correto)
+    memory.save_message(IAN, "user", "oi", "whatsapp")
+    # WhatsApp (turno em background): responde honesto em vez de morrer calado
+    enviados = []
+    monkeypatch.setattr(server.whatsapp, "send_message_sync",
+                        lambda to, t: enviados.append(t) or True)
+    server._turn_blocking(IAN, "oi", "text")
+    assert enviados and "Me perdi" in enviados[0]
+    # Web /chat: 200 com resposta honesta, não HTTP 500
+    r = client.post("/chat", json={"user_id": IAN, "message": "oi"},
+                    headers={"Authorization": f"Bearer {TOKENS['Ian']}"})
+    assert r.status_code == 200
+    assert "Me perdi" in r.json()["reply"]
 
 
 def test_welcome_aplicado_no_cadastro_automaticamente():
