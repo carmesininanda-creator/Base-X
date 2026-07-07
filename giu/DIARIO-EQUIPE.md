@@ -56,6 +56,17 @@ Vida ao Lado (conectores) · Living Context (o momento + fricção) · Missões
 
 ## 3. Registro corrido (descobertas · decisões · problemas)
 
+**07/07 — 🌱 LIFE ARCHITECT (PR #16): MERGE LIBERADO (82%) — 4 dívidas
+cobradas e PAGAS antes do merge.** Veredito: "ataca a prioridade nº 1 do jeito
+certo — não como gerenciador de tarefas, mas como cuidado com começo, meio e
+FIM; descarregamento mental real, não teatro de lembrete". Dívidas quitadas:
+M1 — a pergunta de vida sobrevive à janela (concluídas sem 'VIDA:' ficam no
+prompt por 7 dias); M2 — saída digna (desistir encerra com zero julgamento;
+missão parada recebe UM 'ainda faz sentido eu cuidar disso?'); M3 —
+transparência sob demanda ("o invisível é o MECANISMO, nunca o cuidado");
+M4 — sonda do Life Radar no protocolo (conversas ÷ missões ≈ 1:1 = presença
+virou produtividade). PR #16 MERGEADO (main 32a5d4c, 55/55).
+
 **07/07 — Code: O NASCIMENTO COMEÇA (PR #16 — Mission Engine + Life Radar +
 Life Lens + Base-X no modelo mental).** Fase filosófica encerrada por decisão
 da fundadora ("a pergunta deixa de ser 'o que a Base-X consegue fazer' e passa
