@@ -56,6 +56,20 @@ Vida ao Lado (conectores) · Living Context (o momento + fricção) · Missões
 
 ## 3. Registro corrido (descobertas · decisões · problemas)
 
+**07/07 — DECISÃO da fundadora (roadmap):** "Capability Connectors" morre;
+nasce **LIFE CONNECTORS** — cada conector existe para tornar uma ÁREA DA VIDA
+mais leve, nunca para integrar um app. Pergunta-definição: *"que parte da
+vida esta integração ajuda a tornar mais leve?"*. Roadmap reclassificado em
+3 níveis: **P1 essencial** (Tempo & Compromissos/Calendar · Pendências/Tasks ·
+Burocracia/Gmail · Presença/voz natural — parte da promessa central, não
+ficam para futuro distante) · **P2 alto impacto** (Mobilidade/Uber · Casa &
+Abastecimento/Rappi · Vida Financeira) · **P3 contexto** (Corpo &
+Descanso/Oura·Garmin·Apple Health — alimenta o Living Context antes de
+qualquer ação). Registrado em ARQUITETURA-LIFE-CONNECTORS.md (fora do git) e
+PERSONA.md item 5 (no git). Impacto: Manus — a experiência de autorização é
+por área da vida, não por app; Despacho — credenciais/integrações seguem a
+ordem P1→P2→P3 quando a engenharia for aprovada.
+
 **07/07 (noite) — Code, sob delegação da fundadora ("faz tudo para mim,
 manda para o despacho e para a manu"):** PR #12 (Friction Lens) mergeado —
 era a especificação dela verbatim, 46/46 testes; main `9933b97` validada em
@@ -111,7 +125,7 @@ só com a Giulieta; todo o resto é bastidor.
 3. **P1 · Manus:** durante a semana — validação de experiência (pulso, atritos); dia 7-8 — entrevistas das 9 dimensões.
 4. **P1 · Code:** plantão de bugs/ajustes durante a semana (escopo fechado: correções, nunca features); consolidar o relatório do Ciclo 1 com Manus.
 5. **P2 · equipe:** o relatório da semana escolhe o que entra no Ciclo 2 (a fricção real de cada membro decide — não a lista de ideias).
-6. **Roadmap (aguardando aprovação formal da Nanda, SEM engenharia):** Vida ao Lado · Living Context · Missões · 14 capacidades da PERSONA item 5.
+6. **Roadmap (aguardando aprovação formal da Nanda para engenharia):** Life Connectors em 3 níveis — P1 essencial: Calendar, Tasks, Gmail, voz natural · P2: Uber, Rappi, financeiro · P3: Oura, Garmin, Apple Health (contexto) — + Living Context · Missões. Detalhe: PERSONA.md item 5 e ARQUITETURA-LIFE-CONNECTORS.md.
 
 ## 6. Relatório do ciclo (modelo — preenchido a cada ciclo)
 
