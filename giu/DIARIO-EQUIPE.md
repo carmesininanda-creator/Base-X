@@ -58,6 +58,17 @@ roadmap P1/P2/P3 na PERSONA item 5 — zero integração implementada.
 
 ## 3. Registro corrido (descobertas · decisões · problemas)
 
+**08/07 — DECISÃO da fundadora: a REGRA DA DEMONSTRAÇÃO.** Todo conector novo
+vem acompanhado de demonstração em conversa real — o PR entrega a EXPERIÊNCIA,
+não só o código: pedido natural → autorização → conexão → execução →
+acompanhamento → "como foi?" → medição de vida. Aplicada retroativamente ao
+PR #18: **DEMO-CONECTOR-AGENDA.md** (no repo) — a conversa completa da
+consulta da mãe, fiel ao código, com os bastidores anotados (Friction Lens →
+missão → conectar_agenda → D2 em voz alta → evento na agenda DELA → véspera →
+pasta azul → "como foi a consulta?" → VIDA:). Serve de roteiro de aceitação:
+o conector conclui quando a Nanda VIVER essa conversa no WhatsApp, sem ajuda
+técnica. Registrada na GOVERNANCA (regra permanente, 2 níveis).
+
 **08/07 — 🌱 LIFE ARCHITECT (PR #18): MERGE LIBERADO (87%) — D1+D2 pagas
 antes do merge; PR #18 MERGEADO (main c66e5c5, 60/60).** Veredito: "o desenho
 por pessoa (opt-in, uso único, revogação-lei, escopo mínimo, fallback honesto)
