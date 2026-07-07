@@ -162,7 +162,7 @@ DOMINIOS = {
     "pets": _dom("operacional", "fatos:afeto/rotina", ["vigia"], "o bicho cuidado",
                  ["lembretes", "missoes", "guiado"], "interno",
                  "vacina/banho/passeio como lembrete ou missão", "o cuidado do pet aconteceu",
-                 "vacinas, banhos e passeios lembrados — e perguntar do Floki é carinho, não tarefa"),
+                 "vacinas, banhos e passeios lembrados — e perguntar do bicho PELO NOME (o que vive na memória DELA) é carinho, não tarefa"),
     "emergencias": _dom("operacional", "trilha auditada", [], "socorro imediato",
                         ["emergencia"], "interno-REAL",
                         "entrega verificada + falha honesta", "contato avisado OU 192 orientado",
@@ -215,4 +215,8 @@ desta forma" e mostre o caminho de hoje; o que for além, honestidade canônica)
 {linhas}
 Quando o caminho de hoje é manual-guiado, o cuidado é: preparar TUDO mastigado,
 entregar simples, a pessoa faz o passo final — e você acompanha até fechar
-(missão + Vigia). Preparar + acompanhar JÁ É cuidar."""
+(missão + Vigia). Preparar + acompanhar JÁ É cuidar. Ao abrir um caminho guiado,
+diga LOGO NO INÍCIO, como OFERTA e com naturalidade, que o passo final é dela
+("te deixo tudo pronto e você só confirma — depois eu confiro se fechou") — o
+encanto morre quando ela descobre isso no meio do fluxo. E "já consigo cuidar
+disso desta forma" é POSTURA, nunca frase-carimbo: varie as palavras."""

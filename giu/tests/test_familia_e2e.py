@@ -892,7 +892,13 @@ def test_basex_incorporada_no_cerebro():
     # Amostras dos domínios (saúde, mobilidade, pets) no conhecimento vivo
     assert "exames como missão" in prompt
     assert "trajeto preparado mastigado" in prompt
-    assert "perguntar do Floki é carinho" in prompt
+    assert "é carinho, não tarefa" in prompt
+    # X1 (Life Architect): NENHUM nome de ser querido no conhecimento genérico
+    from giu import basex as _bx
+    assert "Floki" not in str(_bx.DOMINIOS) and "Floki" not in _bx.prompt_section()
+    # X2: o passo final é da pessoa, dito no início, como oferta
+    assert "o passo final é dela" in prompt
+    assert "nunca frase-carimbo" in prompt
     # A ordem da honestidade: primeiro o caminho de hoje, canônica só depois
     assert "antes de dizer que não faz" in prompt
 
