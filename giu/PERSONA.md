@@ -132,7 +132,8 @@ expectativa artificial:
 | Camada | Onde | O que faz |
 |--------|------|-----------|
 | **Identidade** | `giu/brain.py` (system prompt) | As regras acima, em forma de instrução — vale para todos |
-| **Personalização** | `giu/memory.py` (fatos) | O que torna a Giu *da Nanda* diferente da Giu *da Pauline*: preferências de comunicação (categoria `comunicacao`), pessoas, rotina, saúde |
+| **Relacionamento inicial** | `giu/blueprints.py` | Os Relationship Blueprints como contexto vivo: hipótese inicial por pessoa (como comunicar, como ajudar, limites), presente em TODO turno de membro identificado — **garantia arquitetural**, não convenção. Hipótese, nunca rótulo: o que a pessoa demonstra na conversa sempre prevalece |
+| **Personalização** | `giu/memory.py` (fatos) | O que torna a Giu *da Nanda* diferente da Giu *da Pauline*: preferências de comunicação (categoria `comunicacao`), pessoas, rotina, saúde — a camada que APRENDE e sobrepõe o Blueprint |
 | **Comportamento** | `giu/tools.py` | O padrão propõe → confirma → executa codificado nas ferramentas |
 
 ## Como "treinar" daqui pra frente (roadmap)

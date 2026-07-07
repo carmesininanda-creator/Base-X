@@ -11,13 +11,19 @@ from zoneinfo import ZoneInfo
 
 from openai import OpenAI
 
-from . import config, memory, modes, onboarding, tools
+from . import blueprints, config, memory, modes, onboarding, tools
 
 MAX_TOOL_ROUNDS = 5
 
 
 def _system_prompt(user_id, user_message=""):
+    """Monta o contexto de TODO turno. Fluxo obrigatório (princípio estrutural):
+    número → identidade → Relationship Blueprint → memória → contexto → think.
+    O Blueprint entra por construção — membro identificado nunca recebe uma
+    resposta que não tenha passado por ele."""
     profile = memory.get_profile(user_id)
+    member = memory.get_member(user_id)  # identidade (cadastro da família)
+    blueprint_str = blueprints.prompt_section(member["name"]) if member else ""
     facts = memory.get_facts(user_id)
     agenda = memory.get_agenda(user_id)
     pending = memory.list_pending_actions(user_id)
@@ -58,8 +64,8 @@ MODO DE PRESENÇA ATUAL: {mode}
 AGORA: {now} (fuso {config.TIMEZONE})
 PESSOA: {name}
 INTERAÇÕES REGISTRADAS: {count}
-
-O QUE VOCÊ SABE SOBRE ELA (memória permanente):
+{blueprint_str}
+O QUE VOCÊ SABE SOBRE ELA (memória permanente — o que ELA mostrou; prevalece sobre o Blueprint):
 {facts_str}
 
 AGENDA VIVA:
