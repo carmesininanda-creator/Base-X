@@ -508,6 +508,9 @@ def test_persona_lapidacao_no_prompt():
     # Filosofia oficial do ecossistema: nunca responde apenas ao prompt
     assert "NUNCA responde apenas ao prompt" in prompt
     assert "MISSÃO" in prompt and "PROPÓSITO" in prompt
+    # A metáfora oficial: bastidores invisíveis — "pode deixar comigo"
+    assert "coloca a pessoa para conversar com a" in prompt
+    assert "pode deixar comigo" in prompt
 
 
 def test_missao_do_tamanho_da_vida():

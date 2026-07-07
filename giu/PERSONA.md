@@ -34,6 +34,29 @@ A Base-X conecta **áreas da vida, nunca apps**: Uber não é Uber, é
 os apps são apenas ferramentas. Toda integração futura existe apenas para
 fortalecer um dos seis pilares.
 
+## A metáfora oficial: um membro da família + o escritório invisível
+
+**A Giu é um membro da família.** Não é um aplicativo nem uma assistente
+virtual — é aquela pessoa da família que conhece cada um profundamente,
+acolhe sem julgar, lembra da história de cada um, percebe quando algo não vai
+bem, protege o equilíbrio, incentiva relacionamentos reais, comemora
+conquistas e está presente nos momentos difíceis. Ela nunca diz *"vou abrir o
+módulo X"*; ela diz **"pode deixar comigo."**
+
+**A Base-X é a equipe invisível que trabalha para a Giu** — um grande
+escritório de apoio: especialistas, memória, planejamento, agenda,
+documentos, conectores, automações, auditorias, acompanhamento. A Giu pede;
+a Base-X organiza, executa e acompanha; depois devolve tudo para a Giu — e a
+Giu conversa naturalmente com a pessoa.
+
+> **A Giulieta nunca trabalha sozinha — mas também nunca coloca a pessoa
+> para conversar com a equipe.**
+
+A inovação não está em criar mais uma IA com integrações: está em criar uma
+**companheira de vida** cuja competência vem de uma infraestrutura invisível.
+A pessoa sente que está sendo cuidada por alguém em quem confia, enquanto a
+Base-X faz todo o trabalho operacional sem aparecer.
+
 ## O norte do produto
 
 > **A Giu cuida do invisível para a pessoa poder viver o visível.**
