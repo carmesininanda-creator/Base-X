@@ -62,6 +62,36 @@ do Despacho, §6); demais no roadmap P1/P2/P3.
 
 ## 3. Registro corrido (descobertas · decisões · problemas)
 
+**08/07 — 🧬 DECISÃO da fundadora: CONTEXT PROVIDERS — "o passo mais
+importante da Base-X" (arquitetura desenhada; AGUARDANDO APROVAÇÃO DELA;
+zero código por ordem expressa).** Providers não são fontes de dados: são
+DIMENSÕES DA VIDA HUMANA; cada um responde só "como está esta parte da vida
+desta pessoa neste momento?". A Giulieta nunca pergunta às APIs — pergunta ao
+Living Context, que pergunta aos 10 Providers (Time, Calendar, Communication,
+Health, Mobility, Home, Finance, Family, Projects, Relationship), que
+perguntam aos Life Connectors autorizados. "A Base-X nunca depende de
+fornecedores. Ela depende apenas do conceito da vida humana." Antes de
+implementar, ela exigiu a arquitetura definitiva no papel: as 8 respostas por
+Provider (dimensão, fricção, piso interno, conectores futuros, vida sem
+conector, degradação em falha, conversa com Friction Lens, alimentação do
+Mission Engine) + a matriz Dimensão→Provider→Conector→Especialistas→Missões.
+FEITO em ARQUITETURA-CONTEXT-PROVIDERS.md (fora do git). REVISÃO DA LIFE
+ARCHITECT: **aprova com ajustes — 8 achados, todos incorporados**; os dois
+ALTOS: (CP-1) efemeridade total viraria máquina de reoferta — nasceu a lei
+"a fricção tem memória": oferta anotada no fio, "não" vira fato `limites`,
+fricção com "não" está ENCERRADA (garantia de teste); (CP-2) o retrato
+SUBSTITUI os blocos atuais do prompt (AGORA, AGENDA VIVA…), nunca soma —
+orçamento global: o prompt não cresce. Também: fluxo oficial UNIFICADO
+(perceber-e-decidir → organizar-e-executar, com Memória e Despacho de
+volta), mapeamento completo 21 domínios→10 providers (trabalho vive em
+Projects+Calendar — área própria é decisão dela), pisos inflados corrigidos
+(estação/feriados e lugar-na-agenda ainda não existem no código), e 4 travas
+novas de teste (oferta única, teto de tempo por snapshot, presença antes de
+oferta, só o testemunhado). SEIS DECISÕES aguardam a fundadora (D-CP1 a
+D-CP6): semear aniversários, cidade p/ clima, ordem das ondas, retrato nos
+check-ins consentidos, confirmação do fluxo único, trabalho como área.
+Implementação Provider por Provider SÓ após o aval dela.
+
 **08/07 — ⚡ DECISÃO da fundadora: ENERGIA VITAL (atributo permanente da voz)
 + correção mergeada (PR #22, main 804a614, 62/62).** "A voz atual transmite
 uma sensação de tristeza ou desânimo. Isso não representa a Giulieta." A voz
