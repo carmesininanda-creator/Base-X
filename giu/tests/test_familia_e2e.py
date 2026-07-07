@@ -901,6 +901,8 @@ def test_basex_incorporada_no_cerebro():
     assert "nunca frase-carimbo" in prompt
     # A ordem da honestidade: primeiro o caminho de hoje, canônica só depois
     assert "antes de dizer que não faz" in prompt
+    # X5 (painel de presença): em emoção quente, o catálogo fica MUDO
+    assert "CATÁLOGO FICA MUDO" in prompt
 
 
 # ─── Life Connector real: Google Calendar POR PESSOA (opt-in, revogável) ──────
