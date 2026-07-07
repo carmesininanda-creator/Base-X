@@ -56,6 +56,68 @@ Vida ao Lado (conectores) · Living Context (o momento + fricção) · Missões
 
 ## 3. Registro corrido (descobertas · decisões · problemas)
 
+**07/07 — 🌱 LIFE ARCHITECT, revisão inaugural (PR #14): MERGE LIBERADO,
+com dívida de medição PAGA.** Veredito: "o desenho aponta para vida melhor,
+não apenas para conversa boa" — a conversa está a serviço da vida (Friction
+Lens), e o desenho protege contra os dois jeitos de piorar uma vida
+(dependência e invasão). Dívida cobrada e quitada: o protocolo media a
+RELAÇÃO e quase nada da VIDA → **5 sondas de vida adicionadas ao fecho**
+(§3.1 do protocolo): carga mental, vida prática, vida relacional, fricção
+remanescente (escolhe o Ciclo 2) e o teste definitivo ("se a Giu desaparecesse
+amanhã, o que pioraria?" — 'quase nada' na semana 1 é linha de base saudável).
+**Risco a vigiar (não bloqueia):** o vão entre a missão do tamanho da vida e
+as mãos do tamanho de uma agenda — termômetro: a frequência da resposta
+canônica por pessoa (volta a pedir OUTRA coisa = inspirou; para de pedir =
+frustrou). **3 fricções previstas:** Nanda — a Giu virar mais uma coisa para
+gerenciar (ela delegou UMA carga real ou só administrou o piloto?); Ian —
+proatividade lida como cobrança (silêncio pode ser sucesso; ele VOLTA
+sozinho?); Rafael — o primeiro a esbarrar no vão missão×mãos. **Prioridade
+nº 1 pós-piloto (aposta a priori, a vida vivida vence):** fechar o ciclo da
+pequena carga — de "eu seguro isso" até "isso foi RESOLVIDO" (a consulta
+aconteceu?); hoje ela lembra mas não confere, e a Nanda segue como follow-up
+ambulante da família. **Nota de sequência:** o piloto deve rodar COM o #14 em
+produção (senão a sonda de expectativa perde o objeto) → H4 atualizado:
+redeploy da main PÓS-merge do #14.
+
+**07/07 — DECISÃO da fundadora: criada a 🌱 LIFE ARCHITECT — guardiã
+permanente da missão da Base-X.** Ela não revisa tecnologia; revisa A VIDA da
+pessoa, com a pergunta permanente "depois de conviver com a Giulieta, a vida
+desta pessoa está objetivamente melhor?" e o teste definitivo "se a Giulieta
+desaparecesse hoje, o que pioraria?" (valor real ≠ dependência). Dez lentes
+(carga mental → qualidade de vida → fricção remanescente) registradas na
+GOVERNANCA. **Nova regra da Base-X:** toda funcionalidade responde ANTES de
+existir: que fricção humana reduz? que área da vida melhora? como a Life
+Architect medirá o benefício na vida real? Sem as três → roadmap. Mandato:
+revisa toda grande evolução ANTES de merge importante — inaugurada já no
+PR #14; o relatório da Primeira Semana é material dela. Impacto: Manus
+compartilha lentes com ela (experiência × vida); Code passa a incluir as 3
+respostas na descrição de todo PR de funcionalidade.
+
+**07/07 — DECISÃO da fundadora (definição oficial da Base-X + 6º PILAR).**
+A Base-X NÃO é plataforma/backend/APIs: é uma **camada de inteligência
+operacional da vida** — uma equipe invisível. Definição oficial: *"sistema
+operacional de vida que orquestra pessoas, inteligência, especialistas,
+conectores e automações para reduzir continuamente a fricção da vida humana"*;
+Giulieta: *"a única presença humana através da qual uma pessoa percebe toda
+essa inteligência"*. Giulieta = consciência; Base-X = ação em CICLO (percebe →
+antecipa → organiza → decide → executa → acompanha → aprende). Fluxo: Vida →
+Fricções → Missões → Resolução. Conecta áreas da vida, nunca apps (Uber =
+Mobilidade; Calendar = Tempo; Gmail = Comunicação; Oura = Saúde). **Sexto
+pilar oficializado: Life Orchestration** — "como coordenar tudo isso sem que
+a pessoa perceba a complexidade?" (hoje exercido manualmente pelo Orquestrador
+Técnico; em produto, realizado pelo Mission Engine). Registrado em
+DECISOES-ARQUITETURA e GOVERNANCA (fora do git) e PERSONA.md (no git).
+
+**07/07 — DECISÃO da fundadora (filosofia do piloto): "a Base-X nasce grande
+na visão e cresce gradualmente na execução."** O piloto não é pequeno: a
+Giulieta nasce sabendo que sua missão cobre TODAS as áreas da vida (18 áreas,
+de agenda a hobbies), sem fingir o que ainda não faz — resposta canônica de
+honestidade: "posso fazer isso quando essa capacidade estiver disponível e
+você decidir ativá-la". Salvaguardas preservadas: nunca recitar lista/cardápio,
+nunca prometer prazo (Promessa 8 intacta). Implementado no cérebro + PERSONA
+(PR #14). Impacto Manus: a sonda de expectativa ("ela pareceu maior do que
+faz hoje? isso frustrou ou inspirou?") vale observação na Primeira Semana.
+
 **07/07 — DECISÃO DE ARQUITETURA da fundadora (marco do PR #13): abre a
 segunda frente — Base-X — evoluindo JUNTO com a Giulieta.** Oficializados os
 **cinco pilares permanentes da Base-X**: Identity · Living Context ·

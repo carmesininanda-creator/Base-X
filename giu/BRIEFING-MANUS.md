@@ -33,7 +33,10 @@ Sua parte:
    (dia 7-8), nas 9 dimensões: qualidade da conversa · confiança · adaptação
    ao jeito de cada um · memória · voz×texto · silêncio (check-ins 2×/dia:
    bons ou demais?) · pequenas lembranças · pequenas surpresas · atritos.
-   As perguntas-sonda estão prontas no protocolo, §3.
+   As perguntas-sonda estão prontas no protocolo, §3 — **incluindo as 5
+   SONDAS DE VIDA da Life Architect (§3.1), obrigatórias no fecho**: as 9
+   dimensões medem a relação; as 5 sondas medem a vida (carga mental, vida
+   prática, vida relacional, fricção remanescente e o teste definitivo).
 3. **Caçar fricção de experiência** — os pontos que as auditorias marcaram
    para observar em gente real: a pergunta de preferência de voz soou natural
    ou "configuração"? o texto+áudio duplicado incomoda? a "ponte" ("liga pro

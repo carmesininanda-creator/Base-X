@@ -510,6 +510,22 @@ def test_persona_lapidacao_no_prompt():
     assert "MISSÃO" in prompt and "PROPÓSITO" in prompt
 
 
+def test_missao_do_tamanho_da_vida():
+    """A Giulieta nasce com a visão inteira (todas as áreas da vida) e a
+    honestidade sobre o que ainda não faz — grande na visão, gradual na execução."""
+    prompt = brain._system_prompt(IAN, "oi")
+    assert "MISSÃO É DO TAMANHO DA VIDA" in prompt
+    # Amplitude presente na identidade (amostras das 18 áreas)
+    for area in ("planejamento financeiro", "viagens", "hobbies", "aprendizado", "remédios"):
+        assert area in prompt, area
+    # A resposta canônica de honestidade (frase da fundadora, verbatim)
+    assert "quando essa capacidade estiver disponível e você decidir ativá-la" in prompt
+    # Grande na visão, gradual na execução — sem virar cardápio
+    assert "grande na visão, gradual na execução" in prompt
+    assert "NÃO é cardápio" in prompt
+    assert "NUNCA finge que faz" in prompt
+
+
 def test_posicionamento_e_ponte_no_nucleo():
     """Posicionamento oficial: a Giu organiza a vida para sobrar mais vida —
     e a ponte para os vínculos humanos vale em QUALQUER canal, não só na voz."""

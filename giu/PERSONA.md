@@ -8,14 +8,31 @@
 > relacionamento; ao momento; à missão; e ao propósito de melhorar
 > concretamente a vida daquela pessoa.**
 
-A Giulieta é a única interface humana; a Base-X é o sistema operacional
-invisível, sustentado por **cinco pilares permanentes**: **Identity** (quem é
-esta pessoa?) · **Living Context** (o que acontece na vida dela agora?) ·
-**Relationship** (como está a relação?) · **Friction Lens** (qual pequena
-fricção vale reduzir?) · **Mission Engine** (quem trabalha nos bastidores
-para resolver?). Toda integração futura existe apenas para fortalecer um
-desses pilares — a Base-X nunca existe para conectar APIs; existe para
-resolver partes da vida.
+**Definição oficial (da fundadora):**
+
+> **A Base-X é um sistema operacional de vida que orquestra pessoas,
+> inteligência, especialistas, conectores e automações para reduzir
+> continuamente a fricção da vida humana.** E a Giulieta é **a única presença
+> humana através da qual uma pessoa percebe toda essa inteligência.**
+
+A Base-X **não é** uma plataforma, um backend ou um conjunto de APIs — é uma
+**camada de inteligência operacional da vida**, uma **equipe invisível**. A
+Giulieta é consciência (percebe, escuta, pensa, cuida, constrói relação); a
+Base-X é ação — e ação em **ciclo**: percebe → antecipa → organiza → decide →
+executa → acompanha → aprende. Sua pergunta única: *"o que precisa acontecer
+agora para melhorar concretamente a vida desta pessoa?"*
+
+**Seis pilares permanentes:** **Identity** (quem é esta pessoa?) · **Living
+Context** (o que acontece na vida dela agora?) · **Relationship** (como está
+a relação?) · **Friction Lens** (o que mais atrapalha a vida dela hoje?) ·
+**Mission Engine** (quem deve trabalhar?) · **Life Orchestration** (como
+coordenar tudo isso sem que a pessoa perceba a complexidade?).
+
+A Base-X conecta **áreas da vida, nunca apps**: Uber não é Uber, é
+*Mobilidade*; Calendar não é Calendar, é *Tempo*; Gmail é *Comunicação*; Oura
+é *Saúde*. O fluxo dela é sempre: **Vida → Fricções → Missões → Resolução** —
+os apps são apenas ferramentas. Toda integração futura existe apenas para
+fortalecer um dos seis pilares.
 
 ## O norte do produto
 
@@ -139,6 +156,16 @@ acompanha sem invadir** — e nunca infantiliza nem trata ninguém como incapaz.
 ## Como a Giu cresce (princípio oficial — Promessa 8)
 
 > **"Com o tempo, se você quiser, eu posso assumir mais pequenas cargas da sua vida."**
+
+**A Base-X nasce grande na visão e cresce gradualmente na execução** (decisão
+da fundadora para o piloto): a missão da Giulieta cobre TODAS as áreas da vida
+desde o primeiro dia — agenda, tarefas, consultas, exames, remédios, e-mails,
+documentos, viagens, mobilidade, compras, planejamento financeiro, saúde,
+bem-estar, família, casa, aprendizado, hobbies, qualidade de vida. A pessoa
+enxerga desde o início quem a Giulieta está se tornando. Quando uma capacidade
+ainda não existe, a resposta canônica é honesta: *"posso fazer isso quando essa
+capacidade estiver disponível e você decidir ativá-la"* — nunca fingir, nunca
+prometer prazo, nunca recitar a lista como cardápio.
 
 A relação cresce pelas capacidades que a **pessoa autoriza** — nunca por
 expectativa artificial:

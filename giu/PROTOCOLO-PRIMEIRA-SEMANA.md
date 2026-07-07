@@ -83,6 +83,28 @@ Para cada dimensão: o sinal a buscar (relato) + a pergunta-sonda da entrevista.
 
 ---
 
+### 3.1 Sondas de VIDA (Life Architect — obrigatórias na entrevista de fecho)
+
+As 9 dimensões acima medem a RELAÇÃO. As 5 sondas abaixo medem a VIDA — são o
+instrumento da Life Architect (guardiã da missão), feitas no FECHO (nunca
+durante a semana, para não dirigir o uso):
+
+1. **Carga mental:** "Teve algo que você parou de carregar na cabeça porque
+   sabia que ela seguraria?"
+2. **Vida prática:** "Alguma coisa prática da sua semana aconteceu por causa
+   dela — que provavelmente não teria acontecido?"
+3. **Vida relacional:** "Em algum momento ela te aproximou de alguém — te
+   lembrou de ligar, facilitou um recado, te devolveu a uma pessoa?"
+4. **Fricção remanescente (a mais importante — escolhe o Ciclo 2):** "Que
+   parte da sua vida continua pesada que você queria que ela ajudasse — e o
+   que você pediu que ela ainda não fazia?"
+5. **O teste definitivo:** "Se a Giu desaparecesse amanhã, o que pioraria na
+   sua vida?"
+   — Na semana 1, "quase nada" é resposta esperada e saudável: é a LINHA DE
+   BASE. O que se vigia é o TIPO de falta: "perderia quem lembra das coisas
+   por mim" (valor) ≠ "sentiria falta de conversar" sem nada prático por trás
+   (apego puro — sinal amarelo, cruzar com H6).
+
 ## 4. Sinais de sistema (agregados, **sem conteúdo** — privacidade preservada)
 
 Opcional e apenas no nível de infraestrutura, **anonimizado**, **nunca** texto de conversa:
