@@ -507,7 +507,7 @@ TOOL_DEFINITIONS = [
         "type": "function",
         "function": {
             "name": "concluir_compromisso",
-            "description": "Marca um compromisso da agenda como concluído, pelo id.",
+            "description": "Marca um compromisso da agenda como concluído, pelo id (o id vem de ver_agenda).",
             "parameters": {
                 "type": "object",
                 "properties": {"id": {"type": "integer"}},

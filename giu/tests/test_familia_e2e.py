@@ -1295,9 +1295,11 @@ def test_calendar_hoje_vespera_e_pendencias():
     memory.add_agenda(u, "Consulta da mãe", hoje, "15:00")
     memory.add_agenda(u, "Exame de sangue", amanha, "08:30")
     memory.add_agenda(u, "Renovar CNH")  # pendência sem data
-    snap = ctx_agenda.snapshot(u)
-    assert "hoje: Consulta da mãe às 15:00" in snap
-    assert "amanhã: Exame de sangue às 08:30" in snap
+    from datetime import datetime as _dt
+    manha = _dt.fromisoformat(f"{hoje}T07:00:00")
+    snap = ctx_agenda.snapshot(u, _now=manha)
+    assert "Consulta da mãe às 15:00" in snap and "hoje" in snap
+    assert "AGENDA — amanhã: Exame de sangue às 08:30" in snap  # rótulo próprio (C6)
     assert "véspera" in snap                      # o preparo leve vai junto
     assert "1 pendência(s) sem data" in snap
     assert len(snap.splitlines()) <= 3            # teto do contrato
@@ -1308,7 +1310,8 @@ def test_calendar_conflito_detectado():
     hoje = _hoje().strftime("%Y-%m-%d")
     memory.add_agenda(u, "Dentista", hoje, "15:00")
     memory.add_agenda(u, "Reunião do banco", hoje, "15:00")
-    snap = ctx_agenda.snapshot(u)
+    from datetime import datetime as _dt
+    snap = ctx_agenda.snapshot(u, _now=_dt.fromisoformat(f"{hoje}T07:00:00"))
     assert "CONFLITO DE AGENDA" in snap
     assert "Dentista" in snap and "Reunião do banco" in snap
     assert "COM ela" in snap                      # resolver é decisão dela
@@ -1319,8 +1322,9 @@ def test_calendar_dia_cheio_reduz_a_uma_prioridade():
     hoje = _hoje().strftime("%Y-%m-%d")
     for i, h in enumerate(("08:00", "10:00", "13:00", "16:00", "19:00")):
         memory.add_agenda(u, f"Compromisso {i+1}", hoje, h)
-    snap = ctx_agenda.snapshot(u)
-    assert "dia CHEIO: 5 compromissos" in snap
+    from datetime import datetime as _dt
+    snap = ctx_agenda.snapshot(u, _now=_dt.fromisoformat(f"{hoje}T07:00:00"))
+    assert "dia CHEIO: 5 compromissos ainda por vir" in snap
     assert "UMA prioridade" in snap
     assert "Compromisso 4" not in snap            # NÃO despeja a lista
 
@@ -1328,10 +1332,12 @@ def test_calendar_dia_cheio_reduz_a_uma_prioridade():
 def test_calendar_concluido_sai_do_retrato():
     u = "5511900008995"
     hoje = _hoje().strftime("%Y-%m-%d")
+    from datetime import datetime as _dt
+    manha = _dt.fromisoformat(f"{hoje}T07:00:00")
     iid = memory.add_agenda(u, "Buscar exame", hoje, "11:00")
-    assert "Buscar exame" in ctx_agenda.snapshot(u)
+    assert "Buscar exame" in ctx_agenda.snapshot(u, _now=manha)
     memory.complete_agenda(u, iid)
-    assert "Buscar exame" not in ctx_agenda.snapshot(u)
+    assert "Buscar exame" not in ctx_agenda.snapshot(u, _now=manha)
 
 
 def test_calendar_confidencialidade_e_efemero():
@@ -1346,26 +1352,41 @@ def test_calendar_confidencialidade_e_efemero():
 
 
 def test_cp2_agenda_viva_absorvida_pelo_retrato():
-    # CP-2: o bloco antigo sumiu; a agenda entra UMA vez, pelo retrato
-    u = "5511900008998"
+    # CP-2: o bloco antigo sumiu; a agenda entra pelo retrato (item sem hora
+    # aparece em qualquer hora do dia — não depende do relógio do teste)
+    u = "5511900008992"
+    memory.add_agenda(u, "Levar a receita na farmácia", _hoje().strftime("%Y-%m-%d"))
     prompt = brain._system_prompt(u, "oi")
     assert "AGENDA VIVA:" not in prompt
-    assert prompt.count("AGENDA —") == 1
-    assert "Consulta da mãe" in prompt            # o cuidado do dia está lá
+    assert prompt.count("AGENDA —") >= 1
+    assert "Levar a receita na farmácia" in prompt  # o cuidado do dia está lá
 
 
 def test_t7_providers_desacoplados_de_fornecedor():
     # Garantia 7 do contrato: nenhum Provider conhece fornecedor, URL ou HTTP —
-    # a fronteira mora em integrations/ (Life Connectors), como o Google Calendar.
+    # a fronteira mora em integrations/ (Life Connectors). Verificação por AST
+    # (C3 da Life Architect): pega "import httpx", "from httpx import get",
+    # urllib, socket e importlib — não só o padrão de hoje.
+    import ast as _ast
     import glob
     import os as _os
+    PROIBIDOS = {"httpx", "requests", "urllib", "socket", "http", "importlib"}
     base = _os.path.join(_os.path.dirname(_os.path.dirname(_os.path.abspath(__file__))),
                          "giu", "context")
     for arquivo in glob.glob(_os.path.join(base, "*.py")):
-        fonte = open(arquivo, encoding="utf-8").read().lower()
-        for proibido in ("import httpx", "import requests", "http://", "https://",
-                         "open-meteo.com", "googleapis"):
-            assert proibido not in fonte, f"{arquivo} conhece fornecedor: {proibido}"
+        fonte = open(arquivo, encoding="utf-8").read()
+        for no in _ast.walk(_ast.parse(fonte)):
+            mods = []
+            if isinstance(no, _ast.Import):
+                mods = [a.name for a in no.names]
+            elif isinstance(no, _ast.ImportFrom):
+                mods = [no.module or ""]
+            for mod in mods:
+                raiz = mod.split(".")[0]
+                assert raiz not in PROIBIDOS, f"{arquivo} importa fornecedor/rede: {mod}"
+        # E nenhuma URL de fornecedor no texto (cinto e suspensório)
+        for proibido in ("http://", "https://", "open-meteo.com", "googleapis"):
+            assert proibido not in fonte.lower(), f"{arquivo} conhece fornecedor: {proibido}"
 
 
 # ─── Voz e Presença (frente permanente — prescrições V0 da Voice Architect) ───
@@ -1394,3 +1415,28 @@ def test_voz_folego_frase_longa_respira():
     assert falado.replace("…", ",") == longa.replace(",", ",")  # mesmas palavras
     # frase curta fica intocada (fôlego não vira tique)
     assert voice.vocefy("tô aqui, viu") == "tô aqui, viu"
+
+
+def test_c1_boa_companhia_sabe_que_horas_sao():
+    # O dia já vivido não é "hoje" (C1): às 22h, o compromisso das 09:00 cala,
+    # o dia CHEIO fantasma não dispara, e o conflito que já passou não alarma.
+    from datetime import datetime as _dt
+    u = "5511900008994"
+    hoje = _hoje().strftime("%Y-%m-%d")
+    noite = _dt.fromisoformat(f"{hoje}T22:00:00")
+    for h in ("08:00", "09:00", "10:00", "11:00"):
+        memory.add_agenda(u, f"Já vivido {h}", hoje, h)
+    memory.add_agenda(u, "Conflito passado A", hoje, "09:00")
+    assert ctx_agenda.snapshot(u, _now=noite) == ""      # silêncio: o dia acabou
+    # O que ainda vem, aparece; o que passou, não
+    memory.add_agenda(u, "Plantão da noite", hoje, "23:00")
+    snap = ctx_agenda.snapshot(u, _now=noite)
+    assert "Plantão da noite" in snap and "Já vivido" not in snap
+
+
+def test_c2_google_conectado_retrato_declara_o_limite(monkeypatch):
+    from giu.integrations import google_calendar as gc
+    u = "5511900008993"
+    monkeypatch.setattr(gc, "is_configured", lambda uid=None: True)
+    snap = ctx_agenda.snapshot(u)  # Agenda Viva vazia, Google conectado
+    assert "confirme em ver_agenda" in snap  # nunca "dia livre" sem conferir

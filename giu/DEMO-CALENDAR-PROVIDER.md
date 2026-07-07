@@ -80,6 +80,23 @@ o dia cheio e pergunta "qual é A prioridade?", quem avisa do conflito antes
 de doer, quem lembra da véspera do exame. Nenhuma dessas frases menciona
 tecnologia; todas mencionam a vida dela.
 
+## Limites conhecidos (registrados pela Life Architect — honestidade de escopo)
+
+- **T9 (era C4):** conflito é detectado por igualdade exata de horário; 15:00
+  e 15:30 "muito próximos" passam — janela real exige campo de duração, que
+  herda a fila do campo `lugar` (T8). A linha afirma o conflito que viu,
+  nunca a ausência de conflito.
+- **C1 pago:** boa companhia sabe que horas são — o que já foi vivido hoje
+  cala; dia CHEIO conta só o que ainda vem; conflito no passado não alarma.
+- **C2 pago:** com Google conectado, o retrato declara o próprio limite
+  ("confirme em ver_agenda") — a Giu nunca afirma "dia livre" sem conferir.
+- **C5 (evolução):** pendências sem data só aparecem junto do dia — sozinhas,
+  não acordam; a fricção "pendência que cobra da cabeça" tem casa melhor no
+  Communication Provider (próximo da fila).
+- **C7 (evolução):** compromisso de ontem não concluído sai do retrato (sem
+  julgamento) e fica em ver_agenda; o "como foi?" retrospectivo com leveza é
+  evolução, não regressão.
+
 **Fase do Provider:** arquitetura ✅ → implementação ✅ → **validação em uso
 real (Família Fundadora)** → evolução (Google Calendar já espelha a criação
 de eventos; a leitura externa entra quando o OAuth do Despacho chegar).
