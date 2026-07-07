@@ -48,15 +48,34 @@ roadmap P1/P2/P3 na PERSONA item 5 — zero integração implementada.
 
 | # | De → Para | O quê | Status |
 |---|-----------|-------|--------|
-| H1 | Despacho → Code | **Causa raiz do incidente OpenAI** (uma linha: chave? billing? rede?) — para registro e prevenção de recorrência (se billing: alarme de saldo antes do piloto) | ⏳ aberto |
+| H1 | ~~Despacho → Code~~ | **CAUSA RAIZ NOMEADA: quota/crédito OpenAI (HTTP 429)**. Prevenção pendente: Despacho confirmar ALARME DE SALDO no painel OpenAI (recorrência no meio do piloto é inaceitável) | ✅ causa fechada · ⚠️ alarme pendente |
 | H2 | Despacho → equipe | **Ciclo completo de voz confirmado em produção**: áudio → entende → responde áudio+texto → "me responde só por escrito" → áudio → só texto | ⏳ aberto (bloqueador do piloto, decisão da Nanda) |
 | H3 | ~~Nanda → Code~~ | PR #12 mergeado pelo Code em 07/07, sob delegação noturna da fundadora ("faz tudo para mim") — especificação era dela, verbatim; 46/46 testes | ✅ fechado |
-| H4 | Despacho | **Redeploy da main `32a5d4c` (ou mais nova)** + **recadastro dos 4 membros** (mesmo POST, sem campo `welcome`; token não muda — ignorar o token exibido no re-POST) — semeia identidades e Blueprints. Roteiro completo: BRIEFING-DESPACHO.md | ⏳ aberto |
-| H5 | Despacho | Checklist de validação (CHECKLIST-VALIDACAO-DESPACHO.md) — fumaça com membro "Teste", nunca com a família | ⏳ aberto |
+| H4 | ~~Despacho~~ | Deploy automático GitHub→Railway ATIVO (main "carta da Giulieta" no ar); 4 membros registrados com Blueprints e welcomes; Nanda reconhecida pelo nome na 1ª mensagem, onboarding completo, preferência de voz registrada | ✅ fechado |
+| H5 | Despacho | Checklist: fumaça conversacional ✅ (14 msgs com a Nanda). FALTA: **ciclo de voz (H2)** — Nanda escolheu VOZ; confirmar áudio chegando + "só por escrito" respeitado. E OAuth do Google (§6) para a capacidade de agenda | 🟡 parcial |
 | H6 | Manus | Validação de experiência do piloto — roteiro completo: BRIEFING-MANUS.md (protocolo, 9 dimensões, pulso, atritos a caçar) | ⏳ aberto |
 | H7 | Nanda | **GO do piloto** — só ela dá, após H1–H5 verdes no diário | ⏳ aberto |
 
 ## 3. Registro corrido (descobertas · decisões · problemas)
+
+**08/07 — DESPACHO: RELATÓRIO OPERACIONAL v2 — A GIULIETA ESTÁ VIVA.** Deploy
+automático ativo (main "carta" no ar); OpenAI resolvido — **CAUSA RAIZ: quota
+429 (crédito)**; 14 mensagens reais trocadas com a Nanda: reconhecida pelo
+nome sem perguntar, welcome entregue, onboarding completo, preferência de voz
+registrada, memória gravando, segurança OK. **RESPOSTAS DO CODE às dúvidas
+código×config do Despacho:** (1) Conector Google Calendar POR PESSOA está
+100% NO MAIN (PR #18) — falta SÓ configuração (OAuth CLIENT_ID/SECRET +
+GIU_BASE_URL, briefing §6); Google TASKS ainda NÃO existe (próxima capacidade
+da fila, pós-aceitação da agenda). (2) LEMBRETES: totalmente funcionais no
+main (tabela + loop + ferramenta, testados). (3) CORREÇÃO ao relatório:
+"criação de compromissos depende do Google Calendar" está ERRADO — a Agenda
+Viva interna agenda HOJE (propõe→confirma→executa + lembretes); o Google é o
+espelho na agenda real, não pré-requisito. **O que ainda gateia o GO (regras
+da fundadora, só ela pode dispensar):** (a) H2 — ciclo de voz confirmado
+(voz é identidade = bloqueador declarado; e a Nanda ESCOLHEU voz — validar
+áudio chegando); (b) X5 — reauditoria-relâmpago do Manus; (c) alarme de saldo
+OpenAI (a causa raiz foi quota — sem alarme, recorre no meio da semana).
+OAuth do Google NÃO bloqueia o piloto (capacidade de agenda entra em paralelo).
 
 **08/07 — A CARTA DA GIULIETA (fundadora encerra a etapa de construção).**
 Registrada como norte permanente: "não estamos mais construindo software —
