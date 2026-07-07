@@ -62,6 +62,31 @@ do Despacho, §6); demais no roadmap P1/P2/P3.
 
 ## 3. Registro corrido (descobertas · decisões · problemas)
 
+**08/07 — 🏗️ FASE 2 EM RITMO: fundadora MERGEOU o Time Provider (PR #23) e
+decidiu o fim da fase conceitual; 📅 CALENDAR PROVIDER + 🎙️ VOZ V0 prontos
+no PR #24 (link enviado; o merge é dela).** DECISÕES registradas: sem novos
+motores/documentos conceituais — só capacidades reais; ordem oficial:
+Calendar → Communication (Gmail) → Home (Rappi/iFood/Alexa) → Mobility
+(Uber) → Health (Oura/Garmin/Apple Health); DUAS FRENTES PERMANENTES
+(capacidades + Voz e Presença); novo portão obrigatório de toda capacidade:
+"isso faz a Giulieta parecer mais uma boa companhia ou apenas uma IA mais
+capaz?". NO PR #24: (1) Calendar Provider — "Google Calendar será apenas
+sincronização; a Agenda Viva continua sendo o cérebro" (dela, textual):
+dia CHEIO → UMA prioridade (Blueprint da Pauline em código), véspera com
+preparo leve, CONFLITO detectado por código, bloco AGENDA VIVA absorvido
+pelo retrato (CP-2); T7 paga (open_meteo virou Life Connector em
+integrations/; teste por AST proíbe Provider conhecer fornecedor);
+(2) Voz V0 — fôlego humano (frase longa respira na vírgula do meio; nenhuma
+palavra muda) + telefone dígito a dígito (dose segue protegida). LIFE
+ARCHITECT: aprova com dívidas — C1 ("boa companhia sabe que horas são": o
+dia já vivido calava... corrigido ANTES do merge), C2 (Google conectado →
+retrato declara o próprio limite; nunca "dia livre" sem conferir), C3
+(teste AST), C6, C8 pagas; T9/C5/C7 registradas como limites conhecidos no
+DEMO-CALENDAR-PROVIDER.md. 91/91 testes. PENDENTE: merge do PR #24 pela
+fundadora; validação em uso real dos dois Providers pela Família Fundadora;
+OAuth Google (Despacho, §6); alarme de saldo OpenAI (Despacho); teste de
+áudio da Nanda (H2) — agora com fôlego e Energia Vital juntos.
+
 **08/07 — 🏗️ FASE 2 ABERTA: arquitetura APROVADA pela fundadora + ⏰ TIME
 PROVIDER implementado (PR #23 aberto — link enviado; O MERGE É DELA).**
 Decisões registradas: (a) **estratégia oficial da Fase 2** — a Base-X existe
