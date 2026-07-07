@@ -56,6 +56,20 @@ Vida ao Lado (conectores) · Living Context (o momento + fricção) · Missões
 
 ## 3. Registro corrido (descobertas · decisões · problemas)
 
+**07/07 — DECISÃO da fundadora: criada a 🌱 LIFE ARCHITECT — guardiã
+permanente da missão da Base-X.** Ela não revisa tecnologia; revisa A VIDA da
+pessoa, com a pergunta permanente "depois de conviver com a Giulieta, a vida
+desta pessoa está objetivamente melhor?" e o teste definitivo "se a Giulieta
+desaparecesse hoje, o que pioraria?" (valor real ≠ dependência). Dez lentes
+(carga mental → qualidade de vida → fricção remanescente) registradas na
+GOVERNANCA. **Nova regra da Base-X:** toda funcionalidade responde ANTES de
+existir: que fricção humana reduz? que área da vida melhora? como a Life
+Architect medirá o benefício na vida real? Sem as três → roadmap. Mandato:
+revisa toda grande evolução ANTES de merge importante — inaugurada já no
+PR #14; o relatório da Primeira Semana é material dela. Impacto: Manus
+compartilha lentes com ela (experiência × vida); Code passa a incluir as 3
+respostas na descrição de todo PR de funcionalidade.
+
 **07/07 — DECISÃO da fundadora (definição oficial da Base-X + 6º PILAR).**
 A Base-X NÃO é plataforma/backend/APIs: é uma **camada de inteligência
 operacional da vida** — uma equipe invisível. Definição oficial: *"sistema
