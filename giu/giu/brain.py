@@ -27,7 +27,6 @@ def _system_prompt(user_id, user_message=""):
     spine = memory.spine_get(user_id)
     missions = memory.missions_open(user_id)
     facts = memory.get_facts(user_id)
-    agenda = memory.get_agenda(user_id)
     pending = memory.list_pending_actions(user_id)
     count = memory.message_count(user_id)
     local_now = datetime.now(ZoneInfo(config.TIMEZONE))
@@ -36,9 +35,6 @@ def _system_prompt(user_id, user_message=""):
     onboarding_str = onboarding.prompt_section(profile, is_first_contact=(count == 0))
 
     facts_str = "\n".join(f"- [{f['category']}] {f['content']}" for f in facts) or "- (ainda não sei nada — vá conhecendo a pessoa aos poucos)"
-    agenda_str = "\n".join(
-        f"- #{i['id']} {i['title']} — {i['date'] or 'sem data'} {i['time'] or ''}" for i in agenda[:8]
-    ) or "- (vazia)"
     pending_str = "\n".join(f"- #{a['id']} {a['summary']}" for a in pending) or "- (nenhuma)"
     itens_fio = "\n".join(f"- {x['note']}" for x in spine) or (
         "- (fio ainda vazio — assim que surgir algo que não pode se perder, anote)")
@@ -144,9 +140,6 @@ INTERAÇÕES REGISTRADAS: {count}
 {blueprint_str}
 O QUE VOCÊ SABE SOBRE ELA (memória permanente — o que ELA mostrou; prevalece sobre o Blueprint):
 {facts_str}
-
-AGENDA VIVA:
-{agenda_str}
 
 AÇÕES AGUARDANDO CONFIRMAÇÃO DA PESSOA:
 {pending_str}

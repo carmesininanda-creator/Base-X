@@ -1068,17 +1068,11 @@ from giu import context  # noqa: E402
 from giu.context import tempo  # noqa: E402
 
 
-class _RespostaClima:
-    """Resposta falsa do conector de clima (nenhum teste toca a rede)."""
-    def raise_for_status(self):
-        pass
-
-    def json(self):
-        return {
-            "current": {"temperature_2m": 17.6, "weather_code": 51},
-            "daily": {"temperature_2m_max": [21.3], "temperature_2m_min": [12.9],
-                      "sunrise": ["2026-07-08T06:48"], "sunset": ["2026-07-08T17:32"]},
-        }
+def _previsao_fake(*a, **k):
+    """Resposta falsa do Life Connector de clima (nenhum teste toca a rede) —
+    já em língua de vida, como o contrato do conector devolve."""
+    return {"temperatura": 18, "descricao": "garoa", "maxima": 21,
+            "minima": 13, "nascer": "06:48", "por": "17:32"}
 
 
 def _hoje():
@@ -1152,7 +1146,7 @@ def test_clima_degrada_em_silencio_quando_conector_falha(monkeypatch):
 
     def explode(*a, **k):
         raise RuntimeError("conector fora do ar")
-    monkeypatch.setattr(tempo.httpx, "get", explode)
+    monkeypatch.setattr(tempo.open_meteo, "previsao", explode)
     r = context.retrato(u)                          # não levanta
     assert "AGORA:" in r                            # o piso continua inteiro
     assert "Lá fora" not in r                       # o clima simplesmente cala
@@ -1163,7 +1157,7 @@ def test_clima_lingua_de_vida_e_teto_por_snapshot(monkeypatch):
     u = "5511900009995"
     memory.city_set(u, "São Paulo", -23.55, -46.63)
     tempo._clima_cache.clear()
-    monkeypatch.setattr(tempo.httpx, "get", lambda *a, **k: _RespostaClima())
+    monkeypatch.setattr(tempo.open_meteo, "previsao", _previsao_fake)
     snap = tempo.snapshot(u)
     assert "Lá fora em São Paulo" in snap and "18°C" in snap and "garoa" in snap
     assert "sol" in snap                            # nascer/pôr do sol junto
@@ -1255,7 +1249,7 @@ def test_t4_trocar_de_cidade_mata_o_ceu_antigo(monkeypatch):
     u = "5511900009989"
     memory.city_set(u, "São Paulo", -23.55, -46.63)
     tempo._clima_cache.clear()
-    monkeypatch.setattr(tempo.httpx, "get", lambda *a, **k: _RespostaClima())
+    monkeypatch.setattr(tempo.open_meteo, "previsao", _previsao_fake)
     assert "São Paulo" in tempo.snapshot(u)
     # Mudou para Campinas: o cache é por coordenada — a linha antiga não volta
     memory.city_set(u, "Campinas", -22.90, -47.06)
@@ -1280,3 +1274,123 @@ def test_t6_consentimento_recusado_bloqueia_cidade(monkeypatch):
     assert memory.city_get(u) is None
     r = tools.execute_tool("definir_cidade", {"cidade": "Santos"}, u)
     assert "NÃO foi" in r or "recusou" in r
+
+
+# ─── Living Context: Calendar Provider (Fase 2 — garantias do contrato) ───────
+# "Google Calendar será apenas sincronização. A Agenda Viva continua sendo o
+# cérebro." (decisão da fundadora) — o snapshot nasce 100% da Agenda Viva.
+
+from giu.context import agenda as ctx_agenda  # noqa: E402
+
+
+def test_calendar_silencio_com_agenda_vazia():
+    assert ctx_agenda.snapshot("5511900008999") == ""
+
+
+def test_calendar_hoje_vespera_e_pendencias():
+    from datetime import timedelta
+    u = "5511900008998"
+    hoje = _hoje().strftime("%Y-%m-%d")
+    amanha = (_hoje() + timedelta(days=1)).strftime("%Y-%m-%d")
+    memory.add_agenda(u, "Consulta da mãe", hoje, "15:00")
+    memory.add_agenda(u, "Exame de sangue", amanha, "08:30")
+    memory.add_agenda(u, "Renovar CNH")  # pendência sem data
+    snap = ctx_agenda.snapshot(u)
+    assert "hoje: Consulta da mãe às 15:00" in snap
+    assert "amanhã: Exame de sangue às 08:30" in snap
+    assert "véspera" in snap                      # o preparo leve vai junto
+    assert "1 pendência(s) sem data" in snap
+    assert len(snap.splitlines()) <= 3            # teto do contrato
+
+
+def test_calendar_conflito_detectado():
+    u = "5511900008997"
+    hoje = _hoje().strftime("%Y-%m-%d")
+    memory.add_agenda(u, "Dentista", hoje, "15:00")
+    memory.add_agenda(u, "Reunião do banco", hoje, "15:00")
+    snap = ctx_agenda.snapshot(u)
+    assert "CONFLITO DE AGENDA" in snap
+    assert "Dentista" in snap and "Reunião do banco" in snap
+    assert "COM ela" in snap                      # resolver é decisão dela
+
+
+def test_calendar_dia_cheio_reduz_a_uma_prioridade():
+    u = "5511900008996"
+    hoje = _hoje().strftime("%Y-%m-%d")
+    for i, h in enumerate(("08:00", "10:00", "13:00", "16:00", "19:00")):
+        memory.add_agenda(u, f"Compromisso {i+1}", hoje, h)
+    snap = ctx_agenda.snapshot(u)
+    assert "dia CHEIO: 5 compromissos" in snap
+    assert "UMA prioridade" in snap
+    assert "Compromisso 4" not in snap            # NÃO despeja a lista
+
+
+def test_calendar_concluido_sai_do_retrato():
+    u = "5511900008995"
+    hoje = _hoje().strftime("%Y-%m-%d")
+    iid = memory.add_agenda(u, "Buscar exame", hoje, "11:00")
+    assert "Buscar exame" in ctx_agenda.snapshot(u)
+    memory.complete_agenda(u, iid)
+    assert "Buscar exame" not in ctx_agenda.snapshot(u)
+
+
+def test_calendar_confidencialidade_e_efemero():
+    # A consulta de um não aparece no retrato do outro; montar não escreve nada
+    assert "Consulta da mãe" not in context.retrato(PAULINE)
+    u = "5511900008998"
+    with memory._conn() as conn:
+        antes = conn.execute("SELECT COUNT(*) FROM agenda").fetchone()[0]
+    context.retrato(u)
+    with memory._conn() as conn:
+        assert conn.execute("SELECT COUNT(*) FROM agenda").fetchone()[0] == antes
+
+
+def test_cp2_agenda_viva_absorvida_pelo_retrato():
+    # CP-2: o bloco antigo sumiu; a agenda entra UMA vez, pelo retrato
+    u = "5511900008998"
+    prompt = brain._system_prompt(u, "oi")
+    assert "AGENDA VIVA:" not in prompt
+    assert prompt.count("AGENDA —") == 1
+    assert "Consulta da mãe" in prompt            # o cuidado do dia está lá
+
+
+def test_t7_providers_desacoplados_de_fornecedor():
+    # Garantia 7 do contrato: nenhum Provider conhece fornecedor, URL ou HTTP —
+    # a fronteira mora em integrations/ (Life Connectors), como o Google Calendar.
+    import glob
+    import os as _os
+    base = _os.path.join(_os.path.dirname(_os.path.dirname(_os.path.abspath(__file__))),
+                         "giu", "context")
+    for arquivo in glob.glob(_os.path.join(base, "*.py")):
+        fonte = open(arquivo, encoding="utf-8").read().lower()
+        for proibido in ("import httpx", "import requests", "http://", "https://",
+                         "open-meteo.com", "googleapis"):
+            assert proibido not in fonte, f"{arquivo} conhece fornecedor: {proibido}"
+
+
+# ─── Voz e Presença (frente permanente — prescrições V0 da Voice Architect) ───
+
+def test_voz_telefone_dita_digito_a_digito():
+    from giu import voice
+    falado = voice.vocefy("me liga no 11 92078-5067 quando puder")
+    assert "9 2 0 7 8… 5 0 6 7" in falado       # dígito a dígito, com fôlego
+    assert "92078-5067" not in falado
+    # Números de emergência também se ditam
+    assert "1 8 8" in voice.vocefy("o CVV atende no 188")
+    # E a dose continua protegida (segurança > estética)
+    assert "1/2 comprimido" in voice.vocefy("tome 1/2 comprimido às 15:00")
+
+
+def test_voz_folego_frase_longa_respira():
+    from giu import voice
+    longa = ("eu deixei tudo pronto para amanhã cedo, separei o pedido do médico "
+             "na pasta azul, e o lembrete do jejum vai chegar às nove da noite certinho")
+    falado = voice.vocefy(longa)
+    assert "…" in falado                        # a pausa é conteúdo
+    # nenhum trecho entre pausas passa do fôlego humano
+    for trecho in falado.replace("…", ".").split("."):
+        assert len(trecho.split()) <= voice._FOLEGO_MAX_PALAVRAS + 2
+    # nenhuma PALAVRA muda — só a respiração entra
+    assert falado.replace("…", ",") == longa.replace(",", ",")  # mesmas palavras
+    # frase curta fica intocada (fôlego não vira tique)
+    assert voice.vocefy("tô aqui, viu") == "tô aqui, viu"

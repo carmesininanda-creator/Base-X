@@ -19,11 +19,11 @@ Contrato universal (as oito leis, resumidas no código):
   cresce com a chegada do Living Context.
 """
 
-from . import tempo
+from . import agenda, tempo
 
-# Ordem = prioridade no orçamento (a onda 1 da Família Fundadora entra aqui,
-# um Provider por vez: Time → Calendar → Family → Projects → Relationship).
-PROVIDERS = [tempo.PROVIDER]
+# Ordem = prioridade no orçamento (a Fase 2 entra aqui um Provider por vez,
+# na ordem da fundadora: Time → Calendar → Communication → Home → Mobility → Health).
+PROVIDERS = [tempo.PROVIDER, agenda.PROVIDER]
 
 RETRATO_MAX_LINHAS = 14   # orçamento de atenção do retrato inteiro
 SNAPSHOT_MAX_LINHAS = 3   # teto por Provider (contrato)

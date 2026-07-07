@@ -22,6 +22,11 @@ from . import config
 
 _URL = re.compile(r"https?://\S+")
 _HORA = re.compile(r"\b(\d{1,2}):(\d{2})\b")
+# Telefones (com hífen — inambíguo) e números de emergência conhecidos:
+# ouvido não relê; telefone se fala DÍGITO A DÍGITO (prescrição V0 da
+# Voice Architect), com fôlego entre os grupos.
+_TELEFONE = re.compile(r"(?:\+?55[\s.]?)?(?:\(?0?\d{2}\)?[\s.]?)?\d{4,5}-\d{4}\b")
+_EMERGENCIA = re.compile(r"\b(188|190|192|193)\b")
 _MOEDA = re.compile(r"R\$\s?(\d[\d.]*)(?:,(\d{2}))?")
 # Unidades de medida/remédio logo após "n/n" → NÃO é data (protege "1/2 comprimido"
 # de virar "dia 1 do 2"). Segurança primeiro: dose nunca pode ser lida como data.
@@ -48,6 +53,39 @@ def _fala_data(m):
         return m.group(0)
     base = f"dia {d} do {mth}"
     return f"{base} de {int(y)}" if y else base
+
+
+def _fala_telefone(m):
+    """'11 92078-5067' → '1 1… 9 2 0 7 8… 5 0 6 7' — dígito a dígito, com
+    fôlego entre os grupos, como uma pessoa dita um número ao telefone."""
+    grupos = [g for g in re.split(r"\D+", m.group(0)) if g]
+    return "… ".join(" ".join(g) for g in grupos)
+
+
+# Fôlego humano (prescrição V0 da Voice Architect): frase longa demais para
+# um fôlego ganha pausa (…) na vírgula mais próxima do meio — nenhuma palavra
+# muda; só a respiração entra. "A pausa é conteúdo."
+_FOLEGO_MAX_PALAVRAS = 14
+
+
+def _folego(texto):
+    def _respira(frase):
+        palavras = frase.split()
+        if len(palavras) <= _FOLEGO_MAX_PALAVRAS or ", " not in frase:
+            return frase
+        # vírgula mais próxima do meio (em palavras) vira pausa de respiração
+        indices = [i for i, p in enumerate(palavras) if p.endswith(",")]
+        if not indices:
+            return frase
+        meio = len(palavras) / 2
+        corte = min(indices, key=lambda i: abs(i - meio))
+        antes = " ".join(palavras[:corte + 1])[:-1]  # tira a vírgula
+        depois = " ".join(palavras[corte + 1:])
+        return _respira(antes) + "… " + _respira(depois)
+
+    # preserva os terminadores ao dividir em frases
+    partes = re.split(r"([.!?…]+\s*)", texto)
+    return "".join(_respira(p) if i % 2 == 0 else p for i, p in enumerate(partes))
 
 
 def _client():
@@ -96,6 +134,9 @@ def vocefy(texto):
     t = _remove_emoji(t)
     t = t.replace("**", "").replace("*", "").replace("`", "").replace("#", "")
     t = _URL.sub("(link enviado por mensagem)", t)
+    # Telefone dita-se dígito a dígito (antes das demais regras de número)
+    t = _TELEFONE.sub(_fala_telefone, t)
+    t = _EMERGENCIA.sub(lambda m: " ".join(m.group(1)), t)
     # Valor: "R$ 50" → "50 reais" (mantém a unidade; não some com o número)
     t = _MOEDA.sub(_fala_moeda, t)
     t = t.replace("R$", "").replace("%", " por cento")
@@ -104,6 +145,8 @@ def vocefy(texto):
                   else f"{int(m.group(1))} e {int(m.group(2))}", t)
     # Datas: 19/07 → "dia 19 do 7" (com ano quando houver; nunca sobre dose)
     t = _DATA.sub(_fala_data, t)
+    # Fôlego humano: frase longa ganha respiração na vírgula do meio
+    t = _folego(t)
     # Espaços redundantes
     return re.sub(r"[ \t]{2,}", " ", t).strip()
 

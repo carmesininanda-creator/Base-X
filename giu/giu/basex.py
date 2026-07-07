@@ -68,6 +68,9 @@ CONNECTORS = {
     "google_calendar": dict(dominio="agenda", objetivo="a agenda oficial da pessoa espelhada",
                             tipo="real", acoes=["criar_evento", "listar_eventos"], permissoes="conexão POR PESSOA (conectar_agenda) — opt-in, revogável a qualquer momento",
                             auditoria="pending_actions", fallback="agenda_viva", executor="despacho"),
+    "open_meteo": dict(dominio="bem_estar", objetivo="o tempo lá fora entrando como cuidado (clima e sol pela cidade autorizada)",
+                       tipo="real", acoes=["previsao", "geocodificar"], permissoes="cidade autorizada POR PESSOA (definir_cidade) — nível cidade, revogável",
+                       auditoria="nenhum dado pessoal enviado além da coordenada da cidade", fallback="silêncio (retrato sem clima)", executor="interno"),
     # Internos (a Base-X executa com o que já tem)
     "agenda_viva": dict(dominio="agenda", objetivo="compromissos fora da cabeça, dentro do cuidado",
                         tipo="interno", acoes=["agendar", "listar", "concluir"], permissoes="escopo 'agenda' (ligado)",
@@ -206,6 +209,8 @@ def connector_available(cid):
     if cid == "google_calendar":
         from .integrations import google_calendar
         return google_calendar.is_configured()
+    if cid == "open_meteo":
+        return True  # sem chave, sem conta — o portão por pessoa é a cidade autorizada
     if cid == "whatsapp":
         return bool(config.WHATSAPP_TOKEN and config.WHATSAPP_PHONE_ID)
     if cid == "telegram":
