@@ -903,6 +903,60 @@ def test_basex_incorporada_no_cerebro():
     assert "antes de dizer que não faz" in prompt
 
 
+# ─── Life Connector real: Google Calendar POR PESSOA (opt-in, revogável) ──────
+
+def test_agenda_conexao_por_pessoa(client, monkeypatch):
+    from giu import config as cfg
+    from giu.integrations import google_calendar as gc
+    U = "u_gcal"
+    memory.set_profile(U, name="G", consentimento=True)
+
+    # Sem app configurado: honestidade canônica, nunca link quebrado
+    r = tools.execute_tool("conectar_agenda", {}, U)
+    assert "ainda não está disponível" in r and "Agenda Viva" in r
+
+    # Com app configurado: o link é real, pessoal e com estado de uso único
+    monkeypatch.setattr(cfg, "GOOGLE_CLIENT_ID", "cid")
+    monkeypatch.setattr(cfg, "GOOGLE_CLIENT_SECRET", "sec")
+    monkeypatch.setattr(cfg, "BASE_URL", "https://giu.exemplo.com")
+    r = tools.execute_tool("conectar_agenda", {}, U)
+    assert "accounts.google.com" in r and U in r
+    assert "desconecta minha agenda" in r          # o gesto de sair, ensinado na entrada
+
+    # Callback: estado válido conecta a agenda DA pessoa…
+    monkeypatch.setattr(gc, "exchange_code", lambda code: "RT_NOVO")
+    state = memory.oauth_state_new(U)
+    resp = client.get(f"/connectors/google/callback?code=abc&state={state}")
+    assert resp.status_code == 200 and "conectada" in resp.text
+    assert memory.google_token(U) == "RT_NOVO"
+    # …e o estado é de USO ÚNICO (replay não conecta de novo)
+    assert client.get(f"/connectors/google/callback?code=abc&state={state}").status_code == 400
+    # estado forjado: rejeitado
+    assert client.get("/connectors/google/callback?code=abc&state=u_gcal.falso").status_code == 400
+
+    # A cadeia por pessoa: token DELA vale mesmo sem token global
+    monkeypatch.setattr(cfg, "GOOGLE_REFRESH_TOKEN", "")
+    assert gc.is_configured(U) is True             # a pessoa está conectada
+    assert gc.is_configured() is False             # o modo global segue exigindo env
+    assert gc._refresh_token_for(U) == "RT_NOVO"
+    assert gc._calendar_id_for(U) == "primary"     # a agenda principal DELA
+    # Outra pessoa NÃO herda a conexão (isolamento)
+    assert gc.is_connected(IAN) is False
+
+    # Revogação imediata e determinística
+    r = tools.execute_tool("desconectar_agenda", {}, U)
+    assert "AGORA" in r
+    assert not memory.google_token(U)
+    assert gc.is_configured(U) is False
+
+
+def test_basex_regra_de_ouro_no_prompt():
+    prompt = brain._system_prompt(IAN, "oi")
+    assert "qual aplicativo devo usar" in prompt
+    assert "melhor forma de resolver a necessidade desta pessoa" in prompt
+    assert "nunca escolhe app" in prompt
+
+
 def test_falha_honesta_em_todos_os_canais(client, monkeypatch):
     """Lição do incidente: se o cérebro quebrar, a pessoa recebe resposta
     honesta — NUNCA silêncio (WhatsApp) nem 500 seco (web/Telegram)."""

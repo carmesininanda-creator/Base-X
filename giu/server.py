@@ -288,6 +288,32 @@ def delete_family_member(user_id: str):
     return {"removed": user_id, "nota": "A memória da pessoa NÃO foi apagada; apague a pedido dela via /memories."}
 
 
+# ─── Life Connector: Google (callback do consentimento OAuth) ────────────────
+
+@app.get("/connectors/google/callback")
+def google_oauth_callback(code: str = "", state: str = ""):
+    """A pessoa clicou no link que a Giu mandou, autorizou no Google e caiu
+    aqui. Estado de uso único + validade 15 min; o refresh token fica no perfil
+    DELA (revogável na conversa: 'desconecta minha agenda')."""
+    from giu.integrations import google_calendar
+    user_id = memory.oauth_state_take(state)
+    if not user_id or not code:
+        return Response("Esse link não vale mais — pede um novo pra Giu, tá? 💛",
+                        media_type="text/plain; charset=utf-8", status_code=400)
+    try:
+        refresh = google_calendar.exchange_code(code)
+    except Exception:
+        log.exception("Troca de código Google falhou para %s", user_id)
+        refresh = ""
+    if not refresh:
+        return Response("Não deu certo agora. Pede um link novo pra Giu que a gente tenta de novo. 💛",
+                        media_type="text/plain; charset=utf-8", status_code=502)
+    memory.google_connect(user_id, refresh)
+    log.info("Agenda Google conectada para %s", user_id)
+    return Response("Prontinho! Sua agenda está conectada. Pode voltar pra conversa com a Giu. 💛",
+                    media_type="text/plain; charset=utf-8")
+
+
 # ─── Porta WhatsApp ───────────────────────────────────────────────────────────
 
 @app.get("/webhook/whatsapp")

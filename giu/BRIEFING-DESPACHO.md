@@ -50,6 +50,20 @@ Atualize o `DIARIO-EQUIPE.md`: H1 (causa raiz nomeada), H2 (ciclo de voz ✅/❌
 com evidência), H4/H5 (deploy + validação). **Só a Nanda dá o go do piloto** —
 seu papel termina em "tudo verde, evidências no diário".
 
+## 6. Conector Google Calendar por pessoa (PR #18 — provisionamento)
+
+Para a agenda por pessoa funcionar em produção:
+1. Google Cloud Console → criar OAuth Client (tipo Web): anotar CLIENT_ID e
+   CLIENT_SECRET → variáveis `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET`.
+2. Registrar o redirect URI: `https://<domínio>/connectors/google/callback`.
+3. Definir `GIU_BASE_URL=https://<domínio>` no Railway.
+4. Teste (membro "Teste"): pedir na conversa "quero conectar minha agenda" →
+   clicar no link → autorizar → "agenda conectada" → pedir um compromisso →
+   confirmar que o evento apareceu no Google Calendar DA conta de teste →
+   "desconecta minha agenda" → confirmar revogação imediata.
+(O escopo pedido é só calendar.events; sem conexão, a Agenda Viva interna
+continua — nada quebra.)
+
 ## Regras da casa (não negociáveis)
 - Ninguém da família usa o número até o go da Nanda (o primeiro contato é único).
 - Logs jamais contêm conteúdo de conversa (só metadados) — se vir conteúdo em

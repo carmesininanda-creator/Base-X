@@ -268,6 +268,31 @@ TOOL_DEFINITIONS = [
     {
         "type": "function",
         "function": {
+            "name": "conectar_agenda",
+            "description": (
+                "Gera o link pessoal para a pessoa conectar a agenda Google DELA "
+                "(opt-in, revogável a qualquer momento). Use SOMENTE quando ela pedir "
+                "para conectar a agenda, ou aceitar uma oferta sua explícita. NUNCA "
+                "insista; 'não' encerra o assunto."
+            ),
+            "parameters": {"type": "object", "properties": {}},
+        },
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "desconectar_agenda",
+            "description": (
+                "Desconecta a agenda Google da pessoa IMEDIATAMENTE (revogação). "
+                "Use quando ela pedir ('desconecta minha agenda'). Sem julgamento, "
+                "sem perguntar por quê."
+            ),
+            "parameters": {"type": "object", "properties": {}},
+        },
+    },
+    {
+        "type": "function",
+        "function": {
             "name": "resumo_do_dia",
             "description": (
                 "Resumo do dia da pessoa: pendências, lembretes, agenda, saúde e uma sugestão "
@@ -452,10 +477,11 @@ def _execute_agendar(user_id, payload):
         user_id, payload["titulo"], payload.get("data"), payload.get("hora"), payload.get("notas")
     )
     result = f"Compromisso #{item_id} adicionado à Agenda Viva."
-    if google_calendar.is_configured() and payload.get("data"):
+    if google_calendar.is_configured(user_id) and payload.get("data"):
         try:
             link = google_calendar.create_event(
-                payload["titulo"], payload["data"], payload.get("hora"), payload.get("notas")
+                payload["titulo"], payload["data"], payload.get("hora"), payload.get("notas"),
+                user_id=user_id,
             )
             result += f" Também criei no Google Calendar: {link}"
         except Exception as e:
@@ -565,6 +591,31 @@ def execute_tool(name, arguments, user_id, channel="web"):
             f"Preferência registrada: responder {rotulo}. Confirme isso em voz alta para a "
             "pessoa e ENSINE o gesto — que ela pode mudar quando quiser, é só falar "
             "(ex.: 'fechado, te respondo assim; quando quiser trocar, é só me dizer')."
+        )
+
+    if name == "conectar_agenda":
+        if not (google_calendar.app_configured() and config.BASE_URL):
+            return (
+                "A conexão de agenda ainda não está disponível neste ambiente. Honestidade "
+                "canônica: diga que poderá fazer isso quando a capacidade estiver disponível "
+                "e ela decidir ativá-la — e que, enquanto isso, você já cuida dos compromissos "
+                "por aqui (Agenda Viva)."
+            )
+        if google_calendar.is_connected(user_id):
+            return "A agenda desta pessoa JÁ está conectada — diga que está tudo certo por lá."
+        state = memory.oauth_state_new(user_id)
+        url = google_calendar.auth_url(state)
+        return (
+            f"Envie este link para ELA MESMA autorizar (vale 15 minutos): {url}\n"
+            "Explique leve e curto: é opcional, a agenda é só dela, e desconecta quando "
+            "quiser — basta dizer 'desconecta minha agenda'."
+        )
+
+    if name == "desconectar_agenda":
+        memory.google_disconnect(user_id)
+        return (
+            "Agenda desconectada AGORA. Confirme com leveza e ensine o gesto de volta: "
+            "quando quiser reconectar, é só pedir."
         )
 
     if name == "resumo_do_dia":
@@ -728,9 +779,9 @@ def execute_tool(name, arguments, user_id, channel="web"):
                 + (f" ({i['notes']})" if i["notes"] else "")
                 for i in items
             )
-        if google_calendar.is_configured():
+        if google_calendar.is_configured(user_id):
             try:
-                events = google_calendar.list_events()
+                events = google_calendar.list_events(user_id=user_id)
                 if events:
                     lines.append("Google Calendar (próximos):")
                     lines.extend(
