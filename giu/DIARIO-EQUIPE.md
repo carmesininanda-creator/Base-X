@@ -58,6 +58,24 @@ roadmap P1/P2/P3 na PERSONA item 5 — zero integração implementada.
 
 ## 3. Registro corrido (descobertas · decisões · problemas)
 
+**08/07 — DECISÃO da fundadora: abre a EVOLUÇÃO DA VOZ.** Criada a 🎙️ VOICE
+ARCHITECT (papel permanente — missão: não escolher TTS, mas construir a voz
+que faça sentir "que bom que a Giu está aqui"; nunca atendente/robô/locutora —
+alguém da família). Criado o PORTÃO TRIPLO (Voice + Life + Relationship
+Architects, juntas, antes de todo merge importante: "excelente IA ou companhia
+que tornou a vida melhor?" — o principal critério da Giulieta). Princípio novo
+no cérebro (PR #20, mergeado, main 941eaef, 60/60): "a Giulieta nunca fala
+apenas para responder — fala para melhorar AQUELE momento" ("como posso tornar
+os próximos minutos da vida desta pessoa um pouco melhores?"). Diagnóstico
+inaugural da Voice Architect EM ANDAMENTO (por que a voz atual transmite
+tecnologia; prescrições V0/V1/V2; os 10 mandamentos da voz; medição na semana).
+FRASE-NORTE registrada (fundadora): "A Giulieta não quer impressionar ninguém.
+Ela quer cuidar tão bem das pessoas que, um dia, elas simplesmente não
+consigam mais imaginar a vida sem ela ao lado." — harmonizada com o teste
+definitivo da Life Architect: o 'não imaginar a vida sem ela' deve nascer de
+VALOR REAL (o que pioraria se ela sumisse), jamais de apego fabricado; os
+guarda-corpos anti-dependência continuam invioláveis.
+
 **08/07 — X5 FECHADO (painel de presença, verificação-relâmpago pré-GO):
 PASSA — o desabafo segue protegido; endurecimento de 1 linha aplicado e
 mergeado (PR #19, main 89741df, 60/60).** Simulação do pior caso (Nine 22h30,
