@@ -260,10 +260,28 @@ TOOL_DEFINITIONS = [
                 "type": "object",
                 "properties": {
                     "titulo": {"type": "string", "description": "O que é a data, em linguagem de vida. Ex: 'Aniversário da mãe dela (dona Cida)'"},
-                    "data": {"type": "string", "description": "'MM-DD' para data que repete todo ano (ex: '09-21'), ou 'YYYY-MM-DD' para data única"},
-                    "recorrente": {"type": "boolean", "description": "true se repete todo ano (aniversários). Padrão: true"},
+                    "data": {"type": "string", "description": "'MM-DD' = repete todo ano (aniversários; ex: '09-21'). 'YYYY-MM-DD' = data única (não volta no ano seguinte)"},
+                    "recorrente": {"type": "boolean", "description": "Só para 'YYYY-MM-DD' com ano conhecido que deva repetir todo ano (ex: aniversário '1967-09-21'). 'MM-DD' já é sempre anual"},
                 },
                 "required": ["titulo", "data"],
+            },
+        },
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "esquecer_data",
+            "description": (
+                "ESQUECE uma data guardada, imediatamente — 'esquece essa data' tem a mesma "
+                "dignidade de 'esquece minha cidade'. Use quando a pessoa pedir para não "
+                "lembrar mais de uma data (ou quando registrou errado e vai corrigir)."
+            ),
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "titulo": {"type": "string", "description": "Título (ou parte dele) da data a esquecer. Ex: 'aniversário do ex'"},
+                },
+                "required": ["titulo"],
             },
         },
     },
@@ -622,13 +640,20 @@ def execute_tool(name, arguments, user_id, channel="web"):
 
     if name == "anotar_data":
         ok = memory.dates_add(user_id, args["titulo"], args["data"],
-                              args.get("recorrente", True))
+                              args.get("recorrente"))
         if not ok:
             return ("Não consegui guardar (data em formato inválido ou memória "
                     "recusada pela pessoa). Formato: 'MM-DD' anual ou 'YYYY-MM-DD' única.")
         return ("Data guardada. Você vai revê-la no retrato do dia e da véspera — "
                 "quando chegar, toque no assunto com carinho e no momento certo, "
                 "nunca como notificação.")
+
+    if name == "esquecer_data":
+        removidas = memory.dates_remove(user_id, args["titulo"])
+        if not removidas:
+            return "Não encontrei data guardada com esse título — nada foi esquecido."
+        return ("Data esquecida AGORA. Confirme com leveza — e sem drama: "
+                "esquecer também é cuidar.")
 
     if name == "definir_cidade":
         cidade = (args.get("cidade") or "").strip()
@@ -651,7 +676,9 @@ def execute_tool(name, arguments, user_id, channel="web"):
                 lat, lon = resultados[0]["latitude"], resultados[0]["longitude"]
         except Exception:
             pass  # sem geocodificação agora: guarda o nome; o clima chega depois
-        memory.city_set(user_id, nome, lat, lon)
+        if not memory.city_set(user_id, nome, lat, lon):
+            return ("A pessoa recusou memória (consentimento) — a cidade NÃO foi "
+                    "guardada. Respeite: sem registro, sem clima; a conversa segue normal.")
         if lat is None:
             return (f"Cidade registrada: {nome} — mas não consegui localizar o tempo de lá "
                     "agora (o clima fica de fora por enquanto). Se fizer sentido, confirme "

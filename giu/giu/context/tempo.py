@@ -73,19 +73,35 @@ def _linha_agora(now):
 
 # ─── Datas queridas (o que ELA pediu para lembrar — anotar_data) ──────────────
 
+def _e_bissexto(ano):
+    return ano % 4 == 0 and (ano % 100 != 0 or ano % 400 == 0)
+
+
+def _acorda_em(mmdd, ano):
+    """Em ano não bissexto, quem nasceu em 29/02 acorda em 28/02 (T1) — o
+    aniversário existe todo ano; o calendário é que às vezes não colabora."""
+    if mmdd == "02-29" and not _e_bissexto(ano):
+        return "02-28"
+    return mmdd
+
+
+def _bate(d, dia):
+    """A data acorda neste `dia`? Recorrente compara o MM-DD (com a regra do
+    29/02); única compara a data completa — data única de ano passado JAMAIS
+    volta a acordar (T2)."""
+    alvo = d.get("data", "")
+    if d.get("recorrente", len(alvo) == 5):
+        return len(alvo) >= 5 and _acorda_em(alvo[-5:], dia.year) == dia.strftime("%m-%d")
+    return alvo == dia.strftime("%Y-%m-%d")
+
+
 def _linha_datas(user_id, now):
     datas = memory.dates_all(user_id)
     if not datas:
         return ""
-    hoje, amanha = now.strftime("%m-%d"), (now + timedelta(days=1)).strftime("%m-%d")
-    hoje_full, amanha_full = now.strftime("%Y-%m-%d"), (now + timedelta(days=1)).strftime("%Y-%m-%d")
-
-    def _bate(d, md, full):
-        alvo = d.get("data", "")
-        return alvo == full or (d.get("recorrente", True) and alvo[-5:] == md)
-
-    de_hoje = [d["titulo"] for d in datas if _bate(d, hoje, hoje_full)]
-    de_amanha = [d["titulo"] for d in datas if _bate(d, amanha, amanha_full)]
+    amanha = now + timedelta(days=1)
+    de_hoje = [d["titulo"] for d in datas if _bate(d, now)]
+    de_amanha = [d["titulo"] for d in datas if _bate(d, amanha)]
     partes = []
     if de_hoje:
         partes.append("HOJE: " + "; ".join(de_hoje))
@@ -94,7 +110,9 @@ def _linha_datas(user_id, now):
     if not partes:
         return ""
     return ("DATAS QUERIDAS (ela pediu para lembrar) — " + " · ".join(partes)
-            + " — toque com carinho e no momento certo, nunca como notificação.")
+            + " — toque com carinho e no momento certo, nunca como notificação; "
+            "se JÁ tocou nesta conversa, silêncio — e um 'já resolvi' ou 'não' "
+            "ENCERRA o assunto (anote no fio).")
 
 
 # ─── Clima e sol (cidade AUTORIZADA por ela — enriquecimento, nunca dimensão) ──
@@ -117,7 +135,9 @@ def _linha_clima(user_id, now):
     cidade = memory.city_get(user_id)
     if not cidade or cidade.get("lat") is None:
         return ""  # sem cidade autorizada, o Tempo vive sem clima — e vive bem
-    em_cache = _clima_cache.get(user_id)
+    # Cache por pessoa E coordenada (T4): trocou de cidade → o céu antigo morre na hora
+    chave = (user_id, cidade["lat"], cidade["lon"])
+    em_cache = _clima_cache.get(chave)
     if em_cache and _time.time() - em_cache[0] < _CLIMA_TTL:
         return em_cache[1]
     try:
@@ -144,7 +164,7 @@ def _linha_clima(user_id, now):
                  f"mín {round(dia['temperature_2m_min'][0])}°); {sol}.")
     except Exception:
         return ""  # degrada em silêncio — a pessoa nunca vê erro de fornecedor
-    _clima_cache[user_id] = (_time.time(), linha)
+    _clima_cache[chave] = (_time.time(), linha)
     return linha
 
 

@@ -1204,3 +1204,79 @@ def test_tool_definir_cidade_esquecer_e_lei():
     r = tools.execute_tool("definir_cidade", {"cidade": ""}, u)
     assert "esquecida AGORA" in r
     assert memory.city_get(u) is None
+
+
+# ─── Time Provider: dívidas da Life Architect pagas (T1–T6) ───────────────────
+
+def test_t1_aniversario_29_fevereiro_existe_e_acorda():
+    from datetime import datetime as _dt
+    u = "5511900009992"
+    # 29/02 é aniversário como qualquer outro — a Giu não recusa (T1)
+    assert memory.dates_add(u, "Aniversário do afilhado", "02-29") is True
+    d = memory.dates_all(u)[0]
+    # Em ano bissexto acorda em 29/02; em ano comum, em 28/02
+    assert tempo._bate(d, _dt(2028, 2, 29)) is True
+    assert tempo._bate(d, _dt(2026, 2, 28)) is True
+    assert tempo._bate(d, _dt(2026, 3, 1)) is False
+
+
+def test_t2_recorrencia_deriva_do_formato():
+    from datetime import datetime as _dt
+    u = "5511900009991"
+    # Data única de ano passado JAMAIS volta a acordar (a cobrança fantasma morre)
+    assert memory.dates_add(u, "Entrega antiga", "2025-07-10")
+    unica = [d for d in memory.dates_all(u) if d["titulo"] == "Entrega antiga"][0]
+    assert unica["recorrente"] is False
+    assert tempo._bate(unica, _dt(2026, 7, 10)) is False
+    assert tempo._bate(unica, _dt(2025, 7, 10)) is True
+    # MM-DD é SEMPRE anual — mesmo se alguém passar recorrente=False (nada morre mudo)
+    assert memory.dates_add(u, "Dia dos avós", "07-26", recorrente=False)
+    anual = [d for d in memory.dates_all(u) if d["titulo"] == "Dia dos avós"][0]
+    assert anual["recorrente"] is True
+    # YYYY-MM-DD com recorrente=True explícito vira aniversário anual
+    assert memory.dates_add(u, "Aniversário da Nanda", "1967-09-21", recorrente=True)
+    aniv = [d for d in memory.dates_all(u) if "Nanda" in d["titulo"]][0]
+    assert tempo._bate(aniv, _dt(2026, 9, 21)) is True
+
+
+def test_t3_esquecer_data_e_lei():
+    u = "5511900009990"
+    memory.dates_add(u, "Aniversário do ex", "03-15")
+    memory.dates_add(u, "Consulta anual", "05-10")
+    r = tools.execute_tool("esquecer_data", {"titulo": "aniversário do ex"}, u)
+    assert "esquecida AGORA" in r
+    titulos = [d["titulo"] for d in memory.dates_all(u)]
+    assert "Aniversário do ex" not in titulos and "Consulta anual" in titulos
+    # Título inexistente: honestidade, não silêncio
+    assert "Não encontrei" in tools.execute_tool("esquecer_data", {"titulo": "nada"}, u)
+
+
+def test_t4_trocar_de_cidade_mata_o_ceu_antigo(monkeypatch):
+    u = "5511900009989"
+    memory.city_set(u, "São Paulo", -23.55, -46.63)
+    tempo._clima_cache.clear()
+    monkeypatch.setattr(tempo.httpx, "get", lambda *a, **k: _RespostaClima())
+    assert "São Paulo" in tempo.snapshot(u)
+    # Mudou para Campinas: o cache é por coordenada — a linha antiga não volta
+    memory.city_set(u, "Campinas", -22.90, -47.06)
+    assert "Lá fora em Campinas" in tempo.snapshot(u)
+
+
+def test_t5_o_nao_encerra_esta_no_retrato():
+    from datetime import datetime as _dt
+    u = "5511900009988"
+    memory.dates_add(u, "Dia da vovó", _dt.now().strftime("%m-%d"))
+    linha = tempo._linha_datas(u, tempo._agora())
+    assert "ENCERRA" in linha and "silêncio" in linha  # anti-repetição vai com o dado
+
+
+def test_t6_consentimento_recusado_bloqueia_cidade(monkeypatch):
+    import httpx as _httpx
+    monkeypatch.setattr(_httpx, "get",
+                        lambda *a, **k: (_ for _ in ()).throw(RuntimeError("sem rede")))
+    u = "5511900009987"
+    memory.set_profile(u, consentimento=False)
+    assert memory.city_set(u, "Santos", -23.9, -46.3) is False
+    assert memory.city_get(u) is None
+    r = tools.execute_tool("definir_cidade", {"cidade": "Santos"}, u)
+    assert "NÃO foi" in r or "recusou" in r
