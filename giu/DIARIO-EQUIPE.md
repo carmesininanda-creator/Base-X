@@ -21,15 +21,18 @@
 
 ## 1. Estado atual (retrato — atualizado por quem mudar algo)
 
-**Código (`main` = `32a5d4c`):** a Giulieta do nascimento — voz como
+**Código (`main` = `804a614`):** a Giulieta do nascimento — voz como
 preferência de relacionamento, primeiro encontro por Blueprint, Blueprints no
 cérebro (garantia), identidade semeada, falha honesta nos 3 canais, Friction
 Lens, presença natural (5 ajustes), Conversation Spine, cinco pilares +
 filosofia oficial, metáfora oficial (membro da família + equipe invisível),
-missão do tamanho da vida, **Mission Engine + Life Radar + Life Lens** (com
-dívidas M1-M4 da Life Architect pagas). **55/55 testes E2E em checkout limpo.**
+missão do tamanho da vida, **Mission Engine + Life Radar + Life Lens**,
+organismo Base-X (21 domínios; catálogo mudo no desabafo), conector Google
+Calendar por pessoa (OAuth; D1/D2 pagas), correções da Voice Architect e
+**Energia Vital** (velocidade 1.0; a voz de quem gosta da vida). **62/62
+testes E2E em checkout limpo.**
 
-**PRs:** #9 a #16 mergeados. Fila de PRs: vazia.
+**PRs:** #9 a #22 mergeados. Fila de PRs: vazia.
 
 **Produção (WhatsApp +55 11 92078-5067):** funcionando após incidente
 (fronteira OpenAI). ⚠️ PENDENTE de confirmação formal (ver problemas abertos).
@@ -40,9 +43,10 @@ Ian, Nine, Rafael (todos maiores de idade). Ninguém da família usa o número
 até o go da Nanda.
 
 **Pilares (estado):** Identity ✅ · Friction Lens ✅ · Mission Engine ✅
-(embrião real, sem conectores) · Living Context (filosofia aprovada; engenharia
-pós-piloto) · Relationship (camada ✅; motor RIM congelado). Life Connectors:
-roadmap P1/P2/P3 na PERSONA item 5 — zero integração implementada.
+(embrião real) · Living Context (**arquitetura OFICIAL em 10 áreas da vida**,
+decisão da fundadora; engenharia pós-piloto) · Relationship (camada ✅; motor
+RIM congelado). Life Connectors: Google Calendar por pessoa ✅ (aguarda OAuth
+do Despacho, §6); demais no roadmap P1/P2/P3.
 
 ## 2. Handoffs abertos (quem deve o quê a quem)
 
@@ -57,6 +61,41 @@ roadmap P1/P2/P3 na PERSONA item 5 — zero integração implementada.
 | H7 | Nanda | **GO do piloto** — só ela dá, após H1–H5 verdes no diário | ⏳ aberto |
 
 ## 3. Registro corrido (descobertas · decisões · problemas)
+
+**08/07 — ⚡ DECISÃO da fundadora: ENERGIA VITAL (atributo permanente da voz)
++ correção mergeada (PR #22, main 804a614, 62/62).** "A voz atual transmite
+uma sensação de tristeza ou desânimo. Isso não representa a Giulieta." A voz
+transmite calma, esperança, curiosidade, carinho, segurança, leveza e VONTADE
+DE VIVER — e nunca soa cansada, melancólica, deprimida, excessivamente lenta,
+excessivamente séria ou como leitura de texto. Novo portão da Voice Architect
+antes de aprovar qualquer voz: **"depois de ouvir esta voz durante cinco
+minutos, a pessoa sente mais energia para viver ou menos?"** Aplicado no
+código: velocidade 0.92 → 1.0 (o 0.92 uniforme soava sedado — calma é
+variação e fôlego, não lentidão) e ENERGIA VITAL como primeira diretriz da
+fala ("você soa como alguém que GOSTA da vida — um sorriso discreto na voz").
+Novo TESTE EMOCIONAL no protocolo da semana: ouvintes não técnicos nomeiam o
+que sentiram (esperança/tranquilidade/alegria serena/curiosidade/cuidado ×
+tristeza/monotonia/cansaço/distanciamento). "A Giulieta deve transmitir a
+sensação de alguém que gosta da vida" — identidade oficial da voz. ⚠️ H2
+continua aberto: o próximo áudio da Nanda já sai com a diretriz nova e a
+velocidade natural.
+
+**08/07 — 🌱 DECISÃO da fundadora: LIVING CONTEXT OFICIAL em 10 ÁREAS DA
+VIDA (registro de arquitetura; sem código neste ciclo).** "Essa passa a ser a
+arquitetura oficial do Living Context." O Living Context representa o ESTADO
+ATUAL DA VIDA da pessoa, organizado em 10 áreas: 1.Tempo · 2.Agenda ·
+3.Comunicação · 4.Saúde · 5.Mobilidade · 6.Casa · 7.Vida Financeira ·
+8.Família · 9.Projetos de Vida · 10.Relationship Context. Completamente
+MODULAR: funciona mesmo sem nenhum conector; cada área enriquece à medida que
+Life Connectors forem autorizados. Princípio reforçado (textual): "a Giulieta
+nunca usa contexto apenas porque ele existe — usa apenas quando melhora
+concretamente a vida da pessoa." Pipeline oficial: **Living Context → Friction
+Lens ("qual pequena fricção vale a pena reduzir agora?") → Mission Engine
+("quem deve trabalhar para resolver isso?")** — a pessoa continua conversando
+apenas com a Giulieta; toda a Base-X continua invisível. Registrado em
+ARQUITETURA-LIVING-CONTEXT.md (fora do git, regra da fundadora); a engenharia
+segue o roadmap LC-0→LC-4, alimentada pela fricção real do piloto — a
+estrutura oficial não antecipa código.
 
 **08/07 — 🎙️ VOICE ARCHITECT: DIAGNÓSTICO INAUGURAL + correções V0 mergeadas
 (PR #21, main b2d6aa7, 62/62).** Veredito: "o conteúdo já é de família — é o
