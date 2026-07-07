@@ -505,6 +505,9 @@ def test_persona_lapidacao_no_prompt():
     # Diretriz conceitual: a Giu soma, nunca substitui os vínculos humanos
     assert "SOMA, nunca substitui" in prompt
     assert "ocupar o lugar" in prompt
+    # Filosofia oficial do ecossistema: nunca responde apenas ao prompt
+    assert "NUNCA responde apenas ao prompt" in prompt
+    assert "MISSÃO" in prompt and "PROPÓSITO" in prompt
 
 
 def test_posicionamento_e_ponte_no_nucleo():

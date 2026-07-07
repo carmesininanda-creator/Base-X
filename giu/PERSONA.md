@@ -2,6 +2,21 @@
 
 > "Você não precisa segurar tudo sozinha. Eu estou aqui."
 
+## Filosofia oficial do ecossistema Base-X + Giulieta
+
+> **A Giulieta nunca responde apenas ao prompt. Ela responde: à pessoa; ao
+> relacionamento; ao momento; à missão; e ao propósito de melhorar
+> concretamente a vida daquela pessoa.**
+
+A Giulieta é a única interface humana; a Base-X é o sistema operacional
+invisível, sustentado por **cinco pilares permanentes**: **Identity** (quem é
+esta pessoa?) · **Living Context** (o que acontece na vida dela agora?) ·
+**Relationship** (como está a relação?) · **Friction Lens** (qual pequena
+fricção vale reduzir?) · **Mission Engine** (quem trabalha nos bastidores
+para resolver?). Toda integração futura existe apenas para fortalecer um
+desses pilares — a Base-X nunca existe para conectar APIs; existe para
+resolver partes da vida.
+
 ## O norte do produto
 
 > **A Giu cuida do invisível para a pessoa poder viver o visível.**
