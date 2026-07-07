@@ -35,10 +35,12 @@ def is_connected(user_id):
 
 
 def is_configured(user_id=None):
-    """Sem user_id: modo global antigo (env). Com user_id: a agenda DA PESSOA
-    (token dela) ou, na ausência, o global — a cadeia real→interno decide."""
+    """Sem user_id: modo global antigo (env). Com user_id: SOMENTE a agenda DA
+    PESSOA — turno pessoal NUNCA cai no token/calendário global (D1 da Life
+    Architect: evento na agenda errada é vida, não detalhe). Sem conexão dela,
+    a cadeia cai para a Agenda Viva interna."""
     if user_id is not None:
-        return app_configured() and (is_connected(user_id) or bool(config.GOOGLE_REFRESH_TOKEN))
+        return app_configured() and is_connected(user_id)
     return app_configured() and bool(config.GOOGLE_REFRESH_TOKEN)
 
 

@@ -922,6 +922,7 @@ def test_agenda_conexao_por_pessoa(client, monkeypatch):
     r = tools.execute_tool("conectar_agenda", {}, U)
     assert "accounts.google.com" in r and U in r
     assert "desconecta minha agenda" in r          # o gesto de sair, ensinado na entrada
+    assert "nada" in r and "nem e-mail" in r       # D2: o que ela passa a ver, em voz alta
 
     # Callback: estado válido conecta a agenda DA pessoa…
     monkeypatch.setattr(gc, "exchange_code", lambda code: "RT_NOVO")
@@ -938,6 +939,11 @@ def test_agenda_conexao_por_pessoa(client, monkeypatch):
     monkeypatch.setattr(cfg, "GOOGLE_REFRESH_TOKEN", "")
     assert gc.is_configured(U) is True             # a pessoa está conectada
     assert gc.is_configured() is False             # o modo global segue exigindo env
+    # D1: token GLOBAL nunca vaza para turno pessoal de quem NÃO conectou
+    monkeypatch.setattr(cfg, "GOOGLE_REFRESH_TOKEN", "GLOBAL")
+    assert gc.is_configured("u_nunca_conectou") is False
+    assert gc.is_configured() is True              # global explícito (sem user) continua
+    monkeypatch.setattr(cfg, "GOOGLE_REFRESH_TOKEN", "")
     assert gc._refresh_token_for(U) == "RT_NOVO"
     assert gc._calendar_id_for(U) == "primary"     # a agenda principal DELA
     # Outra pessoa NÃO herda a conexão (isolamento)

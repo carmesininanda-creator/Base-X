@@ -608,7 +608,10 @@ def execute_tool(name, arguments, user_id, channel="web"):
         return (
             f"Envie este link para ELA MESMA autorizar (vale 15 minutos): {url}\n"
             "Explique leve e curto: é opcional, a agenda é só dela, e desconecta quando "
-            "quiser — basta dizer 'desconecta minha agenda'."
+            "quiser — basta dizer 'desconecta minha agenda'. E diga em UMA frase o que "
+            "você passa a ver e fazer: só os eventos da agenda dela (ver e criar), nada "
+            "além — nem e-mail, nem contatos; a chave da conexão fica guardada aqui com "
+            "a família e some na hora se ela desconectar."
         )
 
     if name == "desconectar_agenda":
