@@ -111,6 +111,9 @@ Opcional e apenas no nível de infraestrutura, **anonimizado**, **nunca** texto 
 - Nº de turnos por **modalidade** (voz vs texto), por participante.
 - `voice_pref` definido? (sim/não e qual), por participante.
 - Nº de **fallbacks** de áudio/STT disparados.
+- Nº de conversas ÷ nº de missões abertas, por pessoa (sonda M4 da Life
+  Architect: perto de 1:1 = o Life Radar falhou e a presença virou
+  produtividade).
 - Lembretes **entregues × falhos**; ações pendentes **criadas × confirmadas**.
 - ❌ Proibido: texto de mensagens, fatos, temas, qualquer conteúdo.
 

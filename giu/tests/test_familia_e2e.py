@@ -721,12 +721,21 @@ def test_missoes_vivas_no_prompt_ate_o_fim():
     assert "NUNCA transforme conversa em tarefa" in prompt
     assert "abri uma missão" in prompt            # a frase proibida, nomeada
     assert "RESOLVIDO de" in prompt               # concluir ≠ lembrar
+    # M2/M3 (dívidas da Life Architect): saída digna + transparência sob demanda
+    assert "ainda faz sentido eu cuidar disso?" in prompt
+    assert "nunca o cuidado" in prompt            # invisível é o mecanismo
     # Estoura a janela de histórico… e a missão continua viva no prompt
     for i in range(40):
         memory.save_message(U, "user", f"papo {i}", "whatsapp")
     assert "Devolver os livros" in brain._system_prompt(U, "oi")
-    # Concluída, sai das vivas
+    # Concluída, sai das vivas — mas entra em AGUARDANDO A PERGUNTA DE VIDA (M1):
+    # a medição de vida sobrevive à janela, como a missão sobreviveu
     memory.mission_conclude(U, mid, "devolvidos")
+    p = brain._system_prompt(U, "oi")
+    assert "MISSÕES VIVAS" in p and "AGUARDANDO A PERGUNTA DE VIDA" in p
+    assert "Devolver os livros" in p              # ainda presente, aguardando VIDA
+    # Registrada a resposta de vida → sai do prompt de vez
+    memory.mission_update(U, mid, nota="VIDA: disse que aliviou")
     assert "Devolver os livros" not in brain._system_prompt(U, "oi")
 
 

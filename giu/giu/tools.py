@@ -198,7 +198,9 @@ TOOL_DEFINITIONS = [
             "name": "concluir_missao",
             "description": (
                 "Fecha uma missão quando o CRITÉRIO DE CONCLUSÃO foi atingido (resolvido de "
-                "verdade, não só lembrado). Confirme com a pessoa antes, se houver dúvida."
+                "verdade, não só lembrado) — OU quando a pessoa disser que não quer/não "
+                "precisa mais: desistir também encerra, com ZERO julgamento (resultado ex.: "
+                "'encerrada a pedido dela'). Confirme com a pessoa antes, se houver dúvida."
             ),
             "parameters": {
                 "type": "object",

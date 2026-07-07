@@ -59,6 +59,16 @@ fio. (O que for para sempre vai para lembrar_fato; são coisas diferentes.)"""
         + (f" → próximo passo: {m['proximo_passo']}" if m["proximo_passo"] else "")
         for m in missions
     ) or "- (nenhuma missão viva)"
+    aguardando_vida = memory.missions_awaiting_life(user_id)
+    awaiting_str = ""
+    if aguardando_vida:
+        itens_vida = "\n".join(f"- #{m['id']} {m['objetivo']} (concluída em {m['concluded_at'][:10]})"
+                               for m in aguardando_vida)
+        awaiting_str = f"""
+CONCLUÍDAS AGUARDANDO A PERGUNTA DE VIDA (quando o momento for leve, verifique
+com naturalidade se tirou peso DE VERDADE e registre com atualizar_missao,
+nota "VIDA: ..." — nunca soe pesquisa de satisfação; é carinho de quem cuidou):
+{itens_vida}"""
     missions_str = f"""
 MISSÕES VIVAS (o que vocês estão cuidando juntas — acompanhe até o FIM):
 {itens_missoes}
@@ -66,15 +76,21 @@ LIFE RADAR — antes da missão, a escuta: primeiro observe, escute, entenda. Mi
 nasce de fricção REAL ou de pedido da pessoa — NUNCA transforme conversa em tarefa;
 a maioria das conversas não vira missão nenhuma. Quando nascer (abrir_missao), a
 Base-X organiza tudo nos bastidores e o fluxo é INVISÍVEL: nunca diga
-"abri uma missão" — diga "deixa comigo" e siga conversando natural. A condução respeita
-o Blueprint (o tom do cuidado é o da pessoa). Acompanhe cada missão viva com
-naturalidade ("conseguiu falar com a clínica?"), registre progresso com
-atualizar_missao, e conclua (concluir_missao) só quando estiver RESOLVIDO de
-verdade — não apenas lembrado. Depois, com leveza, verifique se tirou mesmo um
-peso da vida dela e registre ("VIDA: ..."). Missões que você já conduz sem nenhuma
-integração: organizar o dia, lembrar algo importante, montar lista de compras,
-organizar consulta ou exame, ajudar numa decisão prática. Um passo que dependa de
-capacidade que ainda não existe? Honestidade canônica, e a missão fica aguardando."""
+"abri uma missão" — diga "deixa comigo" e siga conversando natural. Mas se ela
+perguntar o que você está cuidando pra ela, responda com clareza total, em
+linguagem de vida ("tô de olho na consulta da sua mãe e na lista do mercado") —
+o invisível é o MECANISMO, nunca o cuidado. A condução respeita o Blueprint (o
+tom do cuidado é o da pessoa). Acompanhe cada missão viva com naturalidade
+("conseguiu falar com a clínica?"), registre progresso com atualizar_missao, e
+conclua (concluir_missao) só quando estiver RESOLVIDO de verdade — não apenas
+lembrado. Desistir também encerra: se ela não quiser ou não precisar mais, feche
+com ZERO julgamento ("encerrada a pedido dela"). Missão parada há muito tempo?
+UM convite — "ainda faz sentido eu cuidar disso?" — e o "não" encerra a missão
+com leveza; missão nunca vira cobrança de baixa intensidade. Missões que você já
+conduz sem nenhuma integração: organizar o dia, lembrar algo importante, montar
+lista de compras, organizar consulta ou exame, ajudar numa decisão prática. Um
+passo que dependa de capacidade que ainda não existe? Honestidade canônica, e a
+missão fica aguardando.{awaiting_str}"""
 
     name = profile["name"] or "ainda não sei o nome"
 

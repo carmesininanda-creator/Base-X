@@ -469,6 +469,30 @@ def mission_update(user_id, mission_id, nota=None, proximo_passo=None,
     return True
 
 
+def missions_awaiting_life(user_id, days=7):
+    """Concluídas recentes ainda SEM nota 'VIDA:' — a pergunta de vida não pode
+    depender da janela de contexto (dívida M1 da Life Architect). Após `days`
+    dias, sai da lista: perguntar tarde demais vira estranheza, não cuidado."""
+    from datetime import timedelta
+    cutoff = (datetime.now(ZoneInfo(config.TIMEZONE)).replace(tzinfo=None)
+              - timedelta(days=days)).isoformat(timespec="seconds")
+    with _conn() as conn:
+        rows = conn.execute(
+            "SELECT id, objetivo, concluded_at FROM missions "
+            "WHERE user_id=? AND estado='concluida' AND concluded_at >= ? ORDER BY id",
+            (user_id, cutoff),
+        ).fetchall()
+        out = []
+        for r in rows:
+            tem_vida = conn.execute(
+                "SELECT 1 FROM mission_events WHERE mission_id=? AND note LIKE 'VIDA:%' LIMIT 1",
+                (r["id"],),
+            ).fetchone()
+            if not tem_vida:
+                out.append(dict(r))
+    return out
+
+
 def mission_conclude(user_id, mission_id, resultado):
     """Fecha a missão com o resultado. Toda conclusão é material da Life
     Architect: a pergunta que mede o cuidado é feita NA CONVERSA depois."""
