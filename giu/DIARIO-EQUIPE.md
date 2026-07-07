@@ -58,6 +58,27 @@ roadmap P1/P2/P3 na PERSONA item 5 — zero integração implementada.
 
 ## 3. Registro corrido (descobertas · decisões · problemas)
 
+**08/07 — 🎙️ VOICE ARCHITECT: DIAGNÓSTICO INAUGURAL + correções V0 mergeadas
+(PR #21, main b2d6aa7, 62/62).** Veredito: "o conteúdo já é de família — é o
+som que ainda é de máquina"; pelo portão triplo, HOJE a voz seria sentida como
+excelente IA, não companhia — "mas a distância é menor do que parece". DUAS
+DESCOBERTAS DE CÓDIGO, corrigidas na hora: (1) quem escolheu voz recebia áudio
+sintetizado de texto escrito para o olho (diretriz seguia o canal de entrada;
+agora segue "a resposta será falada"); (2) o check-in proativo chegava MUDO
+até para quem escolheu voz — agora o "bom dia" fala (texto primeiro, sempre).
+PRESCRIÇÕES EM ABERTO (decisão da fundadora): V0 restante — vocefy como
+diretor de fôlego (frases de 7-12 palavras), telefone dígito a dígito, teste
+cego de velocidade (0.92 uniforme vs 1.0 com fôlego — "calma é variação, não
+lentidão"); V1 — migrar para gpt-4o-mini-tts com instrução de estilo ("fale
+como alguém da família…"), a PRIMEIRA porta para prosódia emocional (exige
+bateria de percepção antes de virar padrão); V2 — voz própria, prosódia por
+emoção do turno, áudios curtos encadeados. OS 10 MANDAMENTOS DA VOZ
+estabelecidos (carta de identidade sonora — "fôlego humano", "a pausa é
+conteúdo", "calma é variação", "errar como gente", "a voz aproxima; a verdade
+permanece"). Medição na semana: reciprocidade de voz (modality no banco),
+"ouve na hora ou deixa pra depois?", e o pronome que ela usa ("a Giu falou" ×
+"o negócio mandou áudio").
+
 **08/07 — DECISÃO da fundadora: abre a EVOLUÇÃO DA VOZ.** Criada a 🎙️ VOICE
 ARCHITECT (papel permanente — missão: não escolher TTS, mas construir a voz
 que faça sentir "que bom que a Giu está aqui"; nunca atendente/robô/locutora —
