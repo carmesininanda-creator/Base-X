@@ -660,6 +660,94 @@ def test_friction_lens_no_prompt():
     assert '"não" encerra o assunto' in prompt
 
 
+# ─── Mission Engine (missões: intenção que vira cuidado acompanhado) ──────────
+
+def test_missao_ciclo_de_vida_completo():
+    U = "u_missao"
+    memory.set_profile(U, name="M", consentimento=True)
+    r = tools.execute_tool("abrir_missao", {
+        "objetivo": "Organizar a consulta da mãe",
+        "contexto": "cardiologista; plano aceita; ela prefere de manhã",
+        "prioridade": "alta",
+        "proximo_passo": "confirmar o horário com a clínica",
+        "criterio_conclusao": "consulta realizada e receita em mãos"}, U)
+    assert "deixa comigo" in r  # o feedback ensina a invisibilidade
+    m = memory.missions_open(U)[0]
+    assert m["estado"] == "aberta" and m["prioridade"] == "alta"
+    # Os 7 campos da fundadora existem e estão preenchidos
+    full = memory.mission_get(U, m["id"])
+    for campo in ("objetivo", "contexto", "prioridade", "estado",
+                  "proximo_passo", "criterio_conclusao"):
+        assert full[campo], campo
+    assert full["events"]                        # histórico desde o nascimento
+    # Progresso vira histórico; estado e próximo passo evoluem
+    tools.execute_tool("atualizar_missao", {
+        "missao_id": m["id"], "nota": "clínica confirmou sexta 10h",
+        "estado": "em_andamento", "proximo_passo": "lembrar na véspera"}, U)
+    full = memory.mission_get(U, m["id"])
+    assert full["estado"] == "em_andamento"
+    assert any("clínica confirmou" in e["note"] for e in full["events"])
+    # Conclusão: só quando RESOLVIDO — e instrui a medir VIDA (Life Architect)
+    r = tools.execute_tool("concluir_missao", {
+        "missao_id": m["id"], "resultado": "consulta feita, receita em mãos"}, U)
+    assert "VIDA:" in r and "peso" in r
+    assert memory.missions_open(U) == []
+    # A resposta de vida entra DEPOIS da conclusão (nota permitida)
+    tools.execute_tool("atualizar_missao", {
+        "missao_id": m["id"], "nota": "VIDA: disse que foi um alívio enorme"}, U)
+    assert any(e["note"].startswith("VIDA:") for e in memory.mission_get(U, m["id"])["events"])
+
+
+def test_missao_isolada_por_pessoa():
+    mid = memory.mission_create("u_missao_a", "Coisa da pessoa A")
+    # Outra pessoa não vê, não atualiza, não conclui a missão alheia
+    assert memory.mission_get("u_missao_b", mid) is None
+    assert memory.mission_update("u_missao_b", mid, nota="invasão") is False
+    assert memory.mission_conclude("u_missao_b", mid, "x") is False
+    assert memory.missions_open("u_missao_b") == []
+
+
+def test_missoes_vivas_no_prompt_ate_o_fim():
+    """A missão sobrevive além da janela de histórico — acompanhamento real."""
+    U = "u_missao_prompt"
+    memory.set_profile(U, name="P")
+    mid = memory.mission_create(U, "Devolver os livros da biblioteca",
+                                proximo_passo="separar os livros na mochila")
+    prompt = brain._system_prompt(U, "oi")
+    assert "MISSÕES VIVAS" in prompt
+    assert "Devolver os livros" in prompt and "separar os livros" in prompt
+    # Life Radar na diretriz: fricção real, nunca reflexo; invisível
+    assert "LIFE RADAR" in prompt
+    assert "NUNCA transforme conversa em tarefa" in prompt
+    assert "abri uma missão" in prompt            # a frase proibida, nomeada
+    assert "RESOLVIDO de" in prompt               # concluir ≠ lembrar
+    # Estoura a janela de histórico… e a missão continua viva no prompt
+    for i in range(40):
+        memory.save_message(U, "user", f"papo {i}", "whatsapp")
+    assert "Devolver os livros" in brain._system_prompt(U, "oi")
+    # Concluída, sai das vivas
+    memory.mission_conclude(U, mid, "devolvidos")
+    assert "Devolver os livros" not in brain._system_prompt(U, "oi")
+
+
+def test_como_voce_trabalha_e_life_lens_no_prompt():
+    """Feedback da fundadora sobre o prompt: a Base-X entra no modelo mental
+    (equipe invisível) e a Life Lens protege a direção da vida."""
+    prompt = brain._system_prompt(IAN, "oi")
+    # Como você trabalha: nunca sozinha; equipe invisível; acolher × organizar
+    assert "COMO VOCÊ TRABALHA" in prompt
+    assert "equipe invisível" in prompt and "Base-X" in prompt
+    assert "SEU trabalho é acolher" in prompt
+    assert "nunca a infraestrutura" in prompt
+    # Personalidade × capacidade
+    assert "personalidade" in prompt and "capacidade" in prompt
+    # Life Lens: direção da vida, não só atrito
+    assert "LIFE LENS" in prompt
+    assert "vida que ela quer viver" in prompt
+    assert "guardiã\ndo equilíbrio" in prompt or "guardiã do equilíbrio" in prompt
+    assert "sonhos" in prompt and "descanso" in prompt and "felicidade" in prompt
+
+
 # ─── Presença natural (auditoria de presença — 5 ajustes aprovados) ───────────
 
 def test_presenca_ajustes_no_prompt():

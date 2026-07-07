@@ -94,6 +94,27 @@ def init_db():
                 channel_msg_id TEXT PRIMARY KEY,
                 created_at     TEXT
             );
+            CREATE TABLE IF NOT EXISTS missions (
+                id                 INTEGER PRIMARY KEY AUTOINCREMENT,
+                user_id            TEXT NOT NULL,
+                objetivo           TEXT NOT NULL,
+                contexto           TEXT,
+                prioridade         TEXT DEFAULT 'normal',
+                estado             TEXT DEFAULT 'aberta',
+                proximo_passo      TEXT,
+                criterio_conclusao TEXT,
+                created_at         TEXT,
+                updated_at         TEXT,
+                concluded_at       TEXT
+            );
+            CREATE TABLE IF NOT EXISTS mission_events (
+                id         INTEGER PRIMARY KEY AUTOINCREMENT,
+                mission_id INTEGER NOT NULL,
+                note       TEXT NOT NULL,
+                created_at TEXT
+            );
+            CREATE INDEX IF NOT EXISTS idx_missions_user ON missions(user_id, estado);
+            CREATE INDEX IF NOT EXISTS idx_mission_events ON mission_events(mission_id, id);
             CREATE INDEX IF NOT EXISTS idx_messages_user ON messages(user_id, id);
             CREATE INDEX IF NOT EXISTS idx_facts_user ON facts(user_id, id);
             CREATE INDEX IF NOT EXISTS idx_reminders_due ON reminders(sent, due_at);
@@ -361,6 +382,110 @@ def reminders_today(user_id):
             (user_id, today),
         ).fetchall()
     return [dict(r) for r in rows]
+
+
+# ─── Missões (Mission Engine — intenção que vira cuidado acompanhado) ─────────
+# O motor NÃO referencia nenhum conector: uma missão carrega objetivo, contexto
+# e próximos passos; quando Life Connectors existirem, eles executarão passos
+# pela escada de autorização de sempre — sem alterar nada aqui (preparação
+# arquitetural exigida pela fundadora).
+
+MISSION_OPEN_STATES = ("aberta", "em_andamento", "aguardando")
+
+
+def mission_create(user_id, objetivo, contexto=None, prioridade="normal",
+                   proximo_passo=None, criterio_conclusao=None):
+    """Abre uma missão (os 7 campos da fundadora: objetivo, contexto,
+    prioridade, estado, histórico, próximos passos, critério de conclusão)."""
+    now = _now()
+    with _conn() as conn:
+        cur = conn.execute(
+            """INSERT INTO missions (user_id, objetivo, contexto, prioridade, estado,
+                                     proximo_passo, criterio_conclusao, created_at, updated_at)
+               VALUES (?,?,?,?,'aberta',?,?,?,?)""",
+            (user_id, objetivo, contexto, prioridade, proximo_passo, criterio_conclusao, now, now),
+        )
+        mid = cur.lastrowid
+        conn.execute(
+            "INSERT INTO mission_events (mission_id, note, created_at) VALUES (?,?,?)",
+            (mid, f"Missão aberta: {objetivo}", now),
+        )
+        return mid
+
+
+def mission_get(user_id, mission_id):
+    """Missão da PRÓPRIA pessoa (isolamento por user_id), com histórico."""
+    with _conn() as conn:
+        row = conn.execute(
+            "SELECT * FROM missions WHERE user_id=? AND id=?", (user_id, mission_id)
+        ).fetchone()
+        if not row:
+            return None
+        mission = dict(row)
+        mission["events"] = [
+            dict(e) for e in conn.execute(
+                "SELECT note, created_at FROM mission_events WHERE mission_id=? ORDER BY id",
+                (mission_id,),
+            ).fetchall()
+        ]
+        return mission
+
+
+def missions_open(user_id):
+    """Missões vivas da pessoa (abertas/em andamento/aguardando), mais antigas primeiro."""
+    marks = ",".join("?" * len(MISSION_OPEN_STATES))
+    with _conn() as conn:
+        rows = conn.execute(
+            f"SELECT id, objetivo, contexto, prioridade, estado, proximo_passo, criterio_conclusao "
+            f"FROM missions WHERE user_id=? AND estado IN ({marks}) ORDER BY id",
+            (user_id, *MISSION_OPEN_STATES),
+        ).fetchall()
+    return [dict(r) for r in rows]
+
+
+def mission_update(user_id, mission_id, nota=None, proximo_passo=None,
+                   estado=None, prioridade=None):
+    """Atualiza a missão e registra no histórico. Nota é permitida mesmo em
+    missão concluída (é assim que a resposta de VIDA entra depois do fim)."""
+    mission = mission_get(user_id, mission_id)
+    if not mission:
+        return False
+    now = _now()
+    with _conn() as conn:
+        sets, vals = ["updated_at=?"], [now]
+        if proximo_passo is not None:
+            sets.append("proximo_passo=?"); vals.append(proximo_passo)
+        if estado in MISSION_OPEN_STATES:
+            sets.append("estado=?"); vals.append(estado)
+        if prioridade in ("baixa", "normal", "alta"):
+            sets.append("prioridade=?"); vals.append(prioridade)
+        conn.execute(f"UPDATE missions SET {', '.join(sets)} WHERE user_id=? AND id=?",
+                     (*vals, user_id, mission_id))
+        if nota:
+            conn.execute(
+                "INSERT INTO mission_events (mission_id, note, created_at) VALUES (?,?,?)",
+                (mission_id, nota[:400], now),
+            )
+    return True
+
+
+def mission_conclude(user_id, mission_id, resultado):
+    """Fecha a missão com o resultado. Toda conclusão é material da Life
+    Architect: a pergunta que mede o cuidado é feita NA CONVERSA depois."""
+    mission = mission_get(user_id, mission_id)
+    if not mission:
+        return False
+    now = _now()
+    with _conn() as conn:
+        conn.execute(
+            "UPDATE missions SET estado='concluida', concluded_at=?, updated_at=? WHERE user_id=? AND id=?",
+            (now, now, user_id, mission_id),
+        )
+        conn.execute(
+            "INSERT INTO mission_events (mission_id, note, created_at) VALUES (?,?,?)",
+            (mission_id, f"CONCLUÍDA: {resultado}"[:400], now),
+        )
+    return True
 
 
 # ─── Família (identidade e confidencialidade) ─────────────────────────────────
