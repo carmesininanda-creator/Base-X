@@ -19,20 +19,91 @@ TOKEN_URL = "https://oauth2.googleapis.com/token"
 CALENDAR_URL = "https://www.googleapis.com/calendar/v3"
 
 
-def is_configured():
-    return bool(
-        config.GOOGLE_CLIENT_ID and config.GOOGLE_CLIENT_SECRET and config.GOOGLE_REFRESH_TOKEN
-    )
+OAUTH_URL = "https://accounts.google.com/o/oauth2/v2/auth"
+SCOPE = "https://www.googleapis.com/auth/calendar.events"
 
 
-def _access_token():
-    """Troca o refresh token por um access token válido (~1h)."""
+def app_configured():
+    """Portão de plataforma: o app Google existe no deploy."""
+    return bool(config.GOOGLE_CLIENT_ID and config.GOOGLE_CLIENT_SECRET)
+
+
+def is_connected(user_id):
+    """Portão de PESSOA: ela conectou a própria agenda (opt-in, revogável)."""
+    from .. import memory
+    return bool(memory.google_token(user_id))
+
+
+def is_configured(user_id=None):
+    """Sem user_id: modo global antigo (env). Com user_id: SOMENTE a agenda DA
+    PESSOA — turno pessoal NUNCA cai no token/calendário global (D1 da Life
+    Architect: evento na agenda errada é vida, não detalhe). Sem conexão dela,
+    a cadeia cai para a Agenda Viva interna."""
+    if user_id is not None:
+        return app_configured() and is_connected(user_id)
+    return app_configured() and bool(config.GOOGLE_REFRESH_TOKEN)
+
+
+def _refresh_token_for(user_id=None):
+    if user_id:
+        from .. import memory
+        token = memory.google_token(user_id)
+        if token:
+            return token
+    return config.GOOGLE_REFRESH_TOKEN
+
+
+def _calendar_id_for(user_id=None):
+    if user_id:
+        from .. import memory
+        if memory.google_token(user_id):
+            return "primary"  # a agenda principal DA pessoa
+    return config.GOOGLE_CALENDAR_ID
+
+
+def _redirect_uri():
+    return config.BASE_URL.rstrip("/") + "/connectors/google/callback"
+
+
+def auth_url(state):
+    """Link de consentimento que a PRÓPRIA pessoa abre para conectar a agenda."""
+    from urllib.parse import urlencode
+    return OAUTH_URL + "?" + urlencode({
+        "client_id": config.GOOGLE_CLIENT_ID,
+        "redirect_uri": _redirect_uri(),
+        "response_type": "code",
+        "scope": SCOPE,
+        "access_type": "offline",
+        "prompt": "consent",
+        "state": state,
+    })
+
+
+def exchange_code(code):
+    """Troca o código do consentimento pelo refresh token da pessoa."""
     resp = httpx.post(
         TOKEN_URL,
         data={
             "client_id": config.GOOGLE_CLIENT_ID,
             "client_secret": config.GOOGLE_CLIENT_SECRET,
-            "refresh_token": config.GOOGLE_REFRESH_TOKEN,
+            "code": code,
+            "grant_type": "authorization_code",
+            "redirect_uri": _redirect_uri(),
+        },
+        timeout=30,
+    )
+    resp.raise_for_status()
+    return resp.json().get("refresh_token", "")
+
+
+def _access_token(user_id=None):
+    """Troca o refresh token (da pessoa, ou o global) por um access token (~1h)."""
+    resp = httpx.post(
+        TOKEN_URL,
+        data={
+            "client_id": config.GOOGLE_CLIENT_ID,
+            "client_secret": config.GOOGLE_CLIENT_SECRET,
+            "refresh_token": _refresh_token_for(user_id),
             "grant_type": "refresh_token",
         },
         timeout=30,
@@ -41,11 +112,11 @@ def _access_token():
     return resp.json()["access_token"]
 
 
-def list_events(max_results=10):
-    """Próximos eventos do calendário, como lista de dicts simples."""
-    token = _access_token()
+def list_events(max_results=10, user_id=None):
+    """Próximos eventos do calendário (o DA PESSOA, quando conectada)."""
+    token = _access_token(user_id)
     resp = httpx.get(
-        f"{CALENDAR_URL}/calendars/{config.GOOGLE_CALENDAR_ID}/events",
+        f"{CALENDAR_URL}/calendars/{_calendar_id_for(user_id)}/events",
         headers={"Authorization": f"Bearer {token}"},
         params={
             "timeMin": datetime.now(timezone.utc).isoformat(),
@@ -67,9 +138,9 @@ def list_events(max_results=10):
     return events
 
 
-def create_event(title, date, time=None, notes=None, duration_minutes=60):
-    """Cria um evento. Com hora vira evento normal de 1h; sem hora, dia inteiro."""
-    token = _access_token()
+def create_event(title, date, time=None, notes=None, duration_minutes=60, user_id=None):
+    """Cria um evento (na agenda DA PESSOA, quando conectada)."""
+    token = _access_token(user_id)
     event = {"summary": title}
     if notes:
         event["description"] = notes
@@ -86,7 +157,7 @@ def create_event(title, date, time=None, notes=None, duration_minutes=60):
         event["end"] = {"date": next_day}
 
     resp = httpx.post(
-        f"{CALENDAR_URL}/calendars/{config.GOOGLE_CALENDAR_ID}/events",
+        f"{CALENDAR_URL}/calendars/{_calendar_id_for(user_id)}/events",
         headers={"Authorization": f"Bearer {token}"},
         json=event,
         timeout=30,

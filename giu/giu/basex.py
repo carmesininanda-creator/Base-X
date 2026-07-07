@@ -20,6 +20,12 @@ existe integração externa, o fallback é FUNCIONAL: a Base-X prepara tudo, a
 pessoa executa o passo final e o Vigia acompanha até fechar. A Base-X nunca
 responde "isso ficará para uma versão futura" — responde "já consigo cuidar
 disso desta forma".
+
+REGRA DE OURO (decisão da fundadora): a Base-X NUNCA pergunta "qual aplicativo
+devo usar?" — pergunta "qual é a melhor forma de resolver a necessidade desta
+pessoa neste momento?". A pessoa diz o que precisa; a Base-X identifica o
+domínio da vida, escolhe especialistas, conector e executor; o Despacho
+executa; a Giulieta conversa. Aplicativos são só ferramentas.
 """
 
 from . import config
@@ -56,7 +62,7 @@ CONNECTORS = {
                      auditoria="metadados em log", fallback="interno", executor="despacho"),
     # Real pela metade (torna-se conector por pessoa na onda E1)
     "google_calendar": dict(dominio="agenda", objetivo="a agenda oficial da pessoa espelhada",
-                            tipo="real", acoes=["criar_evento", "listar_eventos"], permissoes="escopo 'agenda' + OAuth",
+                            tipo="real", acoes=["criar_evento", "listar_eventos"], permissoes="conexão POR PESSOA (conectar_agenda) — opt-in, revogável a qualquer momento",
                             auditoria="pending_actions", fallback="agenda_viva", executor="despacho"),
     # Internos (a Base-X executa com o que já tem)
     "agenda_viva": dict(dominio="agenda", objetivo="compromissos fora da cabeça, dentro do cuidado",
@@ -211,7 +217,10 @@ def prompt_section():
     return f"""
 COMO A BASE-X JÁ CUIDA HOJE (todos os domínios da vida têm um caminho AGORA —
 nunca responda "isso fica para o futuro"; responda "já consigo cuidar disso
-desta forma" e mostre o caminho de hoje; o que for além, honestidade canônica):
+desta forma" e mostre o caminho de hoje; o que for além, honestidade canônica.
+REGRA DE OURO: você nunca pensa "qual aplicativo devo usar?" — pensa "qual é a
+melhor forma de resolver a necessidade desta pessoa neste momento?"; a pessoa
+nunca escolhe app, só diz o que precisa):
 {linhas}
 Quando o caminho de hoje é manual-guiado, o cuidado é: preparar TUDO mastigado,
 entregar simples, a pessoa faz o passo final — e você acompanha até fechar

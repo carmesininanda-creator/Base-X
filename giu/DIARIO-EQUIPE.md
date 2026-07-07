@@ -58,6 +58,23 @@ roadmap P1/P2/P3 na PERSONA item 5 — zero integração implementada.
 
 ## 3. Registro corrido (descobertas · decisões · problemas)
 
+**08/07 — DECISÃO da fundadora (novo método oficial) + Code (PR #18, 1º
+conector real novo).** MÉTODO: a família vira o laboratório vivo; a Base-X
+cresce pela vida ("qual dificuldade real apareceu hoje e como a Giulieta cuida
+melhor disso amanhã?"), não por ideias. REGRA DE OURO no organismo e no
+cérebro: a Base-X nunca pergunta "qual aplicativo devo usar?" — pergunta "qual
+é a melhor forma de resolver a necessidade desta pessoa neste momento?"; a
+pessoa nunca escolhe app. Conector concluído = a Nanda consegue usá-lo
+NATURALMENTE conversando. IMPLEMENTADO (PR #18): **Google Calendar POR
+PESSOA** — opt-in na conversa (conectar_agenda gera link pessoal com estado de
+uso único, 15 min), callback público, refresh token no perfil DELA, eventos
+criados na agenda PRINCIPAL dela, revogação imediata na conversa ("desconecta
+minha agenda"), cadeia real→interno preservada (sem conexão, Agenda Viva
+segue). 60/60 testes. **Para funcionar em produção, o Despacho provisiona:**
+app OAuth no Google Cloud (GOOGLE_CLIENT_ID/SECRET), redirect URI
+`<GIU_BASE_URL>/connectors/google/callback` registrado, e env GIU_BASE_URL.
+Conector só é "concluído" após a Nanda usar de verdade (critério dela).
+
 **08/07 — 🌱 LIFE ARCHITECT (PR #17): MERGE LIBERADO (80%) — X1-X3 pagas
 antes do merge; PR #17 MERGEADO (main 19afd82, 58/58).** Veredito: "ele não
 finge que as mãos cresceram; ensina a Giulieta a usar as mãos que JÁ tem em

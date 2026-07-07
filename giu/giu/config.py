@@ -52,6 +52,9 @@ STT_MODEL = os.getenv("GIU_STT_MODEL", "whisper-1")
 # Quando a pessoa manda áudio, a Giu responde em áudio (espelha o canal)
 VOICE_REPLIES = os.getenv("GIU_VOICE_REPLIES", "1") == "1"
 
+# ─── URL pública do serviço (callbacks OAuth dos Life Connectors) ─────────────
+BASE_URL = os.getenv("GIU_BASE_URL", "")
+
 # ─── Geral ────────────────────────────────────────────────────────────────────
 TIMEZONE = os.getenv("GIU_TIMEZONE", "America/Sao_Paulo")
 

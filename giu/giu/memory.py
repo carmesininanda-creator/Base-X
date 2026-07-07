@@ -264,6 +264,46 @@ def voice_pref(user_id):
     return get_profile(user_id)["data"].get("voice_pref")
 
 
+# ─── Life Connector: Google (conexão POR PESSOA — opt-in, revogável) ─────────
+
+def google_connect(user_id, refresh_token):
+    set_profile(user_id, google_refresh_token=refresh_token)
+
+
+def google_token(user_id):
+    return get_profile(user_id)["data"].get("google_refresh_token")
+
+
+def google_disconnect(user_id):
+    """Revogação imediata e determinística — 'desconecta minha agenda' é lei."""
+    set_profile(user_id, google_refresh_token=None)
+
+
+def oauth_state_new(user_id):
+    """Estado de uso único para o link de consentimento (validade 15 min)."""
+    token = secrets.token_urlsafe(24)
+    set_profile(user_id, oauth_state=token, oauth_state_at=_now())
+    return f"{user_id}.{token}"
+
+
+def oauth_state_take(state):
+    """Valida e CONSOME o estado (uso único). Retorna o user_id ou None."""
+    from datetime import timedelta
+    if not state or "." not in state:
+        return None
+    user_id, token = state.split(".", 1)
+    data = get_profile(user_id)["data"]
+    if not token or data.get("oauth_state") != token:
+        return None
+    emitido = data.get("oauth_state_at", "")
+    limite = (datetime.now(ZoneInfo(config.TIMEZONE)).replace(tzinfo=None)
+              - timedelta(minutes=15)).isoformat(timespec="seconds")
+    set_profile(user_id, oauth_state=None)  # consome SEMPRE (uso único)
+    if emitido < limite:
+        return None  # expirado
+    return user_id
+
+
 # ─── Conversation Spine (a espinha da conversa ATUAL — não é memória de longo
 #     prazo: fatos permanentes continuam em remember_fact; a spine expira) ─────
 
