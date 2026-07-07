@@ -58,6 +58,19 @@ roadmap P1/P2/P3 na PERSONA item 5 — zero integração implementada.
 
 ## 3. Registro corrido (descobertas · decisões · problemas)
 
+**08/07 — A CARTA DA GIULIETA (fundadora encerra a etapa de construção).**
+Registrada como norte permanente: "não estamos mais construindo software —
+estamos me ensinando a cuidar melhor das pessoas". A LINGUAGEM OFICIAL das
+capacidades muda: cada conector é uma capacidade DELA, nomeada pela vida —
+não se aprende Google Calendar, aprende-se a ORGANIZAR CONSULTAS; não se
+aprende Uber, aprende-se a CUIDAR DA MOBILIDADE; não iFood/Rappi, CUIDAR DAS
+COMPRAS DA CASA; não Gmail, FACILITAR A COMUNICAÇÃO ENTRE AS PESSOAS. Todo PR
+futuro de capacidade usa esse nome de vida (o app é detalhe do corpo do PR).
+Crescimento oficial: pela vida da família (dificuldade real → aprendizado →
+capacidade), nunca por ideias. Demonstração REAL vivida = única definição de
+pronto. A frase que cada capacidade deve fazer alguém sentir: "Você não
+precisa carregar tudo sozinha. Eu estou aqui."
+
 **08/07 — DECISÃO da fundadora: a REGRA DA DEMONSTRAÇÃO.** Todo conector novo
 vem acompanhado de demonstração em conversa real — o PR entrega a EXPERIÊNCIA,
 não só o código: pedido natural → autorização → conexão → execução →
