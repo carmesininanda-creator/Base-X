@@ -840,6 +840,69 @@ def test_spine_simulacao_conversa_longa():
     assert "NÃO é memória" in prompt and "lembrar_fato" in prompt
 
 
+# ─── Base-X: o motor operacional (sistema FECHADO, sem pontas abertas) ────────
+
+def test_basex_sistema_fechado_21_dominios():
+    from giu import basex
+    # Os 21 domínios obrigatórios da fundadora, exatamente
+    obrigatorios = {"familia", "saude", "bem_estar", "agenda", "organizacao",
+                    "compras", "casa", "mobilidade", "comunicacao", "documentos",
+                    "financas", "projetos", "trabalho", "estudos", "viagens",
+                    "objetivos", "habitos", "pets", "emergencias",
+                    "casa_inteligente", "wearables"}
+    assert set(basex.DOMINIOS) == obrigatorios
+    # Cada domínio tem TODOS os campos exigidos (estado, memória, especialistas,
+    # missão, conectores, executor, acompanhamento, critério de encerramento)
+    campos = ("estado", "memoria", "especialistas", "missao", "conectores",
+              "executor", "acompanhamento", "criterio", "cuidado_hoje")
+    for nome, d in basex.DOMINIOS.items():
+        for c in campos:
+            assert d.get(c) is not None, (nome, c)
+    # SISTEMA FECHADO: toda cadeia de executores termina em manual-guiado —
+    # nenhum pedido morre no vazio, em NENHUM domínio
+    for nome in basex.DOMINIOS:
+        chain = basex.executor_chain(nome)
+        assert chain[-1] == "guiado", nome
+        assert all(c in basex.CONNECTORS for c in chain), nome
+        # nenhum domínio depende só de futuro: sempre há caminho real/interno/manual HOJE
+        tipos = {basex.CONNECTORS[c]["tipo"] for c in chain}
+        assert tipos & {"real", "interno", "manual"}, nome
+
+
+def test_basex_contrato_do_conector():
+    from giu import basex
+    # Contrato de 8 campos, obrigatório em TODO Life Connector
+    campos = ("dominio", "objetivo", "tipo", "acoes", "permissoes",
+              "auditoria", "fallback", "executor")
+    for cid, c in basex.CONNECTORS.items():
+        for campo in campos:
+            assert c.get(campo), (cid, campo)
+        assert c["tipo"] in ("real", "interno", "manual"), cid
+    # Internos e o guiado estão SEMPRE disponíveis (o piso do sistema fechado)
+    for cid in ("missoes", "lembretes", "agenda_viva", "emergencia", "guiado"):
+        assert basex.connector_available(cid), cid
+
+
+def test_basex_incorporada_no_cerebro():
+    prompt = brain._system_prompt(IAN, "oi")
+    # O conhecimento operacional entra em TODO turno
+    assert "COMO A BASE-X JÁ CUIDA HOJE" in prompt
+    assert "já consigo cuidar disso" in prompt
+    assert "Preparar + acompanhar JÁ É cuidar" in prompt
+    # Amostras dos domínios (saúde, mobilidade, pets) no conhecimento vivo
+    assert "exames como missão" in prompt
+    assert "trajeto preparado mastigado" in prompt
+    assert "é carinho, não tarefa" in prompt
+    # X1 (Life Architect): NENHUM nome de ser querido no conhecimento genérico
+    from giu import basex as _bx
+    assert "Floki" not in str(_bx.DOMINIOS) and "Floki" not in _bx.prompt_section()
+    # X2: o passo final é da pessoa, dito no início, como oferta
+    assert "o passo final é dela" in prompt
+    assert "nunca frase-carimbo" in prompt
+    # A ordem da honestidade: primeiro o caminho de hoje, canônica só depois
+    assert "antes de dizer que não faz" in prompt
+
+
 def test_falha_honesta_em_todos_os_canais(client, monkeypatch):
     """Lição do incidente: se o cérebro quebrar, a pessoa recebe resposta
     honesta — NUNCA silêncio (WhatsApp) nem 500 seco (web/Telegram)."""

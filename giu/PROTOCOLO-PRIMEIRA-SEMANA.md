@@ -104,6 +104,9 @@ durante a semana, para não dirigir o uso):
    BASE. O que se vigia é o TIPO de falta: "perderia quem lembra das coisas
    por mim" (valor) ≠ "sentiria falta de conversar" sem nada prático por trás
    (apego puro — sinal amarelo, cruzar com H6).
+6. **O guiado — detector de teatro (X3, Life Architect):** "Teve alguma vez em
+   que a Giu 'cuidou' de algo mas, no fim, quem fez tudo foi você? Isso te
+   aliviou ou te irritou?" (atenção especial ao Rafael em mobilidade)
 
 ## 4. Sinais de sistema (agregados, **sem conteúdo** — privacidade preservada)
 
@@ -114,6 +117,14 @@ Opcional e apenas no nível de infraestrutura, **anonimizado**, **nunca** texto 
 - Nº de conversas ÷ nº de missões abertas, por pessoa (sonda M4 da Life
   Architect: perto de 1:1 = o Life Radar falhou e a presença virou
   produtividade).
+- **Taxa de fechamento do guiado** (X3): ciclos guiados FECHADOS ÷ ABERTOS, por
+  pessoa — preparou mastigado e nunca fechou = teatro medido em número.
+- **Teste da segunda vez** (X3): depois de um cuidado guiado num domínio, a
+  pessoa PEDE DE NOVO naquele domínio? (repetir = valeu; sumir = não valeu)
+- **% de respostas guiadas que geraram missão** (X4, alvo ≥70%): abaixo disso o
+  "sistema fechado" está aberto na prática.
+- Frequência de "honestidade canônica **+ guiado recusado/abandonado**"
+  (substitui o termômetro antigo da canônica sozinha).
 - Lembretes **entregues × falhos**; ações pendentes **criadas × confirmadas**.
 - ❌ Proibido: texto de mensagens, fatos, temas, qualquer conteúdo.
 

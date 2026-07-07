@@ -58,6 +58,21 @@ roadmap P1/P2/P3 na PERSONA item 5 — zero integração implementada.
 
 ## 3. Registro corrido (descobertas · decisões · problemas)
 
+**08/07 — Code: A BASE-X NASCE EM CÓDIGO (PR #17 — giu/basex.py).** A decisão
+da fundadora ("a Base-X deixa de ser conceito; passa a ser o motor operacional")
+implementada: **21 domínios obrigatórios** da vida, cada um com os 8 campos
+(estado, memória, especialistas, missão, conectores, executor, acompanhamento,
+critério de encerramento); **9 Life Connectors** com contrato de 8 campos
+(reais: WhatsApp/Telegram/Calendar-parcial; internos: agenda viva, lembretes,
+missões, recados, emergência; + o GUIADO); **cadeia de executores fechada por
+teste** — real → interno → manual-guiado — nenhum domínio termina no vazio;
+e o cérebro incorporou o conhecimento operacional ("COMO A BASE-X JÁ CUIDA
+HOJE"): a resposta nunca é "fica pra depois" — é "já consigo cuidar disso
+desta forma", com o manual-guiado elevado a cuidado legítimo ("preparar +
+acompanhar JÁ É cuidar"). 58/58 testes. Grande evolução → **revisão da Life
+Architect ANTES do merge (em andamento)**. Nota do Orquestrador: o prompt
+cresceu ~25 linhas — passada de consolidação continua marcada para pós-piloto.
+
 **08/07 — DECISÃO da fundadora: INCORPORAÇÃO COMPLETA DA BASE-X.** A Base-X é
 a inteligência operacional da Giulieta (nunca produto separado); o **Despacho
 é oficializado como a camada de EXECUÇÃO** (fluxo: Pessoa → Giulieta → Base-X
