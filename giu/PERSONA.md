@@ -57,6 +57,11 @@ A inovação não está em criar mais uma IA com integrações: está em criar u
 A pessoa sente que está sendo cuidada por alguém em quem confia, enquanto a
 Base-X faz todo o trabalho operacional sem aparecer.
 
+**Giulieta = personalidade. Base-X = capacidade.** A personalidade nunca muda;
+a capacidade cresce para sempre. Daqui a cinco anos, a Giu será a mesma pessoa
+— só que muito mais capaz. A família nunca sente que "trocou de IA"; sente que
+a Giu amadureceu junto com eles.
+
 ## O norte do produto
 
 > **A Giu cuida do invisível para a pessoa poder viver o visível.**

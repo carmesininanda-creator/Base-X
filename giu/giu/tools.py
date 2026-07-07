@@ -148,6 +148,85 @@ TOOL_DEFINITIONS = [
     {
         "type": "function",
         "function": {
+            "name": "abrir_missao",
+            "description": (
+                "Abre uma MISSÃO: um cuidado com começo, acompanhamento e fim (ex.: organizar "
+                "o dia, lembrar algo importante, montar lista de compras, organizar consulta ou "
+                "exame, ajudar numa decisão prática). LIFE RADAR: use SOMENTE quando existir "
+                "fricção REAL ou a pessoa pedir ajuda — NUNCA transforme conversa em tarefa. "
+                "INVISÍVEL: nunca diga 'abri uma missão' — diga 'deixa comigo' e converse natural."
+            ),
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "objetivo": {"type": "string", "description": "O que esta missão cuida. Ex: 'Organizar a consulta da mãe da Nanda'"},
+                    "contexto": {"type": "string", "description": "O que importa saber (quem, quando, por quê)"},
+                    "prioridade": {"type": "string", "enum": ["baixa", "normal", "alta"]},
+                    "proximo_passo": {"type": "string", "description": "O menor próximo passo concreto"},
+                    "criterio_conclusao": {"type": "string", "description": "Como saberemos que está RESOLVIDO de verdade (não só lembrado). Ex: 'consulta realizada e receita em mãos'"},
+                },
+                "required": ["objetivo"],
+            },
+        },
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "atualizar_missao",
+            "description": (
+                "Registra progresso numa missão viva: nota de histórico, novo próximo passo, "
+                "estado (aberta/em_andamento/aguardando) ou prioridade. Use sempre que algo "
+                "andar — é assim que você acompanha até o fim. Nota é permitida até em missão "
+                "concluída (ex.: registrar 'VIDA: ...' com a resposta da pessoa)."
+            ),
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "missao_id": {"type": "integer"},
+                    "nota": {"type": "string", "description": "O que aconteceu/mudou"},
+                    "proximo_passo": {"type": "string"},
+                    "estado": {"type": "string", "enum": ["aberta", "em_andamento", "aguardando"]},
+                    "prioridade": {"type": "string", "enum": ["baixa", "normal", "alta"]},
+                },
+                "required": ["missao_id"],
+            },
+        },
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "concluir_missao",
+            "description": (
+                "Fecha uma missão quando o CRITÉRIO DE CONCLUSÃO foi atingido (resolvido de "
+                "verdade, não só lembrado) — OU quando a pessoa disser que não quer/não "
+                "precisa mais: desistir também encerra, com ZERO julgamento (resultado ex.: "
+                "'encerrada a pedido dela'). Confirme com a pessoa antes, se houver dúvida."
+            ),
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "missao_id": {"type": "integer"},
+                    "resultado": {"type": "string", "description": "Como terminou. Ex: 'consulta feita, receita em mãos'"},
+                },
+                "required": ["missao_id", "resultado"],
+            },
+        },
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "ver_missao",
+            "description": "Detalhes e histórico de uma missão da pessoa (para retomar com contexto).",
+            "parameters": {
+                "type": "object",
+                "properties": {"missao_id": {"type": "integer"}},
+                "required": ["missao_id"],
+            },
+        },
+    },
+    {
+        "type": "function",
+        "function": {
             "name": "anotar_fio",
             "description": (
                 "Anota um item na ESPINHA DA CONVERSA ATUAL (Conversation Spine) para "
@@ -426,6 +505,47 @@ def execute_tool(name, arguments, user_id, channel="web"):
 
     if name == "registrar_onboarding":
         return onboarding.register(user_id, args["campo"], args["valor"])
+
+    if name == "abrir_missao":
+        mid = memory.mission_create(
+            user_id, args["objetivo"], args.get("contexto"),
+            args.get("prioridade", "normal"), args.get("proximo_passo"),
+            args.get("criterio_conclusao"),
+        )
+        return (
+            f"Missão #{mid} aberta (invisível para a pessoa — fale natural: 'deixa comigo'). "
+            "Conduza um passo de cada vez, no tom do Blueprint dela, e acompanhe até o fim."
+        )
+
+    if name == "atualizar_missao":
+        ok = memory.mission_update(
+            user_id, args["missao_id"], args.get("nota"),
+            args.get("proximo_passo"), args.get("estado"), args.get("prioridade"),
+        )
+        return "Missão atualizada." if ok else "Não encontrei essa missão desta pessoa."
+
+    if name == "concluir_missao":
+        ok = memory.mission_conclude(user_id, args["missao_id"], args["resultado"])
+        if not ok:
+            return "Não encontrei essa missão desta pessoa."
+        return (
+            "Missão concluída. Diga com naturalidade que está feito ('prontinho — cuidei "
+            "disso'), com o crédito na pessoa quando foi ela quem agiu. Depois, com leveza "
+            "(pode ser dias depois), verifique se isso tirou um peso DE VERDADE da vida dela "
+            "e registre a resposta com atualizar_missao (nota começando com 'VIDA: ...') — "
+            "é assim que medimos cuidado, não tarefas."
+        )
+
+    if name == "ver_missao":
+        m = memory.mission_get(user_id, args["missao_id"])
+        if not m:
+            return "Não encontrei essa missão desta pessoa."
+        eventos = "\n".join(f"  · {e['created_at'][:16]} {e['note']}" for e in m["events"][-6:])
+        return (
+            f"Missão #{m['id']} [{m['estado']}, prioridade {m['prioridade']}]: {m['objetivo']}\n"
+            f"Contexto: {m['contexto'] or '-'}\nPróximo passo: {m['proximo_passo'] or '-'}\n"
+            f"Critério de conclusão: {m['criterio_conclusao'] or '-'}\nHistórico recente:\n{eventos}"
+        )
 
     if name == "anotar_fio":
         ok = memory.spine_add(user_id, args["nota"])

@@ -56,6 +56,32 @@ Vida ao Lado (conectores) · Living Context (o momento + fricção) · Missões
 
 ## 3. Registro corrido (descobertas · decisões · problemas)
 
+**07/07 — Code: O NASCIMENTO COMEÇA (PR #16 — Mission Engine + Life Radar +
+Life Lens + Base-X no modelo mental).** Fase filosófica encerrada por decisão
+da fundadora ("a pergunta deixa de ser 'o que a Base-X consegue fazer' e passa
+a ser 'como a Giulieta cuida melhor desta pessoa'"). Implementado sem
+integração externa: **missões** como objeto de primeira classe (os 7 campos:
+objetivo, contexto, prioridade, estado, histórico, próximos passos, critério
+de conclusão), isoladas por pessoa, vivas no prompt de todo turno até o FIM
+(sobrevivem à janela de histórico — acompanhamento real, não lembrete);
+**Life Radar** (missão nasce de fricção real ou pedido — a maioria das
+conversas não vira missão; fluxo invisível: "deixa comigo", nunca "abri uma
+missão"); **conclusão ≠ lembrança** (critério de conclusão: RESOLVIDO de
+verdade) + medição de vida pós-conclusão ("VIDA: ..." — material da Life
+Architect); as 5 primeiras missões nomeadas (organizar o dia, lembrar algo,
+lista de compras, consulta/exame, decisão prática); **preparação para Life
+Connectors**: o motor não referencia conector nenhum — futuros conectores
+executam passos pela escada de autorização sem alterar o engine. Do feedback
+da fundadora sobre o prompt: **"COMO VOCÊ TRABALHA"** (a Base-X como equipe
+invisível no modelo mental: "seu trabalho é acolher; o da Base-X é organizar";
+personalidade × capacidade) e **LIFE LENS** ("esta resposta aproxima ou afasta
+esta pessoa da vida que ela quer viver?" — a Friction Lens reduz atrito; a
+Life Lens protege direção; vocabulário de vida: sonhos, família, propósito,
+descanso, felicidade, crescimento, equilíbrio). 55/55 testes. **Grande
+evolução → revisão da Life Architect ANTES do merge (em andamento).**
+Demonstração obrigatória da fundadora: após merge + redeploy, conversa
+espontânea real (WhatsApp ou cli.py).
+
 **07/07 — DECISÃO da fundadora: a METÁFORA OFICIAL da identidade.** A Giu é
 **um membro da família** (não app, não assistente); a Base-X é **a equipe
 invisível que trabalha para ela** (o escritório de apoio: especialistas,
