@@ -243,6 +243,36 @@ def voice_pref(user_id):
     return get_profile(user_id)["data"].get("voice_pref")
 
 
+# ─── Conversation Spine (a espinha da conversa ATUAL — não é memória de longo
+#     prazo: fatos permanentes continuam em remember_fact; a spine expira) ─────
+
+SPINE_TTL_HOURS = 24
+SPINE_MAX = 10
+
+
+def spine_add(user_id, note):
+    """Anota um item no fio da conversa atual (decisão, insight, mudança de
+    direção, compromisso). Vive no perfil, expira em SPINE_TTL_HOURS e guarda
+    só os últimos SPINE_MAX — é continuidade, não arquivo."""
+    note = (note or "").strip()
+    if not note:
+        return False
+    spine = spine_get(user_id)  # já filtrada por validade
+    spine.append({"t": _now(), "note": note[:300]})
+    set_profile(user_id, spine=spine[-SPINE_MAX:])
+    return True
+
+
+def spine_get(user_id):
+    """Itens vivos do fio da conversa atual (ordem cronológica). Itens mais
+    velhos que SPINE_TTL_HOURS caem — a espinha é da conversa, não da vida."""
+    from datetime import timedelta
+    raw = get_profile(user_id)["data"].get("spine", [])
+    cutoff = (datetime.now(ZoneInfo(config.TIMEZONE)).replace(tzinfo=None)
+              - timedelta(hours=SPINE_TTL_HOURS)).isoformat(timespec="seconds")
+    return [x for x in raw if isinstance(x, dict) and x.get("t", "") >= cutoff][-SPINE_MAX:]
+
+
 def get_history(user_id, limit=16):
     with _conn() as conn:
         rows = conn.execute(
