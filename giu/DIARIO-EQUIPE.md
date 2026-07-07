@@ -21,14 +21,15 @@
 
 ## 1. Estado atual (retrato — atualizado por quem mudar algo)
 
-**Código (`main` = `9933b97`):** Giulieta completa — voz como preferência de
-relacionamento, persona lapidada, primeiro encontro por Blueprint,
-posicionamento ("devolve a pessoa para quem ela ama"), Promessa 8, Blueprints
-como garantia arquitetural no cérebro, identidade semeada, falha honesta nos
-3 canais e **Friction Lens**. **46/46 testes E2E, validados em checkout limpo
-da main.**
+**Código (`main` = `32a5d4c`):** a Giulieta do nascimento — voz como
+preferência de relacionamento, primeiro encontro por Blueprint, Blueprints no
+cérebro (garantia), identidade semeada, falha honesta nos 3 canais, Friction
+Lens, presença natural (5 ajustes), Conversation Spine, cinco pilares +
+filosofia oficial, metáfora oficial (membro da família + equipe invisível),
+missão do tamanho da vida, **Mission Engine + Life Radar + Life Lens** (com
+dívidas M1-M4 da Life Architect pagas). **55/55 testes E2E em checkout limpo.**
 
-**PRs:** #9, #10, #11 e #12 mergeados. Fila de PRs: vazia.
+**PRs:** #9 a #16 mergeados. Fila de PRs: vazia.
 
 **Produção (WhatsApp +55 11 92078-5067):** funcionando após incidente
 (fronteira OpenAI). ⚠️ PENDENTE de confirmação formal (ver problemas abertos).
@@ -38,9 +39,10 @@ NÃO iniciado — bloqueado pelos itens abertos abaixo. Participantes: Nanda,
 Ian, Nine, Rafael (todos maiores de idade). Ninguém da família usa o número
 até o go da Nanda.
 
-**Alicerces em fila de aprovação (filosofia consolidada, zero engenharia):**
-Vida ao Lado (conectores) · Living Context (o momento + fricção) · Missões
-(condução única). Roadmap de capacidades registrado na PERSONA.md (item 5).
+**Pilares (estado):** Identity ✅ · Friction Lens ✅ · Mission Engine ✅
+(embrião real, sem conectores) · Living Context (filosofia aprovada; engenharia
+pós-piloto) · Relationship (camada ✅; motor RIM congelado). Life Connectors:
+roadmap P1/P2/P3 na PERSONA item 5 — zero integração implementada.
 
 ## 2. Handoffs abertos (quem deve o quê a quem)
 
@@ -49,7 +51,7 @@ Vida ao Lado (conectores) · Living Context (o momento + fricção) · Missões
 | H1 | Despacho → Code | **Causa raiz do incidente OpenAI** (uma linha: chave? billing? rede?) — para registro e prevenção de recorrência (se billing: alarme de saldo antes do piloto) | ⏳ aberto |
 | H2 | Despacho → equipe | **Ciclo completo de voz confirmado em produção**: áudio → entende → responde áudio+texto → "me responde só por escrito" → áudio → só texto | ⏳ aberto (bloqueador do piloto, decisão da Nanda) |
 | H3 | ~~Nanda → Code~~ | PR #12 mergeado pelo Code em 07/07, sob delegação noturna da fundadora ("faz tudo para mim") — especificação era dela, verbatim; 46/46 testes | ✅ fechado |
-| H4 | Despacho | **Redeploy da main `9933b97`** + **recadastro dos 4 membros** (mesmo POST, sem campo `welcome`; token não muda — ignorar o token exibido no re-POST) — semeia identidades e Blueprints. Roteiro completo: BRIEFING-DESPACHO.md | ⏳ aberto |
+| H4 | Despacho | **Redeploy da main `32a5d4c` (ou mais nova)** + **recadastro dos 4 membros** (mesmo POST, sem campo `welcome`; token não muda — ignorar o token exibido no re-POST) — semeia identidades e Blueprints. Roteiro completo: BRIEFING-DESPACHO.md | ⏳ aberto |
 | H5 | Despacho | Checklist de validação (CHECKLIST-VALIDACAO-DESPACHO.md) — fumaça com membro "Teste", nunca com a família | ⏳ aberto |
 | H6 | Manus | Validação de experiência do piloto — roteiro completo: BRIEFING-MANUS.md (protocolo, 9 dimensões, pulso, atritos a caçar) | ⏳ aberto |
 | H7 | Nanda | **GO do piloto** — só ela dá, após H1–H5 verdes no diário | ⏳ aberto |
