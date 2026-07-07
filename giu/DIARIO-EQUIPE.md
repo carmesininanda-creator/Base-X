@@ -62,6 +62,37 @@ do Despacho, §6); demais no roadmap P1/P2/P3.
 
 ## 3. Registro corrido (descobertas · decisões · problemas)
 
+**08/07 — 🏗️ FASE 2 ABERTA: arquitetura APROVADA pela fundadora + ⏰ TIME
+PROVIDER implementado (PR #23 aberto — link enviado; O MERGE É DELA).**
+Decisões registradas: (a) **estratégia oficial da Fase 2** — a Base-X existe
+agora EXCLUSIVAMENTE para a **FAMÍLIA FUNDADORA** (novo nome oficial, por
+decisão dela: não é mais "piloto" — quem funda não é experimento); toda
+implementação responde primeiro "como isso melhora a vida da Nanda, do Ian,
+da Pauline ou do Rafael?"; (b) **sequência obrigatória por Provider**:
+arquitetura → Life Architect valida → uso real pela Família Fundadora →
+aprendizados registrados → evolução; um de cada vez, completo antes do
+próximo; a Life Architect responde ao final: "a vida ficou objetivamente
+melhor?". IMPLEMENTADO no PR #23: pacote giu/context (montador do retrato
+"O MOMENTO DE AGORA" com contrato universal) + Time Provider — piso puro
+(AGORA em português, estação, feriados fixos), datas queridas
+(anotar_data/esquecer_data: acordam no dia e na VÉSPERA), clima e sol pela
+cidade AUTORIZADA (definir_cidade: opt-in, nível cidade, revogável, teto
+2,5s, falha muda); CP-2 cumprido (o retrato SUBSTITUIU o antigo AGORA; um
+único AGORA: no prompt; orçamento em teste). REVISÃO DA LIFE ARCHITECT:
+aprova com dívidas — **T1–T6 PAGAS ANTES DO MERGE** (29/02 existe; data
+única de ano passado jamais volta; esquecer_data é lei; trocar de cidade
+mata o céu antigo; o "não" ENCERRA e viaja com o dado; consentimento vale
+para cidade). DÍVIDAS COM PRAZO: **T7** — extrair open_meteo para
+integrations/ como Life Connector + teste de desacoplamento (ANTES do
+Calendar Provider); **T8** — fuso por pessoa e teto wall-clock do snapshot
+(limite conhecido, ok para a Família Fundadora hoje). 79/79 testes.
+DEMO-TIME-PROVIDER.md entregue (nível 1, cenas com a Nanda). **SEGUNDA ONDA
+DESENHADA sem código (ordem dela): 🥇 Calendar (Agenda Viva é o cérebro;
+Google só sincroniza) · 🥈 Communication · 🥉 Home · 4️⃣ Mobility** — as 5
+respostas de cada um em ARQUITETURA-CONTEXT-PROVIDERS.md §9-A. ⚠️ Esta ordem
+substitui a anterior; Family/Projects/Relationship continuam desenhados e
+aguardam reposicionamento dela na fila.
+
 **08/07 — 🧬 DECISÃO da fundadora: CONTEXT PROVIDERS — "o passo mais
 importante da Base-X" (arquitetura desenhada; AGUARDANDO APROVAÇÃO DELA;
 zero código por ordem expressa).** Providers não são fontes de dados: são
