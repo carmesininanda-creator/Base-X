@@ -56,6 +56,31 @@ Vida ao Lado (conectores) · Living Context (o momento + fricção) · Missões
 
 ## 3. Registro corrido (descobertas · decisões · problemas)
 
+**07/07 — DECISÃO da fundadora (definição oficial da Base-X + 6º PILAR).**
+A Base-X NÃO é plataforma/backend/APIs: é uma **camada de inteligência
+operacional da vida** — uma equipe invisível. Definição oficial: *"sistema
+operacional de vida que orquestra pessoas, inteligência, especialistas,
+conectores e automações para reduzir continuamente a fricção da vida humana"*;
+Giulieta: *"a única presença humana através da qual uma pessoa percebe toda
+essa inteligência"*. Giulieta = consciência; Base-X = ação em CICLO (percebe →
+antecipa → organiza → decide → executa → acompanha → aprende). Fluxo: Vida →
+Fricções → Missões → Resolução. Conecta áreas da vida, nunca apps (Uber =
+Mobilidade; Calendar = Tempo; Gmail = Comunicação; Oura = Saúde). **Sexto
+pilar oficializado: Life Orchestration** — "como coordenar tudo isso sem que
+a pessoa perceba a complexidade?" (hoje exercido manualmente pelo Orquestrador
+Técnico; em produto, realizado pelo Mission Engine). Registrado em
+DECISOES-ARQUITETURA e GOVERNANCA (fora do git) e PERSONA.md (no git).
+
+**07/07 — DECISÃO da fundadora (filosofia do piloto): "a Base-X nasce grande
+na visão e cresce gradualmente na execução."** O piloto não é pequeno: a
+Giulieta nasce sabendo que sua missão cobre TODAS as áreas da vida (18 áreas,
+de agenda a hobbies), sem fingir o que ainda não faz — resposta canônica de
+honestidade: "posso fazer isso quando essa capacidade estiver disponível e
+você decidir ativá-la". Salvaguardas preservadas: nunca recitar lista/cardápio,
+nunca prometer prazo (Promessa 8 intacta). Implementado no cérebro + PERSONA
+(PR #14). Impacto Manus: a sonda de expectativa ("ela pareceu maior do que
+faz hoje? isso frustrou ou inspirou?") vale observação na Primeira Semana.
+
 **07/07 — DECISÃO DE ARQUITETURA da fundadora (marco do PR #13): abre a
 segunda frente — Base-X — evoluindo JUNTO com a Giulieta.** Oficializados os
 **cinco pilares permanentes da Base-X**: Identity · Living Context ·
