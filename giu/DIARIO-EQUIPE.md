@@ -62,6 +62,22 @@ do Despacho, §6) · open_meteo ✅ (T7). Duas frentes permanentes: capacidades
 
 ## 3. Registro corrido (descobertas · decisões · problemas)
 
+**08/07 — ✅ PR #32 MERGEADO (a pedido dela: "merge") — A SPRINT DA
+PRESENÇA DA GIULIETA ESTÁ NO AR.** Main verificada em worktree limpo:
+143/143 testes verdes; conteúdo confirmado (SPRINT-VOZ.md renomeado, cenas
+C1–C7 incluindo C6-silêncio, os 6 provedores no bateria_voz.py, identidade
+vocal madura no voice.py, CC2 = bloqueador do GO no checklist). Deploy
+automático da Railway a caminho. A BOLA AGORA É DO DESPACHO, em ordem:
+(1) plantar as 4 Life Seeds (conteúdo já entregue à fundadora; verificar
+semeado>0 e apagar os arquivos); (2) provisionar as chaves da bateria
+(ELEVENLABS_API_KEY · AZURE_SPEECH_KEY+REGION · GOOGLE_TTS_API_KEY ·
+CARTESIA_API_KEY+CARTESIA_VOICES · PLAYHT_USER_ID+PLAYHT_API_KEY+
+PLAYHT_VOICES — Cartesia/PlayHT: 2-3 vozes femininas MADURAS pt, "id:Nome");
+(3) rodar `python bateria_voz.py` e mandar as cenas cegas para o celular da
+Nanda; (4) alarme de saldo OpenAI (CC3). A sprint só fecha quando ela sentir
+espontaneamente: "ESSA É A GIU" — a voz segue bloqueador oficial do
+lançamento. O Dia de Viver segue vigente para capacidades novas.
+
 **08/07 — 🕯️ A SPRINT MUDA DE NOME: "SPRINT DA PRESENÇA DA GIULIETA"
 (fundadora: "não estamos procurando um TTS — estamos procurando uma
 PRESENÇA") — tudo dentro do PR #32 (merge dela).** CRITÉRIOS OFICIAIS:
