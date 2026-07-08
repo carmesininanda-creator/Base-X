@@ -38,19 +38,26 @@ async def reminder_loop():
     while True:
         for r in memory.due_reminders():
             try:
-                text = f"✦ Lembrete: {r['text']}"
+                # Recorrente: a pergunta gentil de re-consentimento viaja NA
+                # mensagem quando é a vez dela (cerca da Life Architect)
+                text = (f"✦ Lembrete: {r['text']}" + memory.atraso_grave(r)
+                        + memory.pulso_devido(r))
                 if r["channel"] == "whatsapp" and whatsapp.is_configured():
                     await whatsapp.send_message(r["user_id"], text)
-                    memory.mark_reminder_sent(r["id"])
+                    # R3: o histórico PRECISA saber o que saiu — senão o
+                    # "pode parar" da pessoa não tem referente e a promessa quebra
+                    memory.save_message(r["user_id"], "assistant", text, "whatsapp")
+                    memory.reminder_delivered(r)
                     log.info("Lembrete %s enviado via WhatsApp", r["id"])
                 elif r["channel"] == "telegram" and telegram.is_configured():
                     await telegram.send_message(r["user_id"], text)
-                    memory.mark_reminder_sent(r["id"])
+                    memory.save_message(r["user_id"], "assistant", text, "telegram")
+                    memory.reminder_delivered(r)
                     log.info("Lembrete %s enviado via Telegram", r["id"])
                 else:
                     # Canais sem push (web/cli): entregue na próxima conversa
                     memory.save_message(r["user_id"], "assistant", text, r["channel"])
-                    memory.mark_reminder_sent(r["id"])
+                    memory.reminder_delivered(r)
                     log.info("Lembrete %s registrado no histórico", r["id"])
             except Exception:
                 # Falha de entrega (ex.: 24h fechada): conta a tentativa e segue

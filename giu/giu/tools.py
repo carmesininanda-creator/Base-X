@@ -479,9 +479,29 @@ TOOL_DEFINITIONS = [
                 "type": "object",
                 "properties": {
                     "texto": {"type": "string", "description": "O que lembrar. Ex: 'Tomar o remédio da pressão'"},
-                    "quando": {"type": "string", "description": "Data e hora ISO: YYYY-MM-DDTHH:MM"},
+                    "quando": {"type": "string", "description": "PRIMEIRA ocorrência, ISO: YYYY-MM-DDTHH:MM"},
+                    "recorrencia": {"type": "string", "description": "Se repete: 'diario' | 'semanal' (na mesma semana-dia do 'quando') | 'mensal' (no mesmo dia do mês; 31 vira o último) | 'dias:seg,qua,sex'. Omitir = lembrete único"},
                 },
                 "required": ["texto", "quando"],
+            },
+        },
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "parar_lembrete",
+            "description": (
+                "'PODE PARAR' É LEI: encerra na hora os lembretes ativos que contêm o "
+                "trecho (únicos ou recorrentes). Use quando a pessoa disser 'pode parar "
+                "de lembrar', 'não preciso mais', 'a fisio acabou'. ZERO culpa, zero "
+                "'tem certeza?' — parar é tão fácil quanto criar; recomeçar também."
+            ),
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "trecho": {"type": "string", "description": "Trecho do texto do lembrete (mín. 3 letras). Ex: 'fisioterapia'"},
+                },
+                "required": ["trecho"],
             },
         },
     },
@@ -668,7 +688,12 @@ def _execute_cancelar(user_id, payload):
 
 
 def _execute_criar_lembrete(user_id, payload):
-    memory.add_reminder(user_id, payload["texto"], payload["quando"], payload.get("channel", "web"))
+    memory.add_reminder(user_id, payload["texto"], payload["quando"],
+                        payload.get("channel", "web"), payload.get("recorrencia"))
+    if payload.get("recorrencia"):
+        return (f"Lembrete recorrente criado (primeira vez: {payload['quando']}). "
+                "Dito uma vez, cuidado para sempre — e lembre a pessoa, em UMA frase "
+                "leve, que 'pode parar' encerra quando ela quiser.")
     return f"Lembrete criado para {payload['quando']}."
 
 
@@ -930,8 +955,14 @@ def execute_tool(name, arguments, user_id, channel="web"):
     if name == "criar_lembrete":
         if err := _validate_due(args["quando"]):
             return err
+        if args.get("recorrencia") and not memory.recorrencia_valida(args["recorrencia"]):
+            return ("Recorrência inválida. Use 'diario', 'semanal', 'mensal' ou "
+                    "'dias:seg,qua,sex' (dias: seg ter qua qui sex sab dom).")
         payload = {**args, "channel": channel}
-        summary = f"Lembrete: {args['texto']} em {args['quando']}"
+        rotulo_rec = {"diario": " (todo dia)", "semanal": " (toda semana)",
+                      "mensal": " (todo mês)"}.get(args.get("recorrencia") or "",
+                      f" ({args['recorrencia']})" if args.get("recorrencia") else "")
+        summary = f"Lembrete: {args['texto']} em {args['quando']}{rotulo_rec}"
         action_id = memory.add_pending_action(user_id, "criar_lembrete", summary, payload, "baixo")
         return (
             f"Ação pendente #{action_id} criada: {summary}. "
@@ -1001,6 +1032,19 @@ def execute_tool(name, arguments, user_id, channel="web"):
             user_id, args["tipo"], args["resumo"], args.get("payload", {}), args.get("risco", "medio")
         )
         return f"Ação pendente #{action_id} criada: {args['resumo']}. Pergunte se a pessoa confirma."
+
+    if name == "parar_lembrete":
+        parados = memory.reminders_stop(user_id, args["trecho"])
+        if not parados:
+            return ("Não encontrei lembrete ativo com esse trecho — nada foi parado "
+                    "(confira o texto com a pessoa, sem transformar isso em problema).")
+        nomes = "; ".join(f'"{t}"' for t in parados)
+        aviso = ("" if len(parados) == 1 else
+                 " ATENÇÃO: mais de um parou — NOMEIE todos para ela e pergunte se "
+                 "algum era para continuar (você recria na hora, sem drama).")
+        return (f"Parado(s) AGORA: {nomes}.{aviso} Confirme com leveza e SEM "
+                "lamento ('parei, viu? quando quiser de volta, é só me dizer') — "
+                "parar é cuidado tanto quanto lembrar.")
 
     if name == "confirmar_acao":
         action = memory.get_pending_action(user_id, args["action_id"])
