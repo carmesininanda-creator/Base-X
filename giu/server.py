@@ -23,7 +23,7 @@ from pydantic import BaseModel
 from datetime import datetime
 from zoneinfo import ZoneInfo
 
-from giu import brain, config, memory, routines, voice
+from giu import brain, config, memory, modes, routines, voice
 from giu.channels import telegram, whatsapp
 
 logging.basicConfig(level=logging.INFO)
@@ -75,7 +75,9 @@ async def _send_push(user_id, channel, text):
         # voz. Agora o "bom dia" também fala — texto sempre primeiro, como manda a lei.
         if (config.VOICE_ENABLED and config.VOICE_REPLIES
                 and memory.voice_pref(user_id) in ("voice", "both")):
-            audio = await asyncio.to_thread(voice.sintetizar, text)
+            hora = datetime.now(ZoneInfo(config.TIMEZONE)).hour
+            momento = "modo_manha" if 5 <= hora < 12 else "modo_noite"
+            audio = await asyncio.to_thread(voice.sintetizar, text, momento)
             if audio:
                 await asyncio.to_thread(whatsapp.send_audio, user_id, audio)
     elif channel == "telegram" and telegram.is_configured():
@@ -394,12 +396,13 @@ def _should_send_audio(number, via):
     return via == "voice"
 
 
-def _reply_blocking(number, reply, via):
+def _reply_blocking(number, reply, via, momento=None):
     """Envia a resposta: SEMPRE texto (registro relegível + fallback se o TTS
-    falhar) e, conforme a preferência da pessoa, também o áudio."""
+    falhar) e, conforme a preferência da pessoa, também o áudio — com a
+    energia do momento (Sprint da Voz)."""
     whatsapp.send_message_sync(number, reply)
     if _should_send_audio(number, via):
-        audio = voice.sintetizar(reply)
+        audio = voice.sintetizar(reply, momento)
         if audio:
             whatsapp.send_audio(number, audio)
 
@@ -414,7 +417,9 @@ def _turn_blocking(number, text, via):
         memory.save_message(number, "assistant", welcome, "whatsapp")
         _reply_blocking(number, welcome, via)
         return
-    _reply_blocking(number, _think_safe(number, text, "whatsapp", via), via)
+    # A energia da voz acompanha o momento do turno (Sprint da Voz)
+    momento = modes.detect(text, datetime.now(ZoneInfo(config.TIMEZONE)).hour)
+    _reply_blocking(number, _think_safe(number, text, "whatsapp", via), via, momento)
 
 
 def _audio_turn_blocking(number, media_id):

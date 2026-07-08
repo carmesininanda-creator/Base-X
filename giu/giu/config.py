@@ -49,7 +49,8 @@ VOICE_NAME = os.getenv("GIU_VOICE", "shimmer")           # timbre do TTS
 # Energia Vital (decisão da fundadora): 0.92 uniforme soava melancólico/sedado —
 # calma é variação e fôlego, não lentidão. A velocidade natural volta a 1.0.
 VOICE_SPEED = float(os.getenv("GIU_VOICE_SPEED", "1.0"))
-TTS_MODEL = os.getenv("GIU_TTS_MODEL", "tts-1")
+TTS_MODEL = os.getenv("GIU_TTS_MODEL", "gpt-4o-mini-tts")  # fundadora: "a voz ainda parece triste" — a Energia Vital exige o
+# modelo que aceita instruções; rollback: GIU_TTS_MODEL=tts-1 (segundos)
 STT_MODEL = os.getenv("GIU_STT_MODEL", "whisper-1")
 # Quando a pessoa manda áudio, a Giu responde em áudio (espelha o canal)
 VOICE_REPLIES = os.getenv("GIU_VOICE_REPLIES", "1") == "1"

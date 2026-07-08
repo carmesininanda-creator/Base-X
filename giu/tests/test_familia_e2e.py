@@ -474,7 +474,7 @@ def test_voice_fallback_de_stt_nao_e_beco(monkeypatch):
     monkeypatch.setattr(wa, "download_media", lambda mid: b"bytes")
     monkeypatch.setattr(voice, "transcrever", lambda b: None)          # STT falha
     monkeypatch.setattr(wa, "send_message_sync", lambda to, t: enviados.append(t) or True)
-    monkeypatch.setattr(voice, "sintetizar", lambda t: None)           # sem API: TTS None
+    monkeypatch.setattr(voice, "sintetizar", lambda t, momento=None: None)  # sem API: TTS None
     server._audio_turn_blocking("u_voz_falha", "MEDIA")
     assert len(enviados) == 1
     msg = enviados[0].lower()
@@ -1004,7 +1004,7 @@ def test_voz_checkin_fala_para_quem_escolheu_voz(monkeypatch):
     monkeypatch.setattr(server.whatsapp, "send_message", fake_send)
     monkeypatch.setattr(server.whatsapp, "is_configured", lambda: True)
     monkeypatch.setattr(server.whatsapp, "send_audio", lambda uid, a: audios.append(a) or True)
-    monkeypatch.setattr(v, "sintetizar", lambda t: b"OGG")
+    monkeypatch.setattr(v, "sintetizar", lambda t, momento=None: b"OGG")
     assert aio.run(server._send_push(U, "whatsapp", "Bom dia, C")) is True
     assert textos == ["Bom dia, C"]           # texto SEMPRE primeiro
     assert audios == [b"OGG"]                  # e a voz junto, para quem escolheu
@@ -2007,3 +2007,54 @@ def test_r6_semanal_rearma_na_mesma_semana_dia():
                                      "2026-07-09T14:01:00") == "2026-07-16T14:00:00"
     assert memory.proxima_ocorrencia("2026-07-09T14:00:00", "semanal",
                                      "2026-07-11T09:00:00") == "2026-07-16T14:00:00"
+# ─── Sprint da Voz: identidade vocal + energia adaptativa ─────────────────────
+
+def test_voz_adaptativa_cobre_todos_os_momentos():
+    from giu import modes, voice
+    # Todo modo de presença tem uma energia vocal — nenhum momento fica órfão
+    assert set(voice.ESTILOS.keys()) == set(modes.MODES.keys())
+
+
+def test_voz_identidade_nunca_muda_so_a_energia():
+    from giu import voice
+    for momento in list(voice.ESTILOS) + [None, "modo_inexistente"]:
+        instrucao = voice.instrucao_vocal(momento)
+        # A âncora de identidade (charter do painel) está em TODA instrução
+        assert "gosta genuinamente das pessoas" in instrucao
+        assert "sorriso discreto" in instrucao
+        assert "Nunca soe como locutora" in instrucao
+    # Momento desconhecido → neutro-âncora (regra anti-caricatura do painel)
+    assert voice.instrucao_vocal("modo_inexistente") == voice.IDENTIDADE_VOCAL
+
+
+def test_voz_emergencia_e_firme_nunca_doce_fora_de_lugar():
+    from giu import voice
+    emergencia = voice.instrucao_vocal("modo_emergencia")
+    assert "FIRME" in emergencia and "pânico" in emergencia
+
+
+def test_voz_instrucoes_so_quando_o_modelo_aceita(monkeypatch):
+    from giu import voice, config as _cfg
+    monkeypatch.setattr(_cfg, "TTS_MODEL", "tts-1")
+    assert voice._suporta_instrucoes() is False        # tts-1: nada muda
+    monkeypatch.setattr(_cfg, "TTS_MODEL", "gpt-4o-mini-tts")
+    assert voice._suporta_instrucoes() is True         # a adaptação liga por env var
+    # E sintetizar aceita o momento sem quebrar (sem chave → None, nunca exceção)
+    monkeypatch.setattr(_cfg, "OPENAI_API_KEY", "")
+    assert voice.sintetizar("oi", "modo_noite") is None
+
+
+def test_voz_viva_por_padrao_e_speed_nunca_derruba_o_audio(monkeypatch):
+    from giu import voice, config as _cfg
+    # O padrão agora é o modelo que aceita a Energia Vital (fundadora: "ainda triste")
+    import os
+    assert os.getenv("GIU_TTS_MODEL") or _cfg.TTS_MODEL == "gpt-4o-mini-tts"
+    # gpt-*-tts: instructions SIM, speed NÃO (enviar speed mataria o áudio em silêncio)
+    monkeypatch.setattr(_cfg, "TTS_MODEL", "gpt-4o-mini-tts")
+    kwargs = voice._tts_kwargs("oi", "modo_manha")
+    assert "instructions" in kwargs and "speed" not in kwargs
+    assert "gosta genuinamente das pessoas" in kwargs["instructions"]
+    # tts-1 (rollback): speed SIM, instructions NÃO — nada quebra
+    monkeypatch.setattr(_cfg, "TTS_MODEL", "tts-1")
+    kwargs = voice._tts_kwargs("oi", "modo_manha")
+    assert "speed" in kwargs and "instructions" not in kwargs
