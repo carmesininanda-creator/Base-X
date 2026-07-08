@@ -33,7 +33,9 @@ def _fmt(item):
 
 
 def _minutos(hhmm):
-    return int(hhmm[:2]) * 60 + int(hhmm[3:5])
+    """Robusto a "9:00" (K1): hora de 1 dígito jamais derruba o retrato."""
+    h, m = hhmm.split(":")[:2]
+    return int(h) * 60 + int(m)
 
 
 DURACAO_PADRAO = 60  # minutos, quando a pessoa não disse quanto dura
@@ -53,20 +55,29 @@ def _linha_conflito(items, hoje_str, hora_agora):
          and (i["date"] > hoje_str or (i["date"] == hoje_str and i["time"] >= hora_agora))),
         key=lambda i: (i["date"], i["time"]),
     )
+    apertada = ""
     for a, b in zip(futuros, futuros[1:]):
         if a["date"] != b["date"]:
-            continue
-        fim_a = _minutos(a["time"]) + (a.get("duracao") or DURACAO_PADRAO)
+            continue  # duração que cruza meia-noite: fora do radar (K4, registrado)
+        inicio_a = _minutos(a["time"])
+        fim_a = inicio_a + (a.get("duracao") or DURACAO_PADRAO)
         inicio_b = _minutos(b["time"])
         if inicio_b < fim_a:
-            return (f"CONFLITO DE AGENDA: \"{a['title']}\" e \"{b['title']}\" se "
-                    f"sobrepõem em {_dd_mm(a['date'])} ({a['time']} e {b['time']}) — "
-                    "resolva COM ela, com leveza, antes que doa.")
-        if inicio_b - fim_a < 30:
-            return (f"AGENDA APERTADA em {_dd_mm(a['date'])}: \"{a['title']}\" e "
-                    f"\"{b['title']}\" muito próximos ({a['time']} e {b['time']}) — "
-                    "dá tempo de ir de um ao outro? Vale conferir COM ela.")
-    return ""
+            # mesmo horário de início = conflito CERTO, com ou sem duração
+            if a.get("duracao") or inicio_b == inicio_a:  # voz de fato
+                return (f"CONFLITO DE AGENDA: \"{a['title']}\" e \"{b['title']}\" se "
+                        f"sobrepõem em {_dd_mm(a['date'])} ({a['time']} e {b['time']}) — "
+                        "resolva COM ela, com leveza, antes que doa.")
+            # duração SUPOSTA → voz de hipótese (K2): o alarme vira captura de duração
+            return (f"CONFLITO POSSÍVEL em {_dd_mm(a['date'])}: \"{a['title']}\" "
+                    f"({a['time']}) e \"{b['title']}\" ({b['time']}) PODEM se sobrepor "
+                    f"— contei ~1h para \"{a['title']}\"; vale confirmar COM ela quanto "
+                    "tempo dura, sem alarme.")
+        if not apertada and inicio_b - fim_a < 30:
+            apertada = (f"AGENDA APERTADA em {_dd_mm(a['date'])}: \"{a['title']}\" e "
+                        f"\"{b['title']}\" muito próximos ({a['time']} e {b['time']}) — "
+                        "dá tempo de ir de um ao outro? Vale conferir COM ela.")
+    return apertada  # K3: conflito real sempre vence o aviso menor
 
 
 def snapshot(user_id, _now=None):

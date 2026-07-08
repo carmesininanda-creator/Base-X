@@ -1805,3 +1805,36 @@ def test_t9_muito_proximos_ganham_voz_gentil():
     memory.add_agenda(u2, "Almoço com a vó", hoje, "14:00")
     snap2 = ctx_agenda.snapshot(u2, _now=manha)
     assert "CONFLITO" not in snap2 and "APERTADA" not in snap2
+
+
+def test_k1_hora_de_um_digito_nao_mata_o_retrato():
+    from datetime import datetime as _dt
+    u = "5511900005995"
+    hoje = _hoje().strftime("%Y-%m-%d")
+    memory.add_agenda(u, "Café com a vó", hoje, "9:00")   # 1 dígito: vida real
+    snap = ctx_agenda.snapshot(u, _now=_dt.fromisoformat(f"{hoje}T07:00:00"))
+    assert "Café com a vó" in snap                        # o retrato sobrevive
+
+
+def test_k2_duracao_suposta_fala_em_hipotese():
+    from datetime import datetime as _dt
+    u = "5511900005994"
+    hoje = _hoje().strftime("%Y-%m-%d")
+    memory.add_agenda(u, "Reunião", hoje, "15:00")        # duração desconhecida
+    memory.add_agenda(u, "Dentista", hoje, "15:30")
+    snap = ctx_agenda.snapshot(u, _now=_dt.fromisoformat(f"{hoje}T07:00:00"))
+    assert "PODEM se sobrepor" in snap                    # hipótese, não veredito
+    assert "quanto tempo dura" in snap                    # o alarme vira pergunta
+    assert "se sobrepõem em" not in snap
+
+
+def test_k3_conflito_real_vence_o_aviso_menor():
+    from datetime import datetime as _dt
+    u = "5511900005993"
+    hoje = _hoje().strftime("%Y-%m-%d")
+    memory.add_agenda(u, "Dentista", hoje, "09:00", duracao=60)
+    memory.add_agenda(u, "Fisio", hoje, "10:20")          # apertada cedo
+    memory.add_agenda(u, "Consulta da mãe", hoje, "15:00", duracao=90)
+    memory.add_agenda(u, "Reunião", hoje, "16:00")        # CONFLITO real depois
+    snap = ctx_agenda.snapshot(u, _now=_dt.fromisoformat(f"{hoje}T07:00:00"))
+    assert "CONFLITO" in snap and "APERTADA" not in snap  # o maior vence
