@@ -138,12 +138,15 @@ def list_events(max_results=10, user_id=None):
     return events
 
 
-def create_event(title, date, time=None, notes=None, duration_minutes=60, user_id=None):
+def create_event(title, date, time=None, notes=None, duration_minutes=60,
+                 user_id=None, location=None):
     """Cria um evento (na agenda DA PESSOA, quando conectada)."""
     token = _access_token(user_id)
     event = {"summary": title}
     if notes:
         event["description"] = notes
+    if location:
+        event["location"] = location  # o "onde" espelha no Google (T8)
 
     if time:
         start = datetime.fromisoformat(f"{date}T{time}")

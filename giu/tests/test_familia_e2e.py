@@ -1753,3 +1753,55 @@ def test_sonho_e_hipotese_viva_nunca_fato_imutavel():
     assert "nunca preservar o sonho" in prompt
     assert "NUNCA empurra ninguém" in prompt
     assert "mostrar que ele continua vivo" in prompt
+
+
+# ─── Calendar completo para a Família (T8 lugar/duração + T9 sobreposição) ────
+
+def test_t8_lugar_e_duracao_viajam_do_agendar_ao_retrato():
+    from datetime import datetime as _dt
+    u = "5511900005999"
+    hoje = _hoje().strftime("%Y-%m-%d")
+    tools.execute_tool("agendar", {"titulo": "Consulta da mãe", "data": hoje,
+                                   "hora": "15:00", "lugar": "Clínica São Lucas",
+                                   "duracao_minutos": 90}, u)
+    acao = memory.list_pending_actions(u)[-1]
+    tools.execute_tool("confirmar_acao", {"action_id": acao["id"]}, u)
+    item = [i for i in memory.get_agenda(u) if i["title"] == "Consulta da mãe"][0]
+    assert item["lugar"] == "Clínica São Lucas" and item["duracao"] == 90
+    manha = _dt.fromisoformat(f"{hoje}T07:00:00")
+    snap = ctx_agenda.snapshot(u, _now=manha)
+    assert "(Clínica São Lucas)" in snap          # o ONDE é preparo de véspera
+    listagem = tools.execute_tool("ver_agenda", {}, u)
+    assert "@ Clínica São Lucas" in listagem
+
+
+def test_t9_sobreposicao_real_nao_passa_despercebida():
+    from datetime import datetime as _dt
+    u = "5511900005998"
+    hoje = _hoje().strftime("%Y-%m-%d")
+    manha = _dt.fromisoformat(f"{hoje}T07:00:00")
+    # 15:00 (90min) e 16:00 → sobrepõem de verdade (o caso que o T9 apontou)
+    memory.add_agenda(u, "Consulta longa", hoje, "15:00", duracao=90)
+    memory.add_agenda(u, "Reunião", hoje, "16:00")
+    snap = ctx_agenda.snapshot(u, _now=manha)
+    assert "CONFLITO DE AGENDA" in snap and "sobrepõem" in snap
+    assert "COM ela" in snap
+
+
+def test_t9_muito_proximos_ganham_voz_gentil():
+    from datetime import datetime as _dt
+    u = "5511900005997"
+    hoje = _hoje().strftime("%Y-%m-%d")
+    manha = _dt.fromisoformat(f"{hoje}T07:00:00")
+    # 09:00 (60min padrão) termina 10:00; próximo às 10:20 → apertado, não conflito
+    memory.add_agenda(u, "Dentista", hoje, "09:00")
+    memory.add_agenda(u, "Fisioterapia", hoje, "10:20")
+    snap = ctx_agenda.snapshot(u, _now=manha)
+    assert "AGENDA APERTADA" in snap and "muito próximos" in snap
+    assert "CONFLITO" not in snap
+    # Com folga real (14:00), silêncio sobre conflito
+    u2 = "5511900005996"
+    memory.add_agenda(u2, "Dentista", hoje, "09:00")
+    memory.add_agenda(u2, "Almoço com a vó", hoje, "14:00")
+    snap2 = ctx_agenda.snapshot(u2, _now=manha)
+    assert "CONFLITO" not in snap2 and "APERTADA" not in snap2

@@ -414,7 +414,9 @@ TOOL_DEFINITIONS = [
                     "titulo": {"type": "string"},
                     "data": {"type": "string", "description": "Data no formato YYYY-MM-DD, se souber"},
                     "hora": {"type": "string", "description": "Horário HH:MM, se souber"},
-                    "notas": {"type": "string", "description": "Endereço, médico, preparos, etc."},
+                    "lugar": {"type": "string", "description": "ONDE acontece (clínica, endereço, bairro) — vale ouro para a véspera e o deslocamento"},
+                    "duracao_minutos": {"type": "integer", "description": "Quanto dura, em minutos, se souber — protege a agenda de sobreposição"},
+                    "notas": {"type": "string", "description": "Médico, preparos, o que levar, etc."},
                 },
                 "required": ["titulo"],
             },
@@ -573,14 +575,16 @@ TOOL_DEFINITIONS = [
 
 def _execute_agendar(user_id, payload):
     item_id = memory.add_agenda(
-        user_id, payload["titulo"], payload.get("data"), payload.get("hora"), payload.get("notas")
+        user_id, payload["titulo"], payload.get("data"), payload.get("hora"),
+        payload.get("notas"), payload.get("lugar"), payload.get("duracao_minutos"),
     )
     result = f"Compromisso #{item_id} adicionado à Agenda Viva."
     if google_calendar.is_configured(user_id) and payload.get("data"):
         try:
             link = google_calendar.create_event(
                 payload["titulo"], payload["data"], payload.get("hora"), payload.get("notas"),
-                user_id=user_id,
+                duration_minutes=payload.get("duracao_minutos") or 60,
+                user_id=user_id, location=payload.get("lugar"),
             )
             result += f" Também criei no Google Calendar: {link}"
         except Exception as e:
@@ -938,6 +942,7 @@ def execute_tool(name, arguments, user_id, channel="web"):
             lines.append("Agenda Viva:")
             lines.extend(
                 f"#{i['id']} {i['title']} — {i['date'] or 'sem data'} {i['time'] or ''}"
+                + (f" @ {i['lugar']}" if i.get("lugar") else "")
                 + (f" ({i['notes']})" if i["notes"] else "")
                 for i in items
             )

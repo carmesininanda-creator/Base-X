@@ -125,6 +125,8 @@ def init_db():
             "ALTER TABLE family_members ADD COLUMN welcome TEXT",
             "ALTER TABLE reminders ADD COLUMN attempts INTEGER DEFAULT 0",
             "ALTER TABLE messages ADD COLUMN modality TEXT DEFAULT 'text'",
+            "ALTER TABLE agenda ADD COLUMN lugar TEXT",      # T8 (Calendar/Mobility)
+            "ALTER TABLE agenda ADD COLUMN duracao INTEGER",  # T9 (janela de conflito)
         ):
             try:
                 conn.execute(stmt)
@@ -457,17 +459,22 @@ def message_count(user_id):
 
 # ─── Agenda Viva ──────────────────────────────────────────────────────────────
 
-def add_agenda(user_id, title, date=None, time=None, notes=None):
+def add_agenda(user_id, title, date=None, time=None, notes=None,
+               lugar=None, duracao=None):
+    """duracao em minutos (opcional): habilita o conflito por sobreposição
+    real (T9); lugar (opcional): o 'onde' que a Mobilidade vai precisar (T8)."""
     with _conn() as conn:
         cur = conn.execute(
-            "INSERT INTO agenda (user_id, title, date, time, notes, created_at) VALUES (?,?,?,?,?,?)",
-            (user_id, title, date, time, notes, _now()),
+            "INSERT INTO agenda (user_id, title, date, time, notes, lugar, duracao, created_at)"
+            " VALUES (?,?,?,?,?,?,?,?)",
+            (user_id, title, date, time, notes, lugar, duracao, _now()),
         )
         return cur.lastrowid
 
 
 def get_agenda(user_id, include_done=False):
-    sql = "SELECT id, title, date, time, notes, done, created_at FROM agenda WHERE user_id=?"
+    sql = ("SELECT id, title, date, time, notes, done, created_at, lugar, duracao "
+           "FROM agenda WHERE user_id=?")
     if not include_done:
         sql += " AND done=0"
     sql += " ORDER BY date IS NULL, date, time"
