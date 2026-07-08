@@ -62,6 +62,28 @@ do Despacho, §6) · open_meteo ✅ (T7). Duas frentes permanentes: capacidades
 
 ## 3. Registro corrido (descobertas · decisões · problemas)
 
+**08/07 — 🎯 NOVA ORDEM da fundadora: "fazer a Giu Família ficar
+extraordinária" (Calendar → Home → Mobility → Health, cada capacidade
+COMPLETA antes da próxima). PRs #26 e #27 MERGEADOS (Life Seeds aprovadas +
+filosofia dos sonhos — o #27 recuperou o commit que o merge do #26 deixou
+para trás numa corrida de timing; main 6ab12e0 verificada, 119/119).**
+🌱 LIFE SEEDS PRONTAS PARA O PLANTIO — handoff ao DESPACHO: as 4 fichas
+completas (interesses/sonhos/desafios/datas dos quatro) estão FORA do git em
+giu/vida-inicial/; aplicar via POST /family/members/{numero}/vida (token de
+operadora, instruções em FICHA-VIDA-INICIAL.md) e APAGAR os arquivos depois.
+O expurgo pela recusa (S1) está no ar — pré-condição cumprida. ETAPA 1 EM
+ANDAMENTO: 📅 Calendar completo p/ a Família — PR #28 aberto (merge da
+Nanda): T8 paga (compromisso com LUGAR — "Consulta da mãe às 15:00 (Clínica
+São Lucas)" — e DURAÇÃO; espelho no Google com location) + T9 paga (conflito
+por SOBREPOSIÇÃO real; 15:00/15:30 não passa mais; duração suposta fala em
+HIPÓTESE — "PODEM se sobrepor... quanto tempo dura?" — o alarme vira captura
+de duração; "AGENDA APERTADA" para o quase-conflito; conflito real vence o
+aviso menor). LIFE ARCHITECT: aprova com dívidas — K1 (regressão "9:00"
+mataria o retrato em silêncio), K2 e K3 PAGAS no PR; K4 (meia-noite) e K5
+(mesmo lugar) registradas. LACUNA NOMEADA para declarar o domínio COMPLETO:
+**remarcar/cancelar compromisso** (+ recorrência; + leitura Google→retrato
+pós-OAuth) — PRÓXIMA LEVA, antes de abrir o domínio Casa. 125/125 testes.
+
 **08/07 — 🌱 SEMEAR A VIDA ampliado pela fundadora ("identidade + vida":
 interesses, sonhos, desafios; autonomia como OBJETIVO PERMANENTE da relação
 com os três filhos) — PR #26 aberto (merge dela). CC1 ✅ (PR #25 mergeado
