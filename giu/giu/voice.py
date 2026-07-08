@@ -185,19 +185,27 @@ def sintetizar(texto, momento=None):
     if not config.OPENAI_API_KEY:
         return None
     try:
-        kwargs = dict(
-            model=config.TTS_MODEL,
-            voice=config.VOICE_NAME,
-            speed=config.VOICE_SPEED,
-            input=vocefy(texto),
-            response_format="opus",
-        )
-        if _suporta_instrucoes():
-            kwargs["instructions"] = instrucao_vocal(momento)
-        resp = _client().audio.speech.create(**kwargs)
+        resp = _client().audio.speech.create(**_tts_kwargs(texto, momento))
         return resp.read()
     except Exception:
         return None
+
+
+def _tts_kwargs(texto, momento=None):
+    """Monta a chamada certa por modelo: gpt-*-tts recebe instructions e NÃO
+    recebe speed (o ritmo vem da instrução; enviar speed derrubaria o áudio
+    inteiro em silêncio); tts-1 recebe speed e ignora o resto."""
+    kwargs = dict(
+        model=config.TTS_MODEL,
+        voice=config.VOICE_NAME,
+        input=vocefy(texto),
+        response_format="opus",
+    )
+    if _suporta_instrucoes():
+        kwargs["instructions"] = instrucao_vocal(momento)
+    else:
+        kwargs["speed"] = config.VOICE_SPEED
+    return kwargs
 
 
 def vocefy(texto):

@@ -1918,3 +1918,19 @@ def test_voz_instrucoes_so_quando_o_modelo_aceita(monkeypatch):
     # E sintetizar aceita o momento sem quebrar (sem chave → None, nunca exceção)
     monkeypatch.setattr(_cfg, "OPENAI_API_KEY", "")
     assert voice.sintetizar("oi", "modo_noite") is None
+
+
+def test_voz_viva_por_padrao_e_speed_nunca_derruba_o_audio(monkeypatch):
+    from giu import voice, config as _cfg
+    # O padrão agora é o modelo que aceita a Energia Vital (fundadora: "ainda triste")
+    import os
+    assert os.getenv("GIU_TTS_MODEL") or _cfg.TTS_MODEL == "gpt-4o-mini-tts"
+    # gpt-*-tts: instructions SIM, speed NÃO (enviar speed mataria o áudio em silêncio)
+    monkeypatch.setattr(_cfg, "TTS_MODEL", "gpt-4o-mini-tts")
+    kwargs = voice._tts_kwargs("oi", "modo_manha")
+    assert "instructions" in kwargs and "speed" not in kwargs
+    assert "gosta genuinamente das pessoas" in kwargs["instructions"]
+    # tts-1 (rollback): speed SIM, instructions NÃO — nada quebra
+    monkeypatch.setattr(_cfg, "TTS_MODEL", "tts-1")
+    kwargs = voice._tts_kwargs("oi", "modo_manha")
+    assert "speed" in kwargs and "instructions" not in kwargs
