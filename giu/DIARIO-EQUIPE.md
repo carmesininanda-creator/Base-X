@@ -62,6 +62,33 @@ do Despacho, §6) · open_meteo ✅ (T7). Duas frentes permanentes: capacidades
 
 ## 3. Registro corrido (descobertas · decisões · problemas)
 
+**08/07 — 🧊 DECISÃO da fundadora: CONGELAMENTO da expansão genérica +
+CHECKLIST DE LANÇAMENTO da Giu Família v1.0 (aguarda aprovação dela).**
+Prioridade absoluta: **concluir a Base-X para a Família Fundadora** (Nanda,
+Ian, Pauline, Rafael) — sem mercado, sem milhões de usuários, sem
+funcionalidades futuras. Filtro de toda priorização: "isso deixa a Base-X
+da Família Fundadora mais completa?" (sim → implementa; não → roadmap). As
+duas fases NÃO se misturam: primeiro a Giu Família extraordinária; depois a
+expansão contínua. TAMBÉM REGISTRADAS as consolidações dela: "a Base-X não
+pertence aos Providers — os Providers pertencem à Base-X"; domínios
+pertencem às NECESSIDADES humanas; Família Fundadora = LABORATÓRIO VIVO;
+**as 5 perguntas obrigatórias** de toda implementação (fricção? vida da
+família? missão? domínio? como a Life Architect mede?); ciclo permanente
+semanal (aprendizados → fricções → missões → capacidades); Vision inclui
+pessoas QUANDO AUTORIZADO; "não estamos construindo software — estamos
+construindo um sistema que aprende a melhorar a vida"; **a Life Architect
+tem mandato para INTERROMPER implementação que perca o foco**. ENTREGUE:
+CHECKLIST-GIU-FAMILIA-V1.md (no git) — as 10 dimensões que ela pediu
+(Relação, Voz, Living Context, Family Context, Missões, Memória, Blueprint,
+Spine, Friction Lens, Mission Engine) com estado honesto item a item + o
+CAMINHO CRÍTICO de 6 itens entre hoje e o uso diário: CC1 merge do PR #25 ·
+CC2 teste de voz da Nanda (H2) · CC3 alarme de saldo (Despacho) · CC4
+dívida M4 (check-in sem CP-1 — leva curta) · CC5 aniversários dos 4
+(decisão dela, D-CP1) · CC6 o GO. Fora isso: as 10 dimensões estão prontas
+e testadas (104/104 na branch do PR #25); conectores externos (Gmail, Uber,
+Rappi, Oura, Alexa, Vision, Google OAuth) entram como ondas contínuas
+DEPOIS do go, puxados pelas fricções reais das semanas.
+
 **08/07 — ✅ FUNDADORA APROVOU a arquitetura de CAPACIDADES DE VIDA (com 3
 ajustes dela) + ✉️ COMUNICAÇÃO implementada (PR #25 aberto — o merge é
 dela).** Ajustes registrados: (1) os Domínios pertencem às NECESSIDADES da
