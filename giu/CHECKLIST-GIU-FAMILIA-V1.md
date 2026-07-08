@@ -61,7 +61,7 @@ resto abaixo ou já está pronto, ou é evolução que nasce DAS semanas de uso.
   boa companhia sabe que horas são) · contrato com 12 garantias em teste
   (nunca levanta, silêncio, efêmero, confidencialidade, língua de vida,
   teto de tempo, oferta única, desacoplamento por AST).
-- 🔴 **CC1**: ✉️ Comunicação no PR #25.
+- ✅ ✉️ Comunicação mergeada (pendências sem eco; CP-1 com recusa durável).
 - Os demais domínios do retrato (Casa, Saúde…) nascem DAS fricções das
   semanas — ver "Domínios" abaixo.
 
@@ -70,8 +70,9 @@ resto abaixo ou já está pronto, ou é evolução que nasce DAS semanas de uso.
   recados entre membros SÓ com confirmação · confidencialidade absoluta
   TESTADA (nada atravessa membros — nem para a admin) · lei da mãe (mínimo
   necessário, sempre pela Nanda, Giu nunca a contata).
-- 🟡 **CC5**: aniversários dos 4 — semear ou deixar nascer pela conversa
-  (decisão dela).
+- 🟡 **CC5 (elevado)**: Semear a Vida — mecanismo no PR #26 com expurgo pela
+  recusa; interesses/sonhos/desafios; autonomia como objetivo permanente no
+  Blueprint dos filhos; fichas preenchidas fora do git aguardam a revisão dela.
 
 ### 5. Missões
 - ✅ Ciclo completo vivido em teste: abrir → acompanhar → concluir →
@@ -124,7 +125,7 @@ missões → capacidades).
 | Domínio | Vive HOJE (piso interno) | Conector para a família (por ativação, pós-go) | 👤 destrava |
 |---|---|---|---|
 | ⏰ Tempo | ✅ Agenda Viva, lembretes, rotina, datas, dia cheio, conflito, véspera | Google Calendar ✅ construído — **falta só o OAuth** | Despacho (§6) |
-| ✉️ Comunicação | 🔴 PR #25 (pendências sem eco) | Gmail (parecer rígido antes) | Nanda + Despacho |
+| ✉️ Comunicação | ✅ pendências sem eco (mergeado) | Gmail (parecer rígido antes) | Despacho |
 | 🏠 Casa | ✅ listas de mercado/farmácia como missão, manutenção guiada | Rappi · iFood · Alexa | parecer + ativação |
 | 🚗 Mobilidade | ✅ trajeto mastigado guiado, consultas com deslocamento | Uber | parecer + ativação |
 | 🩺 Saúde | ✅ consulta/exame como missão até o fim, medicamentos como lembrete | Vision (receitas/exames) · Oura · Garmin · Apple Health | parecer D-CV4 + ativação |
