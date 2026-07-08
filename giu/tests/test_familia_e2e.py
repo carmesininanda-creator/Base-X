@@ -1883,6 +1883,130 @@ def test_remarcar_valida_data_e_pede_o_que_muda():
     assert "já passou" in r                                       # o sistema confere
 
 
+# ─── 🔁 Recorrência: dito UMA vez, cuidado para sempre (arbitragem da Life
+#     Architect: remédio da mãe > lista de mercado — com as 3 cercas) ─────────
+
+def test_recorrencia_proxima_ocorrencia():
+    # diario: mesmo horário, dia seguinte
+    assert memory.proxima_ocorrencia("2026-07-08T08:00:00", "diario",
+                                     "2026-07-08T08:01:00") == "2026-07-09T08:00:00"
+    # mensal: dia 31 vira o último do mês curto
+    assert memory.proxima_ocorrencia("2026-01-31T09:00:00", "mensal",
+                                     "2026-01-31T09:01:00") == "2026-02-28T09:00:00"
+    # dias:seg,qua,sex a partir de uma quarta (2026-07-08) → sexta
+    assert memory.proxima_ocorrencia("2026-07-08T18:00:00", "dias:seg,qua,sex",
+                                     "2026-07-08T18:01:00") == "2026-07-10T18:00:00"
+    # âncora no AGORA: serviço parado por dias não gera enxurrada
+    assert memory.proxima_ocorrencia("2026-07-01T08:00:00", "diario",
+                                     "2026-07-20T10:00:00") == "2026-07-21T08:00:00"
+
+
+def test_recorrente_se_rearma_unico_morre():
+    from datetime import timedelta
+    u = "5511900003999"
+    ontem = (_hoje().replace(tzinfo=None) - timedelta(days=1)).isoformat(timespec="seconds")
+    rid_rec = memory.add_reminder(u, "Remédio da pressão da mamãe", ontem, "whatsapp", "diario")
+    rid_uni = memory.add_reminder(u, "Ligar pro dentista", ontem, "whatsapp")
+    vencidos = {r["id"]: r for r in memory.due_reminders() if r["user_id"] == u}
+    assert rid_rec in vencidos and rid_uni in vencidos
+    memory.reminder_delivered(vencidos[rid_rec])
+    memory.reminder_delivered(vencidos[rid_uni])
+    with memory._conn() as conn:
+        rec = conn.execute("SELECT sent, due_at, disparos FROM reminders WHERE id=?",
+                           (rid_rec,)).fetchone()
+        uni = conn.execute("SELECT sent FROM reminders WHERE id=?", (rid_uni,)).fetchone()
+    assert rec["sent"] == 0 and rec["due_at"] > ontem and rec["disparos"] == 1  # vive
+    assert uni["sent"] == 1                                                     # morre
+
+
+def test_cerca1_pode_parar_e_lei():
+    from datetime import timedelta
+    u = "5511900003998"
+    amanha = (_hoje().replace(tzinfo=None) + timedelta(days=1)).isoformat(timespec="seconds")
+    memory.add_reminder(u, "Fisioterapia", amanha, "whatsapp", "semanal")
+    r = tools.execute_tool("parar_lembrete", {"trecho": "fisio"}, u)
+    assert "Parado(s) AGORA" in r and '"Fisioterapia"' in r  # nomeia o que parou (R4)
+    assert "SEM" in r                                  # zero culpa, zero 'tem certeza?'
+    assert memory.due_reminders() == [r2 for r2 in memory.due_reminders()
+                                      if r2["user_id"] != u]
+
+
+def test_cerca2_pulso_de_reconsentimento_na_propria_mensagem():
+    u = "5511900003997"
+    rid = memory.add_reminder(u, "Musculação", "2026-01-05T07:00:00", "whatsapp", "dias:seg,qua,sex")
+    with memory._conn() as conn:
+        conn.execute("UPDATE reminders SET disparos=9 WHERE id=?", (rid,))  # o 10º é a vez
+    lembrete = [r for r in memory.due_reminders() if r["id"] == rid][0]
+    pulso = memory.pulso_devido(lembrete)
+    assert "pode parar" in pulso and "carinho" in pulso   # pergunta gentil, na mensagem
+    with memory._conn() as conn:
+        conn.execute("UPDATE reminders SET disparos=3 WHERE id=?", (rid,))
+    lembrete = [r for r in memory.due_reminders() if r["id"] == rid][0]
+    assert memory.pulso_devido(lembrete) == ""            # fora da vez: silêncio
+
+
+def test_recorrencia_ciclo_completo_pela_conversa():
+    from datetime import timedelta
+    u = "5511900003996"
+    quando = (_hoje().replace(tzinfo=None) + timedelta(days=1)).replace(
+        hour=8, minute=0, second=0, microsecond=0).isoformat(timespec="seconds")
+    r = tools.execute_tool("criar_lembrete",
+                           {"texto": "Remédio da pressão", "quando": quando,
+                            "recorrencia": "diario"}, u)
+    assert "(todo dia)" in r                              # o resumo diz que repete
+    acao = memory.list_pending_actions(u)[-1]
+    r = tools.execute_tool("confirmar_acao", {"action_id": acao["id"]}, u)
+    assert "recorrente" in r and "pode parar" in r        # a saída ensinada junto
+    # Recorrência inválida não passa
+    r = tools.execute_tool("criar_lembrete",
+                           {"texto": "X", "quando": quando, "recorrencia": "sempre"}, u)
+    assert "inválida" in r
+
+
+def test_r1_recorrente_jamais_morre_por_falha_de_entrega():
+    from datetime import timedelta
+    u = "5511900003995"
+    ontem = (_hoje().replace(tzinfo=None) - timedelta(days=1)).isoformat(timespec="seconds")
+    rid = memory.add_reminder(u, "Remédio da pressão da mamãe", ontem, "whatsapp", "diario")
+    # 5 falhas seguidas (a janela de 24h fechada): o ÚNICO desistiria; o
+    # recorrente PULA a ocorrência e segue vivo — a cena da mãe não morre
+    for _ in range(5):
+        desistiu = memory.mark_reminder_failed(rid)
+    assert desistiu is False
+    with memory._conn() as conn:
+        row = conn.execute("SELECT sent, attempts, due_at FROM reminders WHERE id=?",
+                           (rid,)).fetchone()
+    assert row["sent"] == 0 and row["attempts"] == 0 and row["due_at"] > ontem
+
+
+def test_r2_mensal_dia_31_nunca_vira_28_para_sempre():
+    # 31/jan → 28/fev (mês curto) → 31/MAR (o alvo persiste)
+    fev = memory.proxima_ocorrencia("2026-01-31T09:00:00", "mensal:31", "2026-01-31T09:01:00")
+    assert fev == "2026-02-28T09:00:00"
+    mar = memory.proxima_ocorrencia(fev, "mensal:31", fev)
+    assert mar == "2026-03-31T09:00:00"
+    # E a criação congela o alvo automaticamente ("mensal" → "mensal:5")
+    u = "5511900003994"
+    rid = memory.add_reminder(u, "Aluguel", "2026-08-05T09:00:00", "whatsapp", "mensal")
+    with memory._conn() as conn:
+        rec = conn.execute("SELECT recorrencia FROM reminders WHERE id=?", (rid,)).fetchone()
+    assert rec["recorrencia"] == "mensal:5"
+
+
+def test_r5_outage_multidia_ganha_honestidade():
+    lembrete = {"due_at": "2026-07-01T08:00:00", "recorrencia": "diario"}
+    linha = memory.atraso_grave(lembrete, "2026-07-05T10:00:00")
+    assert "não saíram" in linha and "me desculpa" in linha
+    # Atraso normal (dentro do período): silêncio
+    assert memory.atraso_grave(lembrete, "2026-07-01T10:00:00") == ""
+
+
+def test_r6_semanal_rearma_na_mesma_semana_dia():
+    # quinta → quinta seguinte, mesmo horário; entrega atrasada não muda o dia
+    assert memory.proxima_ocorrencia("2026-07-09T14:00:00", "semanal",
+                                     "2026-07-09T14:01:00") == "2026-07-16T14:00:00"
+    assert memory.proxima_ocorrencia("2026-07-09T14:00:00", "semanal",
+                                     "2026-07-11T09:00:00") == "2026-07-16T14:00:00"
 # ─── Sprint da Voz: identidade vocal + energia adaptativa ─────────────────────
 
 def test_voz_adaptativa_cobre_todos_os_momentos():

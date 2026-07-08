@@ -128,6 +128,8 @@ def init_db():
             "ALTER TABLE agenda ADD COLUMN lugar TEXT",      # T8 (Calendar/Mobility)
             "ALTER TABLE agenda ADD COLUMN duracao INTEGER",  # T9 (janela de conflito)
             "ALTER TABLE agenda ADD COLUMN cancelado INTEGER DEFAULT 0",  # cancelar ≠ concluir
+            "ALTER TABLE reminders ADD COLUMN recorrencia TEXT",     # dito UMA vez
+            "ALTER TABLE reminders ADD COLUMN disparos INTEGER DEFAULT 0",
         ):
             try:
                 conn.execute(stmt)
@@ -525,11 +527,76 @@ def complete_agenda(user_id, item_id):
 
 # ─── Lembretes ────────────────────────────────────────────────────────────────
 
-def add_reminder(user_id, text, due_at, channel="web"):
+RECORRENCIAS_VALIDAS = ("diario", "semanal", "mensal")  # + "dias:..." e "mensal:<dia>"
+_DIAS_SEMANA_IDX = {"seg": 0, "ter": 1, "qua": 2, "qui": 3, "sex": 4, "sab": 5, "dom": 6}
+# A cada N disparos, UMA pergunta gentil de re-consentimento (cerca da Life
+# Architect: ignorar ocorrências gera pergunta, nunca insistência)
+_PULSO_RECONSENTIMENTO = {"diario": 14, "semanal": 4, "mensal": 3, "dias": 10}
+
+
+def recorrencia_valida(recorrencia):
+    if not recorrencia:
+        return True
+    if recorrencia in RECORRENCIAS_VALIDAS:
+        return True
+    if recorrencia.startswith("mensal:"):
+        try:
+            return 1 <= int(recorrencia[7:]) <= 31
+        except ValueError:
+            return False
+    if recorrencia.startswith("dias:"):
+        dias = [d.strip() for d in recorrencia[5:].split(",") if d.strip()]
+        return bool(dias) and all(d in _DIAS_SEMANA_IDX for d in dias)
+    return False
+
+
+def proxima_ocorrencia(due_iso, recorrencia, agora_iso=None):
+    """A próxima vez, avançando a partir de max(due, agora) — reiniciar o
+    serviço nunca gera enxurrada de lembretes atrasados."""
+    from datetime import timedelta
+    base = datetime.fromisoformat(due_iso)
+    agora = datetime.fromisoformat(agora_iso) if agora_iso else datetime.fromisoformat(_now())
+    ancora = max(base, agora)
+    if recorrencia == "diario":
+        prox = ancora + timedelta(days=1)
+        return prox.replace(hour=base.hour, minute=base.minute,
+                            second=0, microsecond=0).isoformat(timespec="seconds")
+    if recorrencia == "semanal":
+        prox = ancora + timedelta(days=7 - ((ancora.weekday() - base.weekday()) % 7) or 7)
+        return prox.replace(hour=base.hour, minute=base.minute,
+                            second=0, microsecond=0).isoformat(timespec="seconds")
+    if recorrencia == "mensal" or (recorrencia and recorrencia.startswith("mensal:")):
+        # R2: o dia-alvo é PERSISTIDO ("mensal:31") — 31/jan→28/fev→31/MAR,
+        # nunca "28 para sempre"; e a âncora no agora não pula meses
+        alvo = int(recorrencia[7:]) if recorrencia.startswith("mensal:") else base.day
+        ano, mes = ancora.year, ancora.month + 1
+        if mes > 12:
+            ano, mes = ano + 1, 1
+        import calendar as _cal
+        dia = min(alvo, _cal.monthrange(ano, mes)[1])  # 31 → último do mês curto
+        return base.replace(year=ano, month=mes, day=dia).isoformat(timespec="seconds")
+    if recorrencia and recorrencia.startswith("dias:"):
+        alvos = sorted(_DIAS_SEMANA_IDX[d.strip()] for d in recorrencia[5:].split(","))
+        for delta in range(1, 8):
+            cand = ancora + timedelta(days=delta)
+            if cand.weekday() in alvos:
+                return cand.replace(hour=base.hour, minute=base.minute,
+                                    second=0, microsecond=0).isoformat(timespec="seconds")
+    return None
+
+
+def add_reminder(user_id, text, due_at, channel="web", recorrencia=None):
+    """recorrencia: None (única) | 'diario' | 'semanal' | 'mensal' |
+    'dias:seg,qua,sex' — dito UMA vez, cuidado para sempre; parar é uma frase."""
+    if not recorrencia_valida(recorrencia):
+        recorrencia = None  # nunca grava lixo — vira lembrete único
+    if recorrencia == "mensal":  # R2: congela o dia-alvo do mês na criação
+        recorrencia = f"mensal:{datetime.fromisoformat(due_at).day}"
     with _conn() as conn:
         cur = conn.execute(
-            "INSERT INTO reminders (user_id, channel, text, due_at, created_at) VALUES (?,?,?,?,?)",
-            (user_id, channel, text, due_at, _now()),
+            "INSERT INTO reminders (user_id, channel, text, due_at, created_at, recorrencia)"
+            " VALUES (?,?,?,?,?,?)",
+            (user_id, channel, text, due_at, _now(), recorrencia),
         )
         return cur.lastrowid
 
@@ -538,10 +605,85 @@ def due_reminders():
     """Lembretes vencidos e ainda não enviados — usados pelo scheduler."""
     with _conn() as conn:
         rows = conn.execute(
-            "SELECT id, user_id, channel, text, due_at FROM reminders WHERE sent=0 AND due_at <= ?",
+            "SELECT id, user_id, channel, text, due_at, recorrencia, disparos "
+            "FROM reminders WHERE sent=0 AND due_at <= ?",
             (_now(),),
         ).fetchall()
     return [dict(r) for r in rows]
+
+
+_PERIODO_DIAS = {"diario": 1, "dias": 2, "semanal": 7, "mensal": 30}
+
+
+def atraso_grave(reminder, agora_iso=None):
+    """Outage multi-dia: se o lembrete recorrente está atrasado mais de 1,5
+    período, ocorrências intermediárias NÃO saíram — a Giu conta (R5: o
+    silêncio sobre o pulo fere a honestidade que o projeto inteiro tem)."""
+    recorrencia = reminder.get("recorrencia")
+    if not recorrencia:
+        return ""
+    from datetime import timedelta
+    agora = datetime.fromisoformat(agora_iso) if agora_iso else datetime.fromisoformat(_now())
+    devido = datetime.fromisoformat(reminder["due_at"])
+    periodo = _PERIODO_DIAS.get(recorrencia.split(":")[0], 7)
+    if agora - devido > timedelta(days=periodo * 1.5):
+        return ("\n(Fiquei um tempo fora do ar e algumas vezes deste lembrete "
+                "não saíram — me desculpa. Já voltei a cuidar.)")
+    return ""
+
+
+def pulso_devido(reminder):
+    """Pré-envio (só leitura): é a vez da pergunta gentil de re-consentimento?
+    A linha viaja NA PRÓPRIA mensagem — nunca uma mensagem extra de cobrança."""
+    recorrencia = reminder.get("recorrencia")
+    if not recorrencia:
+        return ""
+    chave = recorrencia.split(":")[0]
+    pulso = _PULSO_RECONSENTIMENTO.get(chave, 10)
+    proximo_disparo = (reminder.get("disparos") or 0) + 1
+    if proximo_disparo % pulso == 0:
+        return ("\n(Sigo te lembrando disso com carinho — se não fizer mais "
+                "sentido, é só dizer \"pode parar\" que eu paro na hora.)")
+    return ""
+
+
+def reminder_delivered(reminder):
+    """Entrega registrada: o único morre (sent=1); o RECORRENTE se rearma
+    para a próxima ocorrência — dito uma vez, cuidado para sempre."""
+    rid = reminder["id"]
+    recorrencia = reminder.get("recorrencia")
+    with _conn() as conn:
+        conn.execute("UPDATE reminders SET disparos = COALESCE(disparos,0)+1, attempts=0 "
+                     "WHERE id=?", (rid,))
+        if not recorrencia:
+            conn.execute("UPDATE reminders SET sent=1 WHERE id=?", (rid,))
+            return
+        proxima = proxima_ocorrencia(reminder["due_at"], recorrencia)
+        if proxima:
+            conn.execute("UPDATE reminders SET due_at=? WHERE id=?", (proxima, rid))
+        else:
+            conn.execute("UPDATE reminders SET sent=1 WHERE id=?", (rid,))
+
+
+def reminders_stop(user_id, trecho):
+    """'Pode parar' é lei: encerra na hora os lembretes ativos que contêm o
+    trecho — tão fácil quanto criar. Devolve OS TEXTOS parados (R4: a Giu
+    nomeia o que parou e pode devolver o que parou por engano). Zero culpa."""
+    alvo = (trecho or "").strip().lower()
+    if len(alvo) < 3:
+        return []
+    with _conn() as conn:
+        rows = conn.execute(
+            "SELECT id, text FROM reminders WHERE user_id=? AND sent=0 "
+            "AND lower(text) LIKE ?",
+            (user_id, f"%{alvo}%"),
+        ).fetchall()
+        if rows:
+            conn.execute(
+                f"UPDATE reminders SET sent=1 WHERE id IN ({','.join('?'*len(rows))})",
+                [r["id"] for r in rows],
+            )
+        return [r["text"] for r in rows]
 
 
 def mark_reminder_sent(reminder_id):
@@ -550,14 +692,29 @@ def mark_reminder_sent(reminder_id):
 
 
 def mark_reminder_failed(reminder_id, max_attempts=5):
-    """Conta uma tentativa falha. Após max_attempts, encerra (sent=1) para não
-    retentar para sempre — impede o loop infinito quando a entrega não é possível."""
+    """Conta uma tentativa falha. Após max_attempts: o lembrete ÚNICO encerra
+    (sent=1, impede loop infinito); o RECORRENTE jamais morre por falha de
+    entrega (R1 da Life Architect: a janela de 24h fechada mataria o remédio
+    da mãe em 5 minutos, para sempre, em silêncio) — ele PULA a ocorrência,
+    rearma para a próxima e zera as tentativas. Retorna True só na
+    desistência definitiva (único)."""
     with _conn() as conn:
         conn.execute("UPDATE reminders SET attempts = attempts + 1 WHERE id=?", (reminder_id,))
-        row = conn.execute("SELECT attempts FROM reminders WHERE id=?", (reminder_id,)).fetchone()
+        row = conn.execute(
+            "SELECT attempts, recorrencia, due_at FROM reminders WHERE id=?",
+            (reminder_id,),
+        ).fetchone()
         if row and row["attempts"] >= max_attempts:
+            if row["recorrencia"]:
+                proxima = proxima_ocorrencia(row["due_at"], row["recorrencia"])
+                if proxima:
+                    conn.execute(
+                        "UPDATE reminders SET due_at=?, attempts=0 WHERE id=?",
+                        (proxima, reminder_id),
+                    )
+                    return False  # pulou a ocorrência; o cuidado continua vivo
             conn.execute("UPDATE reminders SET sent=1 WHERE id=?", (reminder_id,))
-            return True  # desistiu
+            return True  # desistiu (só o único)
     return False
 
 
