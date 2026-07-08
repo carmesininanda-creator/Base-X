@@ -474,7 +474,7 @@ def test_voice_fallback_de_stt_nao_e_beco(monkeypatch):
     monkeypatch.setattr(wa, "download_media", lambda mid: b"bytes")
     monkeypatch.setattr(voice, "transcrever", lambda b: None)          # STT falha
     monkeypatch.setattr(wa, "send_message_sync", lambda to, t: enviados.append(t) or True)
-    monkeypatch.setattr(voice, "sintetizar", lambda t: None)           # sem API: TTS None
+    monkeypatch.setattr(voice, "sintetizar", lambda t, momento=None: None)  # sem API: TTS None
     server._audio_turn_blocking("u_voz_falha", "MEDIA")
     assert len(enviados) == 1
     msg = enviados[0].lower()
@@ -1004,7 +1004,7 @@ def test_voz_checkin_fala_para_quem_escolheu_voz(monkeypatch):
     monkeypatch.setattr(server.whatsapp, "send_message", fake_send)
     monkeypatch.setattr(server.whatsapp, "is_configured", lambda: True)
     monkeypatch.setattr(server.whatsapp, "send_audio", lambda uid, a: audios.append(a) or True)
-    monkeypatch.setattr(v, "sintetizar", lambda t: b"OGG")
+    monkeypatch.setattr(v, "sintetizar", lambda t, momento=None: b"OGG")
     assert aio.run(server._send_push(U, "whatsapp", "Bom dia, C")) is True
     assert textos == ["Bom dia, C"]           # texto SEMPRE primeiro
     assert audios == [b"OGG"]                  # e a voz junto, para quem escolheu
@@ -1893,3 +1893,178 @@ def test_filosofia_do_um_por_cento_no_nucleo():
     assert "recomeçar do zero também é um 1%" in prompt
     assert "pelo EXEMPLO" in prompt                   # nunca sermão sobre "1%"
     assert "o crédito é sempre dela" in prompt
+# ─── 🔁 Recorrência: dito UMA vez, cuidado para sempre (arbitragem da Life
+#     Architect: remédio da mãe > lista de mercado — com as 3 cercas) ─────────
+
+def test_recorrencia_proxima_ocorrencia():
+    # diario: mesmo horário, dia seguinte
+    assert memory.proxima_ocorrencia("2026-07-08T08:00:00", "diario",
+                                     "2026-07-08T08:01:00") == "2026-07-09T08:00:00"
+    # mensal: dia 31 vira o último do mês curto
+    assert memory.proxima_ocorrencia("2026-01-31T09:00:00", "mensal",
+                                     "2026-01-31T09:01:00") == "2026-02-28T09:00:00"
+    # dias:seg,qua,sex a partir de uma quarta (2026-07-08) → sexta
+    assert memory.proxima_ocorrencia("2026-07-08T18:00:00", "dias:seg,qua,sex",
+                                     "2026-07-08T18:01:00") == "2026-07-10T18:00:00"
+    # âncora no AGORA: serviço parado por dias não gera enxurrada
+    assert memory.proxima_ocorrencia("2026-07-01T08:00:00", "diario",
+                                     "2026-07-20T10:00:00") == "2026-07-21T08:00:00"
+
+
+def test_recorrente_se_rearma_unico_morre():
+    from datetime import timedelta
+    u = "5511900003999"
+    ontem = (_hoje().replace(tzinfo=None) - timedelta(days=1)).isoformat(timespec="seconds")
+    rid_rec = memory.add_reminder(u, "Remédio da pressão da mamãe", ontem, "whatsapp", "diario")
+    rid_uni = memory.add_reminder(u, "Ligar pro dentista", ontem, "whatsapp")
+    vencidos = {r["id"]: r for r in memory.due_reminders() if r["user_id"] == u}
+    assert rid_rec in vencidos and rid_uni in vencidos
+    memory.reminder_delivered(vencidos[rid_rec])
+    memory.reminder_delivered(vencidos[rid_uni])
+    with memory._conn() as conn:
+        rec = conn.execute("SELECT sent, due_at, disparos FROM reminders WHERE id=?",
+                           (rid_rec,)).fetchone()
+        uni = conn.execute("SELECT sent FROM reminders WHERE id=?", (rid_uni,)).fetchone()
+    assert rec["sent"] == 0 and rec["due_at"] > ontem and rec["disparos"] == 1  # vive
+    assert uni["sent"] == 1                                                     # morre
+
+
+def test_cerca1_pode_parar_e_lei():
+    from datetime import timedelta
+    u = "5511900003998"
+    amanha = (_hoje().replace(tzinfo=None) + timedelta(days=1)).isoformat(timespec="seconds")
+    memory.add_reminder(u, "Fisioterapia", amanha, "whatsapp", "semanal")
+    r = tools.execute_tool("parar_lembrete", {"trecho": "fisio"}, u)
+    assert "Parado(s) AGORA" in r and '"Fisioterapia"' in r  # nomeia o que parou (R4)
+    assert "SEM" in r                                  # zero culpa, zero 'tem certeza?'
+    assert memory.due_reminders() == [r2 for r2 in memory.due_reminders()
+                                      if r2["user_id"] != u]
+
+
+def test_cerca2_pulso_de_reconsentimento_na_propria_mensagem():
+    u = "5511900003997"
+    rid = memory.add_reminder(u, "Musculação", "2026-01-05T07:00:00", "whatsapp", "dias:seg,qua,sex")
+    with memory._conn() as conn:
+        conn.execute("UPDATE reminders SET disparos=9 WHERE id=?", (rid,))  # o 10º é a vez
+    lembrete = [r for r in memory.due_reminders() if r["id"] == rid][0]
+    pulso = memory.pulso_devido(lembrete)
+    assert "pode parar" in pulso and "carinho" in pulso   # pergunta gentil, na mensagem
+    with memory._conn() as conn:
+        conn.execute("UPDATE reminders SET disparos=3 WHERE id=?", (rid,))
+    lembrete = [r for r in memory.due_reminders() if r["id"] == rid][0]
+    assert memory.pulso_devido(lembrete) == ""            # fora da vez: silêncio
+
+
+def test_recorrencia_ciclo_completo_pela_conversa():
+    from datetime import timedelta
+    u = "5511900003996"
+    quando = (_hoje().replace(tzinfo=None) + timedelta(days=1)).replace(
+        hour=8, minute=0, second=0, microsecond=0).isoformat(timespec="seconds")
+    r = tools.execute_tool("criar_lembrete",
+                           {"texto": "Remédio da pressão", "quando": quando,
+                            "recorrencia": "diario"}, u)
+    assert "(todo dia)" in r                              # o resumo diz que repete
+    acao = memory.list_pending_actions(u)[-1]
+    r = tools.execute_tool("confirmar_acao", {"action_id": acao["id"]}, u)
+    assert "recorrente" in r and "pode parar" in r        # a saída ensinada junto
+    # Recorrência inválida não passa
+    r = tools.execute_tool("criar_lembrete",
+                           {"texto": "X", "quando": quando, "recorrencia": "sempre"}, u)
+    assert "inválida" in r
+
+
+def test_r1_recorrente_jamais_morre_por_falha_de_entrega():
+    from datetime import timedelta
+    u = "5511900003995"
+    ontem = (_hoje().replace(tzinfo=None) - timedelta(days=1)).isoformat(timespec="seconds")
+    rid = memory.add_reminder(u, "Remédio da pressão da mamãe", ontem, "whatsapp", "diario")
+    # 5 falhas seguidas (a janela de 24h fechada): o ÚNICO desistiria; o
+    # recorrente PULA a ocorrência e segue vivo — a cena da mãe não morre
+    for _ in range(5):
+        desistiu = memory.mark_reminder_failed(rid)
+    assert desistiu is False
+    with memory._conn() as conn:
+        row = conn.execute("SELECT sent, attempts, due_at FROM reminders WHERE id=?",
+                           (rid,)).fetchone()
+    assert row["sent"] == 0 and row["attempts"] == 0 and row["due_at"] > ontem
+
+
+def test_r2_mensal_dia_31_nunca_vira_28_para_sempre():
+    # 31/jan → 28/fev (mês curto) → 31/MAR (o alvo persiste)
+    fev = memory.proxima_ocorrencia("2026-01-31T09:00:00", "mensal:31", "2026-01-31T09:01:00")
+    assert fev == "2026-02-28T09:00:00"
+    mar = memory.proxima_ocorrencia(fev, "mensal:31", fev)
+    assert mar == "2026-03-31T09:00:00"
+    # E a criação congela o alvo automaticamente ("mensal" → "mensal:5")
+    u = "5511900003994"
+    rid = memory.add_reminder(u, "Aluguel", "2026-08-05T09:00:00", "whatsapp", "mensal")
+    with memory._conn() as conn:
+        rec = conn.execute("SELECT recorrencia FROM reminders WHERE id=?", (rid,)).fetchone()
+    assert rec["recorrencia"] == "mensal:5"
+
+
+def test_r5_outage_multidia_ganha_honestidade():
+    lembrete = {"due_at": "2026-07-01T08:00:00", "recorrencia": "diario"}
+    linha = memory.atraso_grave(lembrete, "2026-07-05T10:00:00")
+    assert "não saíram" in linha and "me desculpa" in linha
+    # Atraso normal (dentro do período): silêncio
+    assert memory.atraso_grave(lembrete, "2026-07-01T10:00:00") == ""
+
+
+def test_r6_semanal_rearma_na_mesma_semana_dia():
+    # quinta → quinta seguinte, mesmo horário; entrega atrasada não muda o dia
+    assert memory.proxima_ocorrencia("2026-07-09T14:00:00", "semanal",
+                                     "2026-07-09T14:01:00") == "2026-07-16T14:00:00"
+    assert memory.proxima_ocorrencia("2026-07-09T14:00:00", "semanal",
+                                     "2026-07-11T09:00:00") == "2026-07-16T14:00:00"
+# ─── Sprint da Voz: identidade vocal + energia adaptativa ─────────────────────
+
+def test_voz_adaptativa_cobre_todos_os_momentos():
+    from giu import modes, voice
+    # Todo modo de presença tem uma energia vocal — nenhum momento fica órfão
+    assert set(voice.ESTILOS.keys()) == set(modes.MODES.keys())
+
+
+def test_voz_identidade_nunca_muda_so_a_energia():
+    from giu import voice
+    for momento in list(voice.ESTILOS) + [None, "modo_inexistente"]:
+        instrucao = voice.instrucao_vocal(momento)
+        # A âncora de identidade (charter do painel) está em TODA instrução
+        assert "gosta genuinamente das pessoas" in instrucao
+        assert "sorriso discreto" in instrucao
+        assert "Nunca soe como locutora" in instrucao
+    # Momento desconhecido → neutro-âncora (regra anti-caricatura do painel)
+    assert voice.instrucao_vocal("modo_inexistente") == voice.IDENTIDADE_VOCAL
+
+
+def test_voz_emergencia_e_firme_nunca_doce_fora_de_lugar():
+    from giu import voice
+    emergencia = voice.instrucao_vocal("modo_emergencia")
+    assert "FIRME" in emergencia and "pânico" in emergencia
+
+
+def test_voz_instrucoes_so_quando_o_modelo_aceita(monkeypatch):
+    from giu import voice, config as _cfg
+    monkeypatch.setattr(_cfg, "TTS_MODEL", "tts-1")
+    assert voice._suporta_instrucoes() is False        # tts-1: nada muda
+    monkeypatch.setattr(_cfg, "TTS_MODEL", "gpt-4o-mini-tts")
+    assert voice._suporta_instrucoes() is True         # a adaptação liga por env var
+    # E sintetizar aceita o momento sem quebrar (sem chave → None, nunca exceção)
+    monkeypatch.setattr(_cfg, "OPENAI_API_KEY", "")
+    assert voice.sintetizar("oi", "modo_noite") is None
+
+
+def test_voz_viva_por_padrao_e_speed_nunca_derruba_o_audio(monkeypatch):
+    from giu import voice, config as _cfg
+    # O padrão agora é o modelo que aceita a Energia Vital (fundadora: "ainda triste")
+    import os
+    assert os.getenv("GIU_TTS_MODEL") or _cfg.TTS_MODEL == "gpt-4o-mini-tts"
+    # gpt-*-tts: instructions SIM, speed NÃO (enviar speed mataria o áudio em silêncio)
+    monkeypatch.setattr(_cfg, "TTS_MODEL", "gpt-4o-mini-tts")
+    kwargs = voice._tts_kwargs("oi", "modo_manha")
+    assert "instructions" in kwargs and "speed" not in kwargs
+    assert "gosta genuinamente das pessoas" in kwargs["instructions"]
+    # tts-1 (rollback): speed SIM, instructions NÃO — nada quebra
+    monkeypatch.setattr(_cfg, "TTS_MODEL", "tts-1")
+    kwargs = voice._tts_kwargs("oi", "modo_manha")
+    assert "speed" in kwargs and "instructions" not in kwargs

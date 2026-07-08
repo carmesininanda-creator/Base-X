@@ -62,6 +62,40 @@ do Despacho, §6) · open_meteo ✅ (T7). Duas frentes permanentes: capacidades
 
 ## 3. Registro corrido (descobertas · decisões · problemas)
 
+**08/07 — 🎭 SPRINT DA VOZ REORIENTADA pela fundadora: "parem — a
+arquitetura está excelente, mas o resultado não; a voz ainda parece um
+sistema lendo texto" → a sprint vira DIREÇÃO ARTÍSTICA e fica ABERTA até a
+sensação "que bom falar com a Giu" existir.** Fato honesto registrado: no
+momento do veredito dela, a produção AINDA falava com o tts-1 (PR #29 não
+mergeado — ela nunca ouviu o modelo que aceita instruções). Resposta no PR
+#29 (atualizado): BATERIA AMPLA cega — 8 vozes do catálogo inteiro (alloy,
+ballad, coral, fable, nova, sage, shimmer, verse — sem veto prévio) × 3
+DIREÇÕES DE CENA (neutra · "sorridente": atriz gravando nota de voz pra quem
+ama · "intimista": café no fim de tarde no viva-voz) × 2 textos-de-vida =
+48 amostras com gabarito lacrado. A pergunta da escuta mudou: "com qual
+delas eu gostaria de conversar durante MUITOS ANOS?" — nunca "qual soa
+melhor". Se nenhuma das 8 despertar a sensação: outros provedores de TTS e,
+com peso ético/custo, voz própria — nesta ordem. HANDOFF: (1) NANDA mergeia
+o #29 (pré-condição de tudo — sem ele a Giu segue surda a qualquer direção);
+(2) DESPACHO roda bateria_voz.py e distribui as amostras; (3) a família
+escuta no celular, sozinha, e a Nanda dá o veredito. 133/133 testes.
+
+**08/07 — 🎙️ FUNDADORA OUVIU E REPROVOU: "a voz ainda parece triste, sem
+vida" — CAUSA RAIZ encontrada e corrigida no PR #29 (atualizado): a produção
+fala com o tts-1, que NÃO ACEITA as instruções de Energia Vital do painel —
+todo o charter só liga no gpt-4o-mini-tts.** Correção: o modelo novo virou o
+PADRÃO (rollback: GIU_TTS_MODEL=tts-1 em segundos) + guarda vital descoberta
+no caminho: gpt-*-tts não aceita o parâmetro speed — enviá-lo derrubaria TODO
+o áudio em silêncio; agora speed só vai ao tts-1 (o ritmo do novo vem da
+própria instrução). ⚠️ O MERGE DO #29 É O QUE MUDA A VOZ QUE ELA OUVE — é o
+item mais urgente da fila. E a bateria cega continua valendo (compara as 4
+candidatas JÁ no modelo vivo). TAMBÉM: 🌱 FILOSOFIA DO 1% POR DIA implantada
+no núcleo (PR #31): "qual é o 1% de hoje?" — celebrado quando feito (crédito
+dela), JAMAIS dívida quando não vem, recomeçar também é 1%, plantada pelo
+EXEMPLO e nunca por sermão. Registrada na governança. FILA DE MERGES da
+Nanda: #29 (VOZ — urgente pelo ouvido dela) · #30 (recorrência) · #31 (1%).
+Verde nas três branches.
+
 **08/07 — 🔄 MODO CONTÍNUO instituído pela fundadora (escolhe→implementa→
 testa→guardiãs→dívidas→PR→merge dela→próxima, sem esperar mensagens) +
 CICLO 1 ENTREGUE: 🔁 RECORRÊNCIA no PR #30 (aguarda merge).** A LIFE
