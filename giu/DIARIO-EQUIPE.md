@@ -62,6 +62,22 @@ do Despacho, §6) · open_meteo ✅ (T7). Duas frentes permanentes: capacidades
 
 ## 3. Registro corrido (descobertas · decisões · problemas)
 
+**08/07 — 🎙️ FUNDADORA OUVIU E REPROVOU: "a voz ainda parece triste, sem
+vida" — CAUSA RAIZ encontrada e corrigida no PR #29 (atualizado): a produção
+fala com o tts-1, que NÃO ACEITA as instruções de Energia Vital do painel —
+todo o charter só liga no gpt-4o-mini-tts.** Correção: o modelo novo virou o
+PADRÃO (rollback: GIU_TTS_MODEL=tts-1 em segundos) + guarda vital descoberta
+no caminho: gpt-*-tts não aceita o parâmetro speed — enviá-lo derrubaria TODO
+o áudio em silêncio; agora speed só vai ao tts-1 (o ritmo do novo vem da
+própria instrução). ⚠️ O MERGE DO #29 É O QUE MUDA A VOZ QUE ELA OUVE — é o
+item mais urgente da fila. E a bateria cega continua valendo (compara as 4
+candidatas JÁ no modelo vivo). TAMBÉM: 🌱 FILOSOFIA DO 1% POR DIA implantada
+no núcleo (PR #31): "qual é o 1% de hoje?" — celebrado quando feito (crédito
+dela), JAMAIS dívida quando não vem, recomeçar também é 1%, plantada pelo
+EXEMPLO e nunca por sermão. Registrada na governança. FILA DE MERGES da
+Nanda: #29 (VOZ — urgente pelo ouvido dela) · #30 (recorrência) · #31 (1%).
+Verde nas três branches.
+
 **08/07 — 🔄 MODO CONTÍNUO instituído pela fundadora (escolhe→implementa→
 testa→guardiãs→dívidas→PR→merge dela→próxima, sem esperar mensagens) +
 CICLO 1 ENTREGUE: 🔁 RECORRÊNCIA no PR #30 (aguarda merge).** A LIFE
