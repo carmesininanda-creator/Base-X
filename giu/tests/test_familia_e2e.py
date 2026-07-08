@@ -1301,7 +1301,8 @@ def test_calendar_hoje_vespera_e_pendencias():
     assert "Consulta da mãe às 15:00" in snap and "hoje" in snap
     assert "AGENDA — amanhã: Exame de sangue às 08:30" in snap  # rótulo próprio (C6)
     assert "véspera" in snap                      # o preparo leve vai junto
-    assert "1 pendência(s) sem data" in snap
+    # Pendências sem data mudaram de casa (C5): moram no Communication Provider
+    assert "pendência(s) sem data" not in snap
     assert len(snap.splitlines()) <= 3            # teto do contrato
 
 
@@ -1440,3 +1441,74 @@ def test_c2_google_conectado_retrato_declara_o_limite(monkeypatch):
     monkeypatch.setattr(gc, "is_configured", lambda uid=None: True)
     snap = ctx_agenda.snapshot(u)  # Agenda Viva vazia, Google conectado
     assert "confirme em ver_agenda" in snap  # nunca "dia livre" sem conferir
+
+
+# ─── Capacidade de Vida: ✉️ Comunicação (Communication Provider — piso) ───────
+# Domínio ampliado pela fundadora: TODA comunicação relevante, não apenas
+# Gmail. Piso = o que a pessoa CONTA. C5 paga: pendência sem data acorda aqui.
+
+from giu.context import comunicacao as ctx_com  # noqa: E402
+
+
+def test_comunicacao_silencio_sem_pendencias():
+    assert ctx_com.snapshot("5511900007999") == ""
+
+
+def test_comunicacao_c5_pendencia_sem_data_acorda_com_idade():
+    u = "5511900007998"
+    memory.add_agenda(u, "Renovar CNH")           # sem data — antes, silêncio eterno
+    memory.add_agenda(u, "Responder o contador")
+    snap = ctx_com.snapshot(u)
+    assert "PENDÊNCIAS em aberto: 2" in snap
+    assert "Renovar CNH" in snap                  # a mais antiga, nomeada
+    assert "Responder o contador" not in snap     # resumo, nunca a lista
+    assert len(snap.splitlines()) <= 2
+
+
+def test_comunicacao_anti_cobranca_cp1_viaja_com_o_dado():
+    u = "5511900007998"
+    snap = ctx_com.snapshot(u)
+    assert "ENCERRA" in snap                      # o "não" encerra
+    assert "momento LEVE" in snap                 # nunca empilha em momento ruim
+    assert "nunca reoferecer" in snap
+
+
+def test_comunicacao_fatos_de_pendencia_entram_e_saem():
+    u = "5511900007997"
+    memory.remember_fact(u, "Precisa enviar o comprovante para o consulado", "pendencias")
+    snap = ctx_com.snapshot(u)
+    assert "comprovante para o consulado" in snap
+    assert "apague o fato" in snap                # resolvido = memória limpa
+    fato = [f for f in memory.get_facts(u) if f["category"] == "pendencias"][0]
+    memory.delete_fact(u, fato["id"])
+    assert ctx_com.snapshot(u) == ""              # resolvida → silêncio de novo
+
+
+def test_comunicacao_concluida_sai_do_retrato():
+    u = "5511900007996"
+    iid = memory.add_agenda(u, "Pagar o IPVA")
+    assert "PENDÊNCIAS" in ctx_com.snapshot(u)
+    memory.complete_agenda(u, iid)
+    assert ctx_com.snapshot(u) == ""
+
+
+def test_comunicacao_confidencialidade_e_efemero():
+    assert "Renovar CNH" not in context.retrato(PAULINE)
+    with memory._conn() as conn:
+        antes = conn.execute("SELECT COUNT(*) FROM facts").fetchone()[0]
+    context.retrato("5511900007998")
+    with memory._conn() as conn:
+        assert conn.execute("SELECT COUNT(*) FROM facts").fetchone()[0] == antes
+
+
+def test_retrato_tres_provedores_dentro_do_orcamento():
+    # Com três Providers vivos, o retrato continua dentro do teto do contrato
+    u = "5511900007995"
+    hoje = _hoje().strftime("%Y-%m-%d")
+    memory.add_agenda(u, "Reunião", hoje, "23:58")
+    memory.add_agenda(u, "Levar o carro na revisão")
+    memory.dates_add(u, "Aniversário do sobrinho", _hoje().strftime("%m-%d"))
+    r = context.retrato(u)
+    corpo = r.split("\n", 1)[1] if "\n" in r else ""
+    assert len(corpo.splitlines()) <= context.RETRATO_MAX_LINHAS
+    assert "AGORA:" in r and "PENDÊNCIAS" in r and "DATAS QUERIDAS" in r

@@ -430,7 +430,7 @@ def add_agenda(user_id, title, date=None, time=None, notes=None):
 
 
 def get_agenda(user_id, include_done=False):
-    sql = "SELECT id, title, date, time, notes, done FROM agenda WHERE user_id=?"
+    sql = "SELECT id, title, date, time, notes, done, created_at FROM agenda WHERE user_id=?"
     if not include_done:
         sql += " AND done=0"
     sql += " ORDER BY date IS NULL, date, time"
