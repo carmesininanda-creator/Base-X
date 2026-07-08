@@ -1,5 +1,40 @@
 # 🎙️ SPRINT DA VOZ — Charter oficial (painel das quatro guardiãs)
 
+> ## 🔴 FASE 3 — A CAÇA MULTI-PROVEDOR (fundadora, 08/07/2026 — VIGENTE)
+> Ela ouviu a voz nova e REPROVOU de novo: "continua parecendo um sistema
+> lendo texto. Não é um problema técnico. É um problema de identidade."
+> DECISÕES: (1) **esquecer completamente a voz atual** — parar de ajustar
+> parâmetros, parar de tentar salvá-la; (2) **bateria muito maior, além da
+> OpenAI**: comparar provedores (ElevenLabs, Azure, Google — e, se preciso,
+> clonagem LICENCIADA ou qualquer outra solução: "a identidade da Giulieta
+> vale mais do que a tecnologia usada para produzi-la"); (3) escolha
+> EXCLUSIVAMENTE pelo ouvido; (4) **a Giu Família NÃO lança com esta voz** —
+> a voz vira bloqueador do GO.
+>
+> **O NOVO BRIEFING OFICIAL da Voice Architect (dela):** procurar uma voz
+> que transmita **maturidade, inteligência tranquila e calor humano** —
+> a sensação que atrizes como Annette Bening transmitem (presença,
+> confiança, humanidade) **sem copiar voz ou identidade de ninguém**.
+> Mulher entre 45 e 60 na SENSAÇÃO; naturalmente sorridente sem ser
+> animadora; segura sem autoritária; elegante sem formal; curiosa;
+> acolhedora; como quem está na mesma sala. NUNCA jovem (quem está
+> preocupado com um exame, um filho, a mãe — precisa ouvir "nós vamos
+> resolver isso juntas", não inexperiência). Nunca teatral, infantil,
+> melancólica ou institucional.
+>
+> **O teste do "Oi…":** a voz certa faz a pessoa SORRIR ao ouvir "Oi…".
+> A única pergunta: "com qual voz eu gostaria de conversar durante muitos
+> anos?" A sprint segue ABERTA até a resposta aparecer naturalmente.
+>
+> **Instrumento:** bateria_voz.py agora é MULTI-PROVEDOR (OpenAI maduras +
+> ElevenLabs multilingual + Azure Neural pt-BR + Google pt-BR; cada um liga
+> com a própria chave; sem chave = pulado com aviso). HANDOFF AO DESPACHO:
+> provisionar ELEVENLABS_API_KEY, AZURE_SPEECH_KEY(+REGION) e
+> GOOGLE_TTS_API_KEY (planos gratuitos/baratos bastam para a bateria),
+> rodar, e mandar as amostras. A identidade madura já é a instrução de
+> produção (voice.py) — mas a voz atual está MORTA para o projeto; ela só
+> fala até a vencedora assumir.
+
 > ## ⚠️ FASE 2 — DIREÇÃO ARTÍSTICA (reorientação da fundadora, 08/07/2026)
 > Ela ouviu: **"a voz continua errada — artificial, monótona, pouca vida,
 > pouca proximidade. Ainda parece um sistema lendo texto."** A sprint deixa
