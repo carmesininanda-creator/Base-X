@@ -656,6 +656,55 @@ def mission_conclude(user_id, mission_id, resultado):
     return True
 
 
+# ─── Semear a vida (CC5 — decisão da fundadora: identidade + VIDA) ───────────
+
+SEED_CATEGORIAS = {
+    "pessoas": ("familia", None),
+    "projetos": ("geral", "projeto atual"),
+    "objetivos": ("geral", "objetivo"),
+    "rotina": ("rotina", None),
+    "preferencias": ("preferencias", None),
+    "contexto": ("geral", None),
+    "friccoes": ("rotina", "fricção conhecida"),
+}
+
+
+def seed_life(user_id, vida):
+    """Semeia a VIDA de um membro no cadastro (pessoas importantes, projetos,
+    objetivos, rotina, preferências, contexto, fricções conhecidas, datas).
+    "Não quero apenas identidade. Quero identidade + vida." — a base sobre a
+    qual a Giulieta aprende continuamente.
+
+    HONESTIDADE ARQUITETURAL: fatos semeados levam o marcador '[de partida]'
+    — a Giu sabe que vieram do cadastro da família (hipótese de contexto),
+    NUNCA 'você me contou'. O que a pessoa mostrar vivendo prevalece e
+    substitui. Respeita o portão de consentimento; deduplica por conteúdo;
+    retorna quantos itens entraram."""
+    if get_profile(user_id)["data"].get("consentimento") is False:
+        return 0
+    existentes = {f["content"] for f in get_facts(user_id, limit=200)}
+    plantados = 0
+    for chave, (categoria, rotulo) in SEED_CATEGORIAS.items():
+        for item in (vida.get(chave) or []):
+            item = (item or "").strip()
+            if not item:
+                continue
+            content = f"[de partida] {rotulo + ': ' if rotulo else ''}{item}"
+            if content in existentes:
+                continue
+            if remember_fact(user_id, content, categoria):
+                existentes.add(content)
+                plantados += 1
+    ja = {(d.get("titulo"), d.get("data")) for d in dates_all(user_id)}
+    for d in (vida.get("datas") or []):
+        titulo, data = (d.get("titulo") or "").strip(), (d.get("data") or "").strip()
+        if (titulo, data) in ja:
+            continue
+        if dates_add(user_id, titulo, data, d.get("recorrente")):
+            plantados += 1
+    return plantados
+
+
 # ─── Família (identidade e confidencialidade) ─────────────────────────────────
 
 def _hash_token(token):

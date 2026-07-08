@@ -289,6 +289,29 @@ def family_members():
     return {"members": memory.list_members()}
 
 
+class VidaRequest(BaseModel):
+    """CC5 (fundadora): semear identidade + VIDA. Conteúdo vem da FICHA
+    (FICHA-VIDA-INICIAL.md) preenchida pela família — e JAMAIS entra no git."""
+    pessoas: list[str] = []
+    projetos: list[str] = []
+    objetivos: list[str] = []
+    rotina: list[str] = []
+    preferencias: list[str] = []
+    contexto: list[str] = []
+    friccoes: list[str] = []
+    datas: list[dict] = []  # {titulo, data 'MM-DD'|'YYYY-MM-DD', recorrente?}
+
+
+@app.post("/family/members/{user_id}/vida", dependencies=[Depends(require_token)])
+def seed_member_life(user_id: str, req: VidaRequest):
+    if not memory.get_member(user_id):
+        raise HTTPException(status_code=404, detail="Membro não encontrado")
+    plantados = memory.seed_life(user_id, req.model_dump())
+    return {"user_id": user_id, "semeado": plantados,
+            "nota": "Fatos entram com '[de partida]' — hipótese de contexto; "
+                    "o que a pessoa mostrar vivendo prevalece e substitui."}
+
+
 @app.delete("/family/members/{user_id}", dependencies=[Depends(require_token)])
 def delete_family_member(user_id: str):
     if not memory.remove_member(user_id):

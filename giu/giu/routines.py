@@ -39,8 +39,11 @@ def _local_now():
 
 
 def _pending_count(user_id):
+    """O bom dia fala do DIA. Pendências sem data têm porta própria (retrato
+    da Comunicação, com a lei da oferta única) — contá-las toda manhã seria
+    cobrança de baixa intensidade diária (dívida M4 da Life Architect, paga)."""
     today = _local_now().date().isoformat()
-    agenda = [i for i in memory.get_agenda(user_id) if not i["date"] or i["date"] <= today]
+    agenda = [i for i in memory.get_agenda(user_id) if i["date"] and i["date"] <= today]
     return len(agenda) + len(memory.list_pending_actions(user_id))
 
 

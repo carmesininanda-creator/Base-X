@@ -35,6 +35,11 @@ def _system_prompt(user_id, user_message=""):
     onboarding_str = onboarding.prompt_section(profile, is_first_contact=(count == 0))
 
     facts_str = "\n".join(f"- [{f['category']}] {f['content']}" for f in facts) or "- (ainda não sei nada — vá conhecendo a pessoa aos poucos)"
+    if any("[de partida]" in f["content"] for f in facts):
+        facts_str += ("\n- ATENÇÃO: itens \"[de partida]\" foram semeados no cadastro pela "
+                      "família — hipótese de contexto, NUNCA \"você me contou\". Confirme "
+                      "vivendo, com naturalidade; o que ELA mostrar prevalece e substitui "
+                      "(atualize com lembrar_fato/esquecer_fato).")
     pending_str = "\n".join(f"- #{a['id']} {a['summary']}" for a in pending) or "- (nenhuma)"
     itens_fio = "\n".join(f"- {x['note']}" for x in spine) or (
         "- (fio ainda vazio — assim que surgir algo que não pode se perder, anote)")
