@@ -62,6 +62,25 @@ do Despacho, §6) · open_meteo ✅ (T7). Duas frentes permanentes: capacidades
 
 ## 3. Registro corrido (descobertas · decisões · problemas)
 
+**08/07 — 🌱 SEMEAR A VIDA ampliado pela fundadora ("identidade + vida":
+interesses, sonhos, desafios; autonomia como OBJETIVO PERMANENTE da relação
+com os três filhos) — PR #26 aberto (merge dela). CC1 ✅ (PR #25 mergeado
+sob delegação) e CC4 ✅ (M4 paga).** A vida real ditada por ela (interesses
+do Ian/Nine/Rafa, desafios de autonomia, o sonho dos EUA do Rafa, peptídeos/
+cannabis medicinal com responsabilidade total) virou FICHAS FORA DO GIT
+(vida-inicial/, no .gitignore) — aplicação pelo Despacho via endpoint, após
+o merge e a revisão dela. LIFE ARCHITECT **BLOQUEOU** e foi atendida antes
+do PR: **S1** o "não" no consentimento agora EXPURGA todo o semeio (dados
+de terceiros jamais sobrevivem à recusa — o germe de vigilância por
+procuração morreu no ovo); **S2** datas semeadas carregam ORIGEM (o retrato
+nunca diz "ela pediu"); S3/S4 a FONTE jamais vira argumento + fricção
+semeada NUNCA abre assunto + terceiros no mínimo; S5 bom dia sem coleção de
+culpas; S6 endpoint distingue recusa de idempotência; S7 dedupe por SQL;
+S8 os 4 testes. Blueprint dos filhos ganhou o objetivo permanente de
+autonomia (nunca renderiza para a Nanda). 118/118 testes. CAMINHO CRÍTICO
+restante: merge do #26 (Nanda) · revisão das fichas + aplicação (Nanda +
+Despacho) · H2 teste de voz (Nanda) · alarme de saldo (Despacho) · GO.
+
 **08/07 — 🧊 DECISÃO da fundadora: CONGELAMENTO da expansão genérica +
 CHECKLIST DE LANÇAMENTO da Giu Família v1.0 (aguarda aprovação dela).**
 Prioridade absoluta: **concluir a Base-X para a Família Fundadora** (Nanda,

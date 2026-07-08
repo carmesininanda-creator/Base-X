@@ -21,11 +21,11 @@
 
 | # | Item | Estado | 👤 |
 |---|------|--------|-----|
-| CC1 | **Merge do PR #25** (Comunicação — pendências sem eco) | 🔴 aberto | Nanda (ou delega) |
+| CC1 | **Merge do PR #25** (Comunicação — pendências sem eco) | ✅ mergeado (delegado: "vamos concluir os itens restantes") | — |
 | CC2 | **H2 — teste real de voz da Nanda**: mandar um áudio e confirmar o ciclo (entende → responde com voz nova → "só por escrito" respeitado) | 🔴 o bloqueador declarado por ela | Nanda |
 | CC3 | **Alarme de saldo OpenAI** no painel (recorrência do 429 no meio da semana é inaceitável) | 🔴 pendente | Despacho |
-| CC4 | **Dívida M4**: check-in matinal conta pendências todo dia SEM a lei da oferta única — corrigir ANTES do uso diário (senão o "bom dia" cobra) | 🔴 leva curta de código | Code |
-| CC5 | **D-CP1 — semear os aniversários dos 4 no cadastro?** (hoje a Giu só sabe se contarem em conversa) | 🟡 decisão dela | Nanda |
+| CC4 | **Dívida M4**: check-in matinal sem a lei da oferta única | ✅ paga no PR #26 (bom dia sem coleção de culpas: vencidos ≤7 dias; recusadas nunca; ações antigas expiram) | — |
+| CC5 | **SEMEAR A VIDA** (elevado pela fundadora: identidade + vida — pessoas, projetos, objetivos, rotina, preferências, contexto, fricções, INTERESSES, SONHOS, DESAFIOS, datas) | 🟡 mecanismo no PR #26 (com expurgo pela recusa — S1); fichas preenchidas prontas FORA do git aguardando revisão dela + aplicação do Despacho | Nanda revisa · Despacho aplica |
 | CC6 | **GO da Primeira Semana** (o protocolo está pronto; os 4 entram no número) | 🔴 após CC1–CC4 | Nanda |
 
 **Sem nenhum item além destes, a Giu Família entra em uso diário.** Todo o
