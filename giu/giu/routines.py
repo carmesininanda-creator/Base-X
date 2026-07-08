@@ -7,7 +7,7 @@ o invisível do dia (pendências, lembretes, agenda, saúde) com um toque
 de cuidado — incluindo o ambiente.
 """
 
-from datetime import datetime
+from datetime import datetime, timedelta
 from zoneinfo import ZoneInfo
 
 from . import config, memory
@@ -41,10 +41,19 @@ def _local_now():
 def _pending_count(user_id):
     """O bom dia fala do DIA. Pendências sem data têm porta própria (retrato
     da Comunicação, com a lei da oferta única) — contá-las toda manhã seria
-    cobrança de baixa intensidade diária (dívida M4 da Life Architect, paga)."""
-    today = _local_now().date().isoformat()
-    agenda = [i for i in memory.get_agenda(user_id) if i["date"] and i["date"] <= today]
-    return len(agenda) + len(memory.list_pending_actions(user_id))
+    cobrança de baixa intensidade diária (M4, paga). Vencidos contam por no
+    máximo 7 dias, itens recusados nunca, e ação proposta há mais de 7 dias
+    sai da contagem — o bom dia jamais vira coleção de culpas (S5)."""
+    hoje = _local_now().date()
+    limite = (hoje - timedelta(days=7)).isoformat()
+    hoje_s = hoje.isoformat()
+    recusadas = memory.pendencias_recusadas(user_id)
+    agenda = [i for i in memory.get_agenda(user_id)
+              if i["date"] and limite <= i["date"] <= hoje_s
+              and (i["title"] or "").strip().lower() not in recusadas]
+    acoes = [a for a in memory.list_pending_actions(user_id)
+             if (a.get("created_at") or hoje_s) >= limite]
+    return len(agenda) + len(acoes)
 
 
 def morning_message(user_id):

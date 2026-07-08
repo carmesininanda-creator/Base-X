@@ -1650,3 +1650,93 @@ def test_cc4_bom_dia_nao_conta_pendencias_sem_data():
     assert routines._pending_count(u) == 0         # M4 paga: o bom dia fala do DIA
     memory.add_agenda(u, "Consulta", _hoje().strftime("%Y-%m-%d"), "09:00")
     assert routines._pending_count(u) == 1
+
+
+# ─── Semear a vida: parecer da Life Architect pago (S1-S8) + ampliação ────────
+
+def test_s1_recusa_no_onboarding_expurga_o_semeio():
+    from giu import onboarding as _onb
+    u = "5511900006996"
+    memory.add_member(u, "Convidado Expurgo")
+    memory.seed_life(u, VIDA_TESTE)
+    assert any("[de partida]" in f["content"] for f in memory.get_facts(u))
+    assert any(d.get("origem") == "semeada" for d in memory.dates_all(u))
+    _onb.register(u, "consentimento", "não")
+    # O "não" vale mais que a ficha: dossiê de terceiro não sobrevive à recusa
+    assert not any("[de partida]" in f["content"] for f in memory.get_facts(u))
+    assert memory.dates_all(u) == []
+    # A prova da recusa (limites) permanece — é a garantia DELA
+    assert any(f["category"] == "limites" for f in memory.get_facts(u))
+
+
+def test_s2_data_semeada_nunca_mente_o_dono():
+    u = "5511900006995"
+    hoje = _hoje().strftime("%m-%d")
+    memory.seed_life(u, {"datas": [{"titulo": "Aniversário da avó", "data": hoje}]})
+    linha = tempo._linha_datas(u, tempo._agora())
+    assert "Aniversário da avó" in linha
+    assert "CADASTRO da família" in linha
+    assert "NUNCA diga que ela pediu" in linha
+    assert "ela pediu para lembrar" not in linha.split("ATENÇÃO")[0]
+    # Data anotada pela PRÓPRIA pessoa não carrega o aviso
+    u2 = "5511900006994"
+    memory.dates_add(u2, "Consulta anual", hoje)
+    assert "CADASTRO" not in tempo._linha_datas(u2, tempo._agora())
+
+
+def test_s3_s4_fonte_nunca_vira_argumento():
+    u = "5511900006999"  # tem vida semeada (teste anterior do CC5)
+    prompt = brain._system_prompt(u, "oi")
+    assert "sua família me contou" in prompt          # a proibição está lá
+    assert "NUNCA abre assunto" in prompt             # fricção não estreia conversa
+    assert "nunca vira painel da vida deles" in prompt  # terceiros: o mínimo
+    assert "convites de conexão, nunca rótulos" in prompt
+
+
+def test_s5_bom_dia_sem_colecao_de_culpas():
+    from datetime import timedelta
+    from giu import routines
+    u = "5511900006993"
+    antigo = (_hoje() - timedelta(days=30)).strftime("%Y-%m-%d")
+    memory.add_agenda(u, "Vencido há um mês", antigo)
+    assert routines._pending_count(u) == 0            # vencido > 7 dias sai
+    memory.add_agenda(u, "Consulta de hoje", _hoje().strftime("%Y-%m-%d"))
+    assert routines._pending_count(u) == 1
+    memory.pendencia_recusar(u, "Consulta de hoje")   # "não quero ajuda" vale de manhã também
+    assert routines._pending_count(u) == 0
+
+
+def test_s6_endpoint_distingue_recusa_de_idempotencia(client):
+    u = "5511900006992"
+    memory.add_member(u, "Convidado Bloqueio")
+    memory.set_profile(u, consentimento=False)
+    r = client.post(f"/family/members/{u}/vida", json=VIDA_TESTE, headers=ADMIN)
+    assert r.json()["semeado"] == 0
+    assert r.json()["bloqueado_por_consentimento"] is True
+
+
+def test_ampliacao_interesses_sonhos_desafios():
+    u = "5511900006991"
+    n = memory.seed_life(u, {
+        "interesses": ["mergulho", "jiu-jitsu"],
+        "sonhos": ["morar nos Estados Unidos"],
+        "desafios": ["construir autonomia na vida prática"],
+    })
+    assert n == 4
+    fatos = {f["content"] for f in memory.get_facts(u)}
+    assert any("interesse: mergulho" in f for f in fatos)
+    assert any("sonho: morar nos Estados Unidos" in f for f in fatos)
+    assert any("desafio (cuidar sem julgamento): construir autonomia" in f for f in fatos)
+
+
+def test_ampliacao_friccao_semeada_nao_vaza_no_communication():
+    u = "5511900006991"
+    assert ctx_com.snapshot(u) == ""  # desafio/fricção semeada NÃO é pendência
+
+
+def test_autonomia_objetivo_permanente_so_dos_filhos():
+    from giu import blueprints
+    for filho in ("Ian", "Pauline", "Rafael"):
+        assert "OBJETIVO PERMANENTE DA RELAÇÃO" in blueprints.prompt_section(filho)
+        assert "sem NENHUM julgamento" in blueprints.prompt_section(filho)
+    assert "OBJETIVO PERMANENTE" not in blueprints.prompt_section("Nanda")

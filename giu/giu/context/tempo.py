@@ -99,19 +99,24 @@ def _linha_datas(user_id, now):
     if not datas:
         return ""
     amanha = now + timedelta(days=1)
-    de_hoje = [d["titulo"] for d in datas if _bate(d, now)]
-    de_amanha = [d["titulo"] for d in datas if _bate(d, amanha)]
+    de_hoje = [d for d in datas if _bate(d, now)]
+    de_amanha = [d for d in datas if _bate(d, amanha)]
     partes = []
     if de_hoje:
-        partes.append("HOJE: " + "; ".join(de_hoje))
+        partes.append("HOJE: " + "; ".join(d["titulo"] for d in de_hoje))
     if de_amanha:
-        partes.append("amanhã: " + "; ".join(de_amanha))
+        partes.append("amanhã: " + "; ".join(d["titulo"] for d in de_amanha))
     if not partes:
         return ""
-    return ("DATAS QUERIDAS (ela pediu para lembrar) — " + " · ".join(partes)
-            + " — toque com carinho e no momento certo, nunca como notificação; "
-            "se JÁ tocou nesta conversa, silêncio — e um 'já resolvi' ou 'não' "
-            "ENCERRA o assunto (anote no fio).")
+    linha = ("DATAS QUERIDAS — " + " · ".join(partes)
+             + " — toque com carinho e no momento certo, nunca como notificação; "
+             "se JÁ tocou nesta conversa, silêncio — e um 'já resolvi' ou 'não' "
+             "ENCERRA o assunto (anote no fio).")
+    if any(d.get("origem") == "semeada" for d in de_hoje + de_amanha):
+        # S2: a data veio do cadastro da família — a Giu nunca mente o dono
+        linha += (" ATENÇÃO: data(s) daqui vieram do CADASTRO da família — "
+                  "NUNCA diga que ela pediu para lembrar; toque só se fizer bem.")
+    return linha
 
 
 # ─── Clima e sol (cidade AUTORIZADA por ela — enriquecimento, nunca dimensão) ──

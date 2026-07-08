@@ -24,7 +24,7 @@
 ```json
 {
   "pessoas": [
-    "… quem importa na vida dela/dele (nome + relação + 1 traço). Ex: 'A mãe, dona ___, mora em ___ — a Nanda coordena consultas e farmácia dela'"
+    "… quem importa na vida dela/dele (nome + relação + 1 traço). Sobre quem NÃO é membro: o MÍNIMO — e NUNCA saúde, endereço ou dado sensível de terceiros (Portão do Cuidado de Quem Não Escolheu). Ex: 'A mãe — a Nanda coordena os cuidados dela'"
   ],
   "projetos": [
     "… o que está construindo AGORA. Ex: 'montar a horta em casa'"
@@ -43,6 +43,15 @@
   ],
   "friccoes": [
     "… as fricções JÁ identificadas. Ex: 'esquece consultas da mãe; a lista do mercado vive na cabeça'"
+  ],
+  "interesses": [
+    "… o que a pessoa AMA (viram convites de conexão, nunca rótulos). Ex: 'mergulho', 'hipismo', 'carros'"
+  ],
+  "sonhos": [
+    "… o que gostaria de construir nos próximos anos (a Giu acompanha durante toda a relação). Ex: 'morar fora'"
+  ],
+  "desafios": [
+    "… onde crescer — a Giu cuida SEM julgamento e nunca abre o assunto; orienta o cuidado quando a pessoa trouxer. Ex: 'depende da família para a vida prática'"
   ],
   "datas": [
     {"titulo": "Aniversário dela/dele", "data": "MM-DD"},
@@ -63,4 +72,7 @@ curl -X POST "$BASE_URL/family/members/<NUMERO>/vida" \
 ```
 
 Reaplicar é seguro: o semeio deduplica (nada entra duas vezes). Consentimento
-recusado bloqueia o semeio inteiro — a recusa da pessoa vale mais que a ficha.
+recusado bloqueia o semeio — e se a pessoa disser "não" no onboarding DEPOIS
+do semeio, **tudo o que foi semeado é EXPURGADO automaticamente** (fatos e
+datas): a recusa da pessoa vale mais que a ficha, sempre (S1 da Life
+Architect). O que ela mesma contar depois, em conversa, nasce limpo e é dela.
