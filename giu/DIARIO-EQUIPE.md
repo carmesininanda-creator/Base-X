@@ -62,6 +62,28 @@ do Despacho, §6) · open_meteo ✅ (T7). Duas frentes permanentes: capacidades
 
 ## 3. Registro corrido (descobertas · decisões · problemas)
 
+**08/07 — 🎭 SPRINT DA VOZ: FASE 3 (fundadora reprovou DE NOVO, agora o
+modelo novo: "não é problema técnico, é de identidade — parem de tentar
+salvar esta voz") — PR #32 aberto (merge dela).** DECISÕES registradas: a
+voz atual está MORTA para o projeto; caça MULTI-PROVEDOR (OpenAI/ElevenLabs/
+Azure/Google; clonagem LICENCIADA na mesa: "a identidade da Giulieta vale
+mais do que a tecnologia"); escolha EXCLUSIVAMENTE pelo ouvido; e a regra
+nova mais dura: **a Giu Família NÃO lança com esta voz — a voz virou
+bloqueador do GO** (checklist CC2 reescrito). NOVO BRIEFING OFICIAL da
+Voice Architect (dela, via conselheira): maturidade (45–60 na sensação),
+inteligência tranquila, calor humano — a EXPERIÊNCIA que atrizes como
+Annette Bening transmitem, SEM copiar ninguém; NUNCA jovem ("quem está
+preocupado com a mãe precisa ouvir 'nós vamos resolver isso juntas', não
+inexperiência"). O teste do "Oi…": a voz certa faz SORRIR nos 3 primeiros
+segundos. NO PR: identidade vocal v2 (madura) + bateria_voz.py
+multi-provedor (OpenAI maduras com direção de cena + ElevenLabs + Azure
+pt-BR Francisca/Thalita/Manuela + Google Neural2/Chirp3; cada um liga com a
+própria chave; gabarito lacrado; T0 = "Oi…"). HANDOFF AO DESPACHO:
+provisionar ELEVENLABS_API_KEY, AZURE_SPEECH_KEY(+REGION),
+GOOGLE_TTS_API_KEY (trial basta) → rodar → mandar as amostras para a Nanda.
+143/143 testes. O Dia de Viver segue valendo para CAPACIDADES; a voz é
+ordem direta dela e corre em paralelo.
+
 **08/07 — 🕊️ OS TRÊS MERGES FEITOS (#29 voz + #30 recorrência + #31
 filosofia do 1%) — main c62b5fd, 143/143 em worktree limpo, deploy
 automático rodando. E a DECISÃO DO DIA: "nada de novas funcionalidades por
