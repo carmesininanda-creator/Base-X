@@ -340,7 +340,7 @@ def oauth_state_take(state):
 
 # ─── Datas queridas e cidade (Time Provider — Living Context, Fase 2) ────────
 
-def dates_add(user_id, titulo, data, recorrente=None):
+def dates_add(user_id, titulo, data, recorrente=None, origem=None):
     """Guarda uma data que a PESSOA pediu para lembrar (aniversário, evento).
     data: 'MM-DD' (SEMPRE anual) ou 'YYYY-MM-DD' (única por padrão; recorrente
     =True explícito a torna anual — aniversário com ano conhecido). A
@@ -365,7 +365,10 @@ def dates_add(user_id, titulo, data, recorrente=None):
         return False
     datas = [d for d in profile["data"].get("datas", [])
              if not (d.get("titulo") == titulo and d.get("data") == data)]
-    datas.append({"titulo": titulo[:120], "data": data, "recorrente": recorrente})
+    nova = {"titulo": titulo[:120], "data": data, "recorrente": recorrente}
+    if origem:
+        nova["origem"] = origem  # 'semeada' = veio do cadastro, não da pessoa (S2)
+    datas.append(nova)
     set_profile(user_id, datas=datas[-40:])
     return True
 
@@ -654,6 +657,76 @@ def mission_conclude(user_id, mission_id, resultado):
             (mission_id, f"CONCLUÍDA: {resultado}"[:400], now),
         )
     return True
+
+
+# ─── Semear a vida (CC5 — decisão da fundadora: identidade + VIDA) ───────────
+
+SEED_CATEGORIAS = {
+    "pessoas": ("familia", None),
+    "projetos": ("geral", "projeto atual"),
+    "objetivos": ("geral", "objetivo"),
+    "rotina": ("rotina", None),
+    "preferencias": ("preferencias", None),
+    "contexto": ("geral", None),
+    "friccoes": ("rotina", "fricção conhecida"),
+    # Ampliação da fundadora: "quem a pessoa é, o que ama, o que sonha"
+    "interesses": ("preferencias", "interesse"),
+    "sonhos": ("geral", "sonho"),
+    "desafios": ("rotina", "desafio (cuidar sem julgamento)"),
+}
+
+
+def seed_life(user_id, vida):
+    """Semeia a VIDA de um membro no cadastro (pessoas importantes, projetos,
+    objetivos, rotina, preferências, contexto, fricções conhecidas, datas).
+    "Não quero apenas identidade. Quero identidade + vida." — a base sobre a
+    qual a Giulieta aprende continuamente.
+
+    HONESTIDADE ARQUITETURAL: fatos semeados levam o marcador '[de partida]'
+    — a Giu sabe que vieram do cadastro da família (hipótese de contexto),
+    NUNCA 'você me contou'. O que a pessoa mostrar vivendo prevalece e
+    substitui. Respeita o portão de consentimento; deduplica por conteúdo;
+    retorna quantos itens entraram."""
+    if get_profile(user_id)["data"].get("consentimento") is False:
+        return 0
+
+    def _ja_existe(content):  # dedupe por SQL (S7): não depende de limite de leitura
+        with _conn() as conn:
+            return conn.execute("SELECT 1 FROM facts WHERE user_id=? AND content=? LIMIT 1",
+                                (user_id, content)).fetchone() is not None
+
+    plantados = 0
+    for chave, (categoria, rotulo) in SEED_CATEGORIAS.items():
+        for item in (vida.get(chave) or []):
+            item = (item or "").strip()
+            if not item:
+                continue
+            content = f"[de partida] {rotulo + ': ' if rotulo else ''}{item}"
+            if _ja_existe(content):
+                continue
+            if remember_fact(user_id, content, categoria):
+                plantados += 1
+    ja = {(d.get("titulo"), d.get("data")) for d in dates_all(user_id)}
+    for d in (vida.get("datas") or []):
+        titulo = (d.get("titulo") or "").strip()[:120]  # compara já truncado (S7)
+        data = (d.get("data") or "").strip()
+        if (titulo, data) in ja:
+            continue
+        if dates_add(user_id, titulo, data, d.get("recorrente"), origem="semeada"):
+            plantados += 1  # datas levam origem (S2): o retrato nunca mente o dono
+    return plantados
+
+
+def seed_purge(user_id):
+    """S1 da Life Architect: o "não" da pessoa EXPURGA o semeio inteiro — fatos
+    '[de partida]' e datas de origem semeada somem na hora. Dados sobre você,
+    fornecidos por terceiros, jamais sobrevivem à sua recusa."""
+    fatos = facts_remove(user_id, "[de partida]")
+    datas = dates_all(user_id)
+    vivas = [d for d in datas if d.get("origem") != "semeada"]
+    if len(vivas) != len(datas):
+        set_profile(user_id, datas=vivas)
+    return fatos + (len(datas) - len(vivas))
 
 
 # ─── Família (identidade e confidencialidade) ─────────────────────────────────

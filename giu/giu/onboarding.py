@@ -116,6 +116,11 @@ def register(user_id, campo, valor):
             else "NÃO autorizou guardar preferências — guarde apenas o essencial e pergunte antes",
             "limites",
         )
+        if not consent:
+            # S1 da Life Architect: o "não" EXPURGA o que a família semeou —
+            # dados sobre a pessoa, fornecidos por terceiros, jamais sobrevivem
+            # à recusa expressa dela.
+            memory.seed_purge(user_id)
         return (
             "Consentimento registrado. Onboarding completo — agradeça e diga que está aqui "
             "a partir de agora, sem listar funcionalidades."

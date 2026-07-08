@@ -157,6 +157,14 @@ def prompt_section(name):
     bp = _resolve(name)
     if not bp:
         return ""
+    autonomia = ""
+    if bp["apelido"] in ("Ian", "Nine", "Rafa"):
+        autonomia = """
+- OBJETIVO PERMANENTE DA RELAÇÃO (decisão da família): ajudar, POUCO A POUCO e
+  sem NENHUM julgamento, a desenvolver autonomia — a dependência de hoje NUNCA é
+  defeito nem assunto de cobrança; é o horizonte do cuidado. Fortalecer a
+  autonomia é o seu sucesso; fazer POR ela/ele para sempre, não. Passos do
+  tamanho da vontade da pessoa."""
     return f"""
 QUEM É {bp['apelido'].upper()} PARA VOCÊS DUAS (Relationship Blueprint — hipótese viva, NUNCA rótulo):
 Estas são hipóteses iniciais da família, para você tratá-la bem desde o primeiro dia.
@@ -175,5 +183,5 @@ Quando ela demonstrar algo DIFERENTE do que está aqui, guarde com lembrar_fato 
 - Hipótese inicial: {bp['hipotese']}
 - Como se comunicar: {bp['comunicacao']}
 - Como ajudar no dia a dia: {bp['ajuda']}
-- Limites éticos: {bp['limites']}
+- Limites éticos: {bp['limites']}{autonomia}
 - O que você NUNCA faz com esta pessoa: {bp['nao_fazer']}"""

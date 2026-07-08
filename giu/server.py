@@ -289,6 +289,35 @@ def family_members():
     return {"members": memory.list_members()}
 
 
+class VidaRequest(BaseModel):
+    """CC5 (fundadora): semear identidade + VIDA. Conteúdo vem da FICHA
+    (FICHA-VIDA-INICIAL.md) preenchida pela família — e JAMAIS entra no git."""
+    pessoas: list[str] = []
+    projetos: list[str] = []
+    objetivos: list[str] = []
+    rotina: list[str] = []
+    preferencias: list[str] = []
+    contexto: list[str] = []
+    friccoes: list[str] = []
+    interesses: list[str] = []   # o que a pessoa AMA (convites de conexão)
+    sonhos: list[str] = []       # o que quer construir nos próximos anos
+    desafios: list[str] = []     # onde crescer — cuidar sem julgamento
+    datas: list[dict] = []  # {titulo, data 'MM-DD'|'YYYY-MM-DD', recorrente?}
+
+
+@app.post("/family/members/{user_id}/vida", dependencies=[Depends(require_token)])
+def seed_member_life(user_id: str, req: VidaRequest):
+    if not memory.get_member(user_id):
+        raise HTTPException(status_code=404, detail="Membro não encontrado")
+    plantados = memory.seed_life(user_id, req.model_dump())
+    bloqueado = memory.get_profile(user_id)["data"].get("consentimento") is False
+    return {"user_id": user_id, "semeado": plantados,
+            "bloqueado_por_consentimento": bloqueado,  # S6: 0 ≠ recusa
+            "nota": "Fatos entram com '[de partida]' — hipótese de contexto; "
+                    "o que a pessoa mostrar vivendo prevalece e substitui. "
+                    "Se a pessoa recusar consentimento, TODO o semeio é expurgado."}
+
+
 @app.delete("/family/members/{user_id}", dependencies=[Depends(require_token)])
 def delete_family_member(user_id: str):
     if not memory.remove_member(user_id):

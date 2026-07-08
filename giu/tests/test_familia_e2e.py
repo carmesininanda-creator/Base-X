@@ -1583,3 +1583,160 @@ def test_m8_teto_do_retrato_e_exercido(monkeypatch):
     # 3 linhas por provider (teto do snapshot) e 14 no total (teto do retrato)
     assert len(corpo.splitlines()) <= context.RETRATO_MAX_LINHAS
     assert corpo.splitlines().count("linha 3") == 0   # 4ª linha de um provider cai
+# ─── CC5: Semear a vida (identidade + VIDA — decisão da fundadora) ────────────
+
+VIDA_TESTE = {
+    "pessoas": ["A avó materna, que ele visita aos domingos"],
+    "projetos": ["Montar um setup de trabalho no quarto"],
+    "objetivos": ["Guardar dinheiro para a viagem do ano que vem"],
+    "rotina": ["Dorme tarde; rende melhor à noite"],
+    "preferencias": ["Mensagens curtas, com humor leve"],
+    "contexto": ["Está num semestre puxado"],
+    "friccoes": ["Perde prazos de contas por esquecer"],
+    "datas": [{"titulo": "Aniversário da avó", "data": "03-14"}],
+}
+
+
+def test_cc5_semear_vida_completa_com_marcador():
+    u = "5511900006999"
+    memory.add_member(u, "Convidado Semeado")
+    n = memory.seed_life(u, VIDA_TESTE)
+    assert n == 8                                  # 7 fatos + 1 data
+    fatos = memory.get_facts(u)
+    semeados = [f for f in fatos if "[de partida]" in f["content"]]
+    assert len(semeados) == 7                      # TODO fato semeado é marcado
+    assert any("projeto atual: Montar um setup" in f["content"] for f in semeados)
+    assert any("objetivo: Guardar dinheiro" in f["content"] for f in semeados)
+    assert any("fricção conhecida: Perde prazos" in f["content"] for f in semeados)
+    assert any(d["titulo"] == "Aniversário da avó" for d in memory.dates_all(u))
+
+
+def test_cc5_semeio_e_idempotente():
+    u = "5511900006999"
+    assert memory.seed_life(u, VIDA_TESTE) == 0    # reaplicar não duplica nada
+
+
+def test_cc5_consentimento_recusado_bloqueia_o_semeio():
+    u = "5511900006998"
+    memory.set_profile(u, consentimento=False)
+    assert memory.seed_life(u, VIDA_TESTE) == 0
+    assert memory.get_facts(u) == []               # a recusa vale mais que a ficha
+
+
+def test_cc5_giu_sabe_que_nao_foi_a_pessoa_que_contou():
+    u = "5511900006999"
+    prompt = brain._system_prompt(u, "oi")
+    assert "[de partida]" in prompt
+    assert 'NUNCA "você me contou"' in prompt      # honestidade viaja com o semeio
+    assert "prevalece e substitui" in prompt
+    # Quem NÃO tem vida semeada não paga a linha de orientação
+    assert "[de partida]" not in brain._system_prompt(IAN, "oi")
+
+
+def test_cc5_endpoint_de_semeio_exige_operadora(client):
+    r = client.post("/family/members/5511900006999/vida", json=VIDA_TESTE)
+    assert r.status_code == 401                    # sem token → porta fechada
+    r = client.post("/family/members/5511900006999/vida", json=VIDA_TESTE, headers=ADMIN)
+    assert r.status_code == 200
+    assert r.json()["semeado"] == 0                # idempotente via endpoint também
+    r = client.post("/family/members/inexistente/vida", json=VIDA_TESTE, headers=ADMIN)
+    assert r.status_code == 404
+
+
+def test_cc4_bom_dia_nao_conta_pendencias_sem_data():
+    from giu import routines
+    u = "5511900006997"
+    memory.add_agenda(u, "Renovar CNH")            # sem data: tem porta própria (CP-1)
+    assert routines._pending_count(u) == 0         # M4 paga: o bom dia fala do DIA
+    memory.add_agenda(u, "Consulta", _hoje().strftime("%Y-%m-%d"), "09:00")
+    assert routines._pending_count(u) == 1
+
+
+# ─── Semear a vida: parecer da Life Architect pago (S1-S8) + ampliação ────────
+
+def test_s1_recusa_no_onboarding_expurga_o_semeio():
+    from giu import onboarding as _onb
+    u = "5511900006996"
+    memory.add_member(u, "Convidado Expurgo")
+    memory.seed_life(u, VIDA_TESTE)
+    assert any("[de partida]" in f["content"] for f in memory.get_facts(u))
+    assert any(d.get("origem") == "semeada" for d in memory.dates_all(u))
+    _onb.register(u, "consentimento", "não")
+    # O "não" vale mais que a ficha: dossiê de terceiro não sobrevive à recusa
+    assert not any("[de partida]" in f["content"] for f in memory.get_facts(u))
+    assert memory.dates_all(u) == []
+    # A prova da recusa (limites) permanece — é a garantia DELA
+    assert any(f["category"] == "limites" for f in memory.get_facts(u))
+
+
+def test_s2_data_semeada_nunca_mente_o_dono():
+    u = "5511900006995"
+    hoje = _hoje().strftime("%m-%d")
+    memory.seed_life(u, {"datas": [{"titulo": "Aniversário da avó", "data": hoje}]})
+    linha = tempo._linha_datas(u, tempo._agora())
+    assert "Aniversário da avó" in linha
+    assert "CADASTRO da família" in linha
+    assert "NUNCA diga que ela pediu" in linha
+    assert "ela pediu para lembrar" not in linha.split("ATENÇÃO")[0]
+    # Data anotada pela PRÓPRIA pessoa não carrega o aviso
+    u2 = "5511900006994"
+    memory.dates_add(u2, "Consulta anual", hoje)
+    assert "CADASTRO" not in tempo._linha_datas(u2, tempo._agora())
+
+
+def test_s3_s4_fonte_nunca_vira_argumento():
+    u = "5511900006999"  # tem vida semeada (teste anterior do CC5)
+    prompt = brain._system_prompt(u, "oi")
+    assert "sua família me contou" in prompt          # a proibição está lá
+    assert "NUNCA abre assunto" in prompt             # fricção não estreia conversa
+    assert "nunca vira painel da vida deles" in prompt  # terceiros: o mínimo
+    assert "convites de conexão, nunca rótulos" in prompt
+
+
+def test_s5_bom_dia_sem_colecao_de_culpas():
+    from datetime import timedelta
+    from giu import routines
+    u = "5511900006993"
+    antigo = (_hoje() - timedelta(days=30)).strftime("%Y-%m-%d")
+    memory.add_agenda(u, "Vencido há um mês", antigo)
+    assert routines._pending_count(u) == 0            # vencido > 7 dias sai
+    memory.add_agenda(u, "Consulta de hoje", _hoje().strftime("%Y-%m-%d"))
+    assert routines._pending_count(u) == 1
+    memory.pendencia_recusar(u, "Consulta de hoje")   # "não quero ajuda" vale de manhã também
+    assert routines._pending_count(u) == 0
+
+
+def test_s6_endpoint_distingue_recusa_de_idempotencia(client):
+    u = "5511900006992"
+    memory.add_member(u, "Convidado Bloqueio")
+    memory.set_profile(u, consentimento=False)
+    r = client.post(f"/family/members/{u}/vida", json=VIDA_TESTE, headers=ADMIN)
+    assert r.json()["semeado"] == 0
+    assert r.json()["bloqueado_por_consentimento"] is True
+
+
+def test_ampliacao_interesses_sonhos_desafios():
+    u = "5511900006991"
+    n = memory.seed_life(u, {
+        "interesses": ["mergulho", "jiu-jitsu"],
+        "sonhos": ["morar nos Estados Unidos"],
+        "desafios": ["construir autonomia na vida prática"],
+    })
+    assert n == 4
+    fatos = {f["content"] for f in memory.get_facts(u)}
+    assert any("interesse: mergulho" in f for f in fatos)
+    assert any("sonho: morar nos Estados Unidos" in f for f in fatos)
+    assert any("desafio (cuidar sem julgamento): construir autonomia" in f for f in fatos)
+
+
+def test_ampliacao_friccao_semeada_nao_vaza_no_communication():
+    u = "5511900006991"
+    assert ctx_com.snapshot(u) == ""  # desafio/fricção semeada NÃO é pendência
+
+
+def test_autonomia_objetivo_permanente_so_dos_filhos():
+    from giu import blueprints
+    for filho in ("Ian", "Pauline", "Rafael"):
+        assert "OBJETIVO PERMANENTE DA RELAÇÃO" in blueprints.prompt_section(filho)
+        assert "sem NENHUM julgamento" in blueprints.prompt_section(filho)
+    assert "OBJETIVO PERMANENTE" not in blueprints.prompt_section("Nanda")
