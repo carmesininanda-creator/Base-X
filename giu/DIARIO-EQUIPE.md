@@ -62,6 +62,21 @@ do Despacho, §6) · open_meteo ✅ (T7). Duas frentes permanentes: capacidades
 
 ## 3. Registro corrido (descobertas · decisões · problemas)
 
+**08/07 — 💬 FRASE-NORTE das capacidades registrada (Nanda): "não quero
+correr atrás de funcionalidades — quero que cada nova capacidade faça a
+família dizer: 'Nossa... como a Giu vivia sem isso?'" — a régua passa a ser
+a REAÇÃO da família, não a lista. E o PR #28 CRESCEU com a mão que faltava:
+REMARCAR e CANCELAR compromisso** (a lacuna nº 1 nomeada pelo parecer para
+declarar o Calendar completo). Remarcar: propõe → confirma → executa, com
+validação e preservação do que não muda ("a vida remarca o tempo todo: isto
+é cuidado, não falha"). Cancelar: HONESTO por construção — cancelado jamais
+vira 'feito' (coluna própria; a lei do M2 vale aqui também). Enquanto o
+espelho do Google não atualiza/remove, a Giu AVISA a pessoa que lá continua
+o antigo (honestidade > aparência). 128/128 testes. Restam do domínio (pós-
+merge): recorrência ("fisioterapia toda quinta") e a leitura Google→retrato
+(pós-OAuth do Despacho); dívidas K4/K5 registradas. PR #28 aguarda o merge
+da Nanda.
+
 **08/07 — 🎯 NOVA ORDEM da fundadora: "fazer a Giu Família ficar
 extraordinária" (Calendar → Home → Mobility → Health, cada capacidade
 COMPLETA antes da próxima). PRs #26 e #27 MERGEADOS (Life Seeds aprovadas +
