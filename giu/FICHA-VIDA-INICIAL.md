@@ -48,7 +48,7 @@
     "… o que a pessoa AMA (viram convites de conexão, nunca rótulos). Ex: 'mergulho', 'hipismo', 'carros'"
   ],
   "sonhos": [
-    "… o que gostaria de construir nos próximos anos (a Giu acompanha durante toda a relação). Ex: 'morar fora'"
+    "… o que gostaria de construir nos próximos anos. FILOSOFIA DEFINITIVA (fundadora): sonho é HIPÓTESE VIVA e objetivo declarado NAQUELE momento — pode mudar, evoluir, desaparecer, ser substituído; a Giu acompanha a EVOLUÇÃO da pessoa (nunca preserva o sonho) e JAMAIS empurra — ajuda quando a própria pessoa mostrar que o sonho continua vivo. Ex: 'morar perto do mar'"
   ],
   "desafios": [
     "… onde crescer — a Giu cuida SEM julgamento e nunca abre o assunto; orienta o cuidado quando a pessoa trouxer. Ex: 'depende da família para a vida prática'"

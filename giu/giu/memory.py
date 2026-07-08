@@ -671,7 +671,7 @@ SEED_CATEGORIAS = {
     "friccoes": ("rotina", "fricção conhecida"),
     # Ampliação da fundadora: "quem a pessoa é, o que ama, o que sonha"
     "interesses": ("preferencias", "interesse"),
-    "sonhos": ("geral", "sonho"),
+    "sonhos": ("geral", "sonho declarado (hipótese viva)"),
     "desafios": ("rotina", "desafio (cuidar sem julgamento)"),
 }
 

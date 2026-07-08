@@ -1725,7 +1725,7 @@ def test_ampliacao_interesses_sonhos_desafios():
     assert n == 4
     fatos = {f["content"] for f in memory.get_facts(u)}
     assert any("interesse: mergulho" in f for f in fatos)
-    assert any("sonho: morar nos Estados Unidos" in f for f in fatos)
+    assert any("sonho declarado (hipótese viva): morar nos Estados Unidos" in f for f in fatos)
     assert any("desafio (cuidar sem julgamento): construir autonomia" in f for f in fatos)
 
 
@@ -1740,3 +1740,16 @@ def test_autonomia_objetivo_permanente_so_dos_filhos():
         assert "OBJETIVO PERMANENTE DA RELAÇÃO" in blueprints.prompt_section(filho)
         assert "sem NENHUM julgamento" in blueprints.prompt_section(filho)
     assert "OBJETIVO PERMANENTE" not in blueprints.prompt_section("Nanda")
+
+
+def test_sonho_e_hipotese_viva_nunca_fato_imutavel():
+    # Filosofia definitiva da fundadora: a Giu acompanha a EVOLUÇÃO da pessoa
+    u = "5511900006990"
+    memory.seed_life(u, {"sonhos": ["morar perto do mar"]})
+    fatos = {f["content"] for f in memory.get_facts(u)}
+    assert any("sonho declarado (hipótese viva): morar perto do mar" in f for f in fatos)
+    prompt = brain._system_prompt(u, "oi")
+    assert "hipóteses VIVAS" in prompt
+    assert "nunca preservar o sonho" in prompt
+    assert "NUNCA empurra ninguém" in prompt
+    assert "mostrar que ele continua vivo" in prompt
