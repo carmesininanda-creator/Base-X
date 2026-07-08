@@ -62,6 +62,26 @@ do Despacho, §6) · open_meteo ✅ (T7). Duas frentes permanentes: capacidades
 
 ## 3. Registro corrido (descobertas · decisões · problemas)
 
+**08/07 — 🕯️ A SPRINT MUDA DE NOME: "SPRINT DA PRESENÇA DA GIULIETA"
+(fundadora: "não estamos procurando um TTS — estamos procurando uma
+PRESENÇA") — tudo dentro do PR #32 (merge dela).** CRITÉRIOS OFICIAIS:
+inspira confiança imediatamente · inteligência tranquila · ESCUTA antes de
+responder · nunca apressada · nunca personagem · nunca sistema lendo texto.
+A INVERSÃO registrada: a Voice Architect deixa de escolher uma voz — escolhe
+uma IDENTIDADE; a tecnologia se adapta a ela, nunca o contrário. A BATERIA
+virou CENAS completas (C1 "Oi…" · C2 bom dia · C3 como foi seu dia · C4
+"vamos resolver isso juntas" · C5 "fico feliz que você tenha me contado" ·
+C6 SILÊNCIO — a presença que não precisa falar · C7 despedida), cegas, no
+celular. PROVEDORES: OpenAI + ElevenLabs + Azure + Google + CARTESIA +
+PLAYHT (+ qualquer superior; clonagem licenciada na mesa). Fecha quando ela
+sentir espontaneamente: "ESSA É A GIU". A voz segue BLOQUEADOR oficial do
+lançamento — "vale tanto quanto a própria identidade da Giulieta". HANDOFF
+DESPACHO: chaves (ELEVENLABS_API_KEY · AZURE_SPEECH_KEY+REGION ·
+GOOGLE_TTS_API_KEY · CARTESIA_API_KEY+CARTESIA_VOICES ·
+PLAYHT_USER_ID+PLAYHT_API_KEY+PLAYHT_VOICES — para Cartesia/PlayHT, escolher
+2-3 vozes femininas MADURAS pt nas bibliotecas deles e passar os IDs) →
+rodar bateria_voz.py → amostras para a Nanda. 143/143.
+
 **08/07 — 🎭 SPRINT DA VOZ: FASE 3 (fundadora reprovou DE NOVO, agora o
 modelo novo: "não é problema técnico, é de identidade — parem de tentar
 salvar esta voz") — PR #32 aberto (merge dela).** DECISÕES registradas: a
