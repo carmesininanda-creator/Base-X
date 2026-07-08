@@ -62,6 +62,33 @@ do Despacho, §6) · open_meteo ✅ (T7). Duas frentes permanentes: capacidades
 
 ## 3. Registro corrido (descobertas · decisões · problemas)
 
+**08/07 — ✅ FUNDADORA APROVOU a arquitetura de CAPACIDADES DE VIDA (com 3
+ajustes dela) + ✉️ COMUNICAÇÃO implementada (PR #25 aberto — o merge é
+dela).** Ajustes registrados: (1) os Domínios pertencem às NECESSIDADES da
+Família Fundadora, nunca a uma pessoa (casos da seção 6 = ilustrações);
+(2) Vision ampliado (documentos, receitas médicas, exames, alimentos,
+objetos, ambientes, ROUPAS, MEDICAMENTOS); (3) Communication ampliado (TODA
+comunicação relevante — e-mail, mensagens, documentos, notificações — não
+apenas Gmail). "A Base-X passa oficialmente a ser organizada por Capacidades
+de Vida; os Providers continuam existindo internamente, mas deixam de ser a
+forma como pensamos o sistema." IMPLEMENTAÇÃO CONTÍNUA RETOMADA pelo domínio
+Comunicação (piso = o que a pessoa CONTA): pendências acordam no retrato
+como RESUMO com idade (nunca lista), C5 paga e mudada de casa (uma porta
+só). LIFE ARCHITECT **BLOQUEOU** — e o bloqueio foi RESOLVIDO antes do
+merge: M1 "risquei daqui" era impossível (nasceu esquecer_fato — a mão real
+de apagar; onboarding não planta mais pendência eterna: traço→rotina); M2 o
+"não" não tinha memória durável (nasceu silenciar_pendencia — recusa cala a
+oferta PARA SEMPRE sem falsificar conclusão; item segue vivo em ver_agenda);
+M3 fricção velha ganha contagem "(e mais N)"; M5 idade testada com backdate;
+M6 idade orienta a Giu, nunca é dita; M7 desabafo cala a linha (cláusula
+explícita); M8 teto do retrato exercido com stub. **M4 = dívida 14 dias**:
+check-in matinal conta pendências sem data todo dia sem CP-1 (routines/
+server — fechar a segunda porta na próxima leva). 104/104 testes.
+DEMO-COMUNICACAO.md entregue. PENDENTE: merge do PR #25 pela fundadora;
+próximos domínios na ordem dela (Vision após Communication, D-CV1
+recomendação (a), salvo decisão contrária; depois Home → Mobility → Health);
+H2 (áudio da Nanda) e alarme de saldo (Despacho) seguem abertos.
+
 **08/07 — 🌳 CORREÇÃO DE DIREÇÃO da fundadora: a Base-X se reorganiza por
 CAPACIDADES DE VIDA (revisão completa desenhada; AGUARDA APROVAÇÃO DELA;
 implementação PAUSADA por ordem expressa).** "A Base-X não nasce de
