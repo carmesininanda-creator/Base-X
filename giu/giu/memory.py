@@ -125,6 +125,9 @@ def init_db():
             "ALTER TABLE family_members ADD COLUMN welcome TEXT",
             "ALTER TABLE reminders ADD COLUMN attempts INTEGER DEFAULT 0",
             "ALTER TABLE messages ADD COLUMN modality TEXT DEFAULT 'text'",
+            "ALTER TABLE agenda ADD COLUMN lugar TEXT",      # T8 (Calendar/Mobility)
+            "ALTER TABLE agenda ADD COLUMN duracao INTEGER",  # T9 (janela de conflito)
+            "ALTER TABLE agenda ADD COLUMN cancelado INTEGER DEFAULT 0",  # cancelar ≠ concluir
         ):
             try:
                 conn.execute(stmt)
@@ -457,23 +460,61 @@ def message_count(user_id):
 
 # ─── Agenda Viva ──────────────────────────────────────────────────────────────
 
-def add_agenda(user_id, title, date=None, time=None, notes=None):
+def add_agenda(user_id, title, date=None, time=None, notes=None,
+               lugar=None, duracao=None):
+    """duracao em minutos (opcional): habilita o conflito por sobreposição
+    real (T9); lugar (opcional): o 'onde' que a Mobilidade vai precisar (T8)."""
     with _conn() as conn:
         cur = conn.execute(
-            "INSERT INTO agenda (user_id, title, date, time, notes, created_at) VALUES (?,?,?,?,?,?)",
-            (user_id, title, date, time, notes, _now()),
+            "INSERT INTO agenda (user_id, title, date, time, notes, lugar, duracao, created_at)"
+            " VALUES (?,?,?,?,?,?,?,?)",
+            (user_id, title, date, time, notes, lugar, duracao, _now()),
         )
         return cur.lastrowid
 
 
 def get_agenda(user_id, include_done=False):
-    sql = "SELECT id, title, date, time, notes, done, created_at FROM agenda WHERE user_id=?"
+    sql = ("SELECT id, title, date, time, notes, done, created_at, lugar, duracao "
+           "FROM agenda WHERE user_id=? AND COALESCE(cancelado,0)=0")
     if not include_done:
         sql += " AND done=0"
     sql += " ORDER BY date IS NULL, date, time"
     with _conn() as conn:
         rows = conn.execute(sql, (user_id,)).fetchall()
     return [dict(r) for r in rows]
+
+
+def reschedule_agenda(user_id, item_id, date=None, time=None, lugar=None, duracao=None):
+    """Remarca um compromisso — a vida remarca o tempo todo; a Giu acompanha.
+    Só altera os campos informados. Retorna o item novo ou None."""
+    sets, vals = [], []
+    for campo, valor in (("date", date), ("time", time), ("lugar", lugar), ("duracao", duracao)):
+        if valor is not None:
+            sets.append(f"{campo}=?"); vals.append(valor)
+    if not sets:
+        return None
+    with _conn() as conn:
+        cur = conn.execute(
+            f"UPDATE agenda SET {', '.join(sets)} WHERE user_id=? AND id=? "
+            "AND done=0 AND COALESCE(cancelado,0)=0",
+            (*vals, user_id, item_id),
+        )
+        if cur.rowcount == 0:
+            return None
+        row = conn.execute("SELECT id, title, date, time, lugar FROM agenda WHERE id=?",
+                           (item_id,)).fetchone()
+        return dict(row)
+
+
+def cancel_agenda(user_id, item_id):
+    """Cancela um compromisso — HONESTAMENTE: cancelado nunca vira 'feito'
+    (a lei do M2 vale aqui também). O registro permanece, fora do retrato."""
+    with _conn() as conn:
+        cur = conn.execute(
+            "UPDATE agenda SET cancelado=1 WHERE user_id=? AND id=? AND done=0",
+            (user_id, item_id),
+        )
+        return cur.rowcount > 0
 
 
 def complete_agenda(user_id, item_id):

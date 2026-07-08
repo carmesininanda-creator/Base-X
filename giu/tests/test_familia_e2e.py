@@ -1753,3 +1753,131 @@ def test_sonho_e_hipotese_viva_nunca_fato_imutavel():
     assert "nunca preservar o sonho" in prompt
     assert "NUNCA empurra ninguém" in prompt
     assert "mostrar que ele continua vivo" in prompt
+
+
+# ─── Calendar completo para a Família (T8 lugar/duração + T9 sobreposição) ────
+
+def test_t8_lugar_e_duracao_viajam_do_agendar_ao_retrato():
+    from datetime import datetime as _dt
+    u = "5511900005999"
+    hoje = _hoje().strftime("%Y-%m-%d")
+    tools.execute_tool("agendar", {"titulo": "Consulta da mãe", "data": hoje,
+                                   "hora": "15:00", "lugar": "Clínica São Lucas",
+                                   "duracao_minutos": 90}, u)
+    acao = memory.list_pending_actions(u)[-1]
+    tools.execute_tool("confirmar_acao", {"action_id": acao["id"]}, u)
+    item = [i for i in memory.get_agenda(u) if i["title"] == "Consulta da mãe"][0]
+    assert item["lugar"] == "Clínica São Lucas" and item["duracao"] == 90
+    manha = _dt.fromisoformat(f"{hoje}T07:00:00")
+    snap = ctx_agenda.snapshot(u, _now=manha)
+    assert "(Clínica São Lucas)" in snap          # o ONDE é preparo de véspera
+    listagem = tools.execute_tool("ver_agenda", {}, u)
+    assert "@ Clínica São Lucas" in listagem
+
+
+def test_t9_sobreposicao_real_nao_passa_despercebida():
+    from datetime import datetime as _dt
+    u = "5511900005998"
+    hoje = _hoje().strftime("%Y-%m-%d")
+    manha = _dt.fromisoformat(f"{hoje}T07:00:00")
+    # 15:00 (90min) e 16:00 → sobrepõem de verdade (o caso que o T9 apontou)
+    memory.add_agenda(u, "Consulta longa", hoje, "15:00", duracao=90)
+    memory.add_agenda(u, "Reunião", hoje, "16:00")
+    snap = ctx_agenda.snapshot(u, _now=manha)
+    assert "CONFLITO DE AGENDA" in snap and "sobrepõem" in snap
+    assert "COM ela" in snap
+
+
+def test_t9_muito_proximos_ganham_voz_gentil():
+    from datetime import datetime as _dt
+    u = "5511900005997"
+    hoje = _hoje().strftime("%Y-%m-%d")
+    manha = _dt.fromisoformat(f"{hoje}T07:00:00")
+    # 09:00 (60min padrão) termina 10:00; próximo às 10:20 → apertado, não conflito
+    memory.add_agenda(u, "Dentista", hoje, "09:00")
+    memory.add_agenda(u, "Fisioterapia", hoje, "10:20")
+    snap = ctx_agenda.snapshot(u, _now=manha)
+    assert "AGENDA APERTADA" in snap and "muito próximos" in snap
+    assert "CONFLITO" not in snap
+    # Com folga real (14:00), silêncio sobre conflito
+    u2 = "5511900005996"
+    memory.add_agenda(u2, "Dentista", hoje, "09:00")
+    memory.add_agenda(u2, "Almoço com a vó", hoje, "14:00")
+    snap2 = ctx_agenda.snapshot(u2, _now=manha)
+    assert "CONFLITO" not in snap2 and "APERTADA" not in snap2
+
+
+def test_k1_hora_de_um_digito_nao_mata_o_retrato():
+    from datetime import datetime as _dt
+    u = "5511900005995"
+    hoje = _hoje().strftime("%Y-%m-%d")
+    memory.add_agenda(u, "Café com a vó", hoje, "9:00")   # 1 dígito: vida real
+    snap = ctx_agenda.snapshot(u, _now=_dt.fromisoformat(f"{hoje}T07:00:00"))
+    assert "Café com a vó" in snap                        # o retrato sobrevive
+
+
+def test_k2_duracao_suposta_fala_em_hipotese():
+    from datetime import datetime as _dt
+    u = "5511900005994"
+    hoje = _hoje().strftime("%Y-%m-%d")
+    memory.add_agenda(u, "Reunião", hoje, "15:00")        # duração desconhecida
+    memory.add_agenda(u, "Dentista", hoje, "15:30")
+    snap = ctx_agenda.snapshot(u, _now=_dt.fromisoformat(f"{hoje}T07:00:00"))
+    assert "PODEM se sobrepor" in snap                    # hipótese, não veredito
+    assert "quanto tempo dura" in snap                    # o alarme vira pergunta
+    assert "se sobrepõem em" not in snap
+
+
+def test_k3_conflito_real_vence_o_aviso_menor():
+    from datetime import datetime as _dt
+    u = "5511900005993"
+    hoje = _hoje().strftime("%Y-%m-%d")
+    memory.add_agenda(u, "Dentista", hoje, "09:00", duracao=60)
+    memory.add_agenda(u, "Fisio", hoje, "10:20")          # apertada cedo
+    memory.add_agenda(u, "Consulta da mãe", hoje, "15:00", duracao=90)
+    memory.add_agenda(u, "Reunião", hoje, "16:00")        # CONFLITO real depois
+    snap = ctx_agenda.snapshot(u, _now=_dt.fromisoformat(f"{hoje}T07:00:00"))
+    assert "CONFLITO" in snap and "APERTADA" not in snap  # o maior vence
+
+
+# ─── A mão que faltava: remarcar e cancelar (parecer K, item c) ───────────────
+
+def test_remarcar_ciclo_completo_propoe_confirma_executa():
+    from datetime import datetime as _dt, timedelta
+    u = "5511900004999"
+    hoje = _hoje().strftime("%Y-%m-%d")
+    quinta = (_hoje() + timedelta(days=2)).strftime("%Y-%m-%d")
+    iid = memory.add_agenda(u, "Dentista", hoje, "15:00", lugar="Clínica Sorriso")
+    r = tools.execute_tool("remarcar_compromisso",
+                           {"id": iid, "nova_data": quinta, "nova_hora": "10:00"}, u)
+    assert "Ação pendente" in r and "Remarcar: Dentista" in r   # propõe, não executa
+    item = [i for i in memory.get_agenda(u) if i["id"] == iid][0]
+    assert item["date"] == hoje                                  # ainda não mudou
+    acao = memory.list_pending_actions(u)[-1]
+    r = tools.execute_tool("confirmar_acao", {"action_id": acao["id"]}, u)
+    assert "remarcado" in r
+    item = [i for i in memory.get_agenda(u) if i["id"] == iid][0]
+    assert item["date"] == quinta and item["time"] == "10:00"
+    assert item["lugar"] == "Clínica Sorriso"                    # o que não mudou, fica
+
+
+def test_cancelar_e_honesto_nunca_vira_feito():
+    u = "5511900004998"
+    hoje = _hoje().strftime("%Y-%m-%d")
+    iid = memory.add_agenda(u, "Reunião que caiu", hoje, "16:00")
+    tools.execute_tool("cancelar_compromisso", {"id": iid}, u)
+    acao = memory.list_pending_actions(u)[-1]
+    r = tools.execute_tool("confirmar_acao", {"action_id": acao["id"]}, u)
+    assert "cancelado" in r and "não vira 'feito'" in r
+    assert all(i["id"] != iid for i in memory.get_agenda(u))     # some do retrato/lista
+    with memory._conn() as conn:                                  # mas NÃO virou done
+        row = conn.execute("SELECT done, cancelado FROM agenda WHERE id=?", (iid,)).fetchone()
+    assert row["done"] == 0 and row["cancelado"] == 1
+
+
+def test_remarcar_valida_data_e_pede_o_que_muda():
+    u = "5511900004997"
+    iid = memory.add_agenda(u, "Exame", _hoje().strftime("%Y-%m-%d"), "08:00")
+    assert "Nada a mudar" in tools.execute_tool("remarcar_compromisso", {"id": iid}, u)
+    r = tools.execute_tool("remarcar_compromisso", {"id": iid, "nova_data": "2020-01-01"}, u)
+    assert "já passou" in r                                       # o sistema confere
