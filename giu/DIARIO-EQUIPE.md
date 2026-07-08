@@ -62,6 +62,34 @@ do Despacho, §6) · open_meteo ✅ (T7). Duas frentes permanentes: capacidades
 
 ## 3. Registro corrido (descobertas · decisões · problemas)
 
+**08/07 — 🌳 CORREÇÃO DE DIREÇÃO da fundadora: a Base-X se reorganiza por
+CAPACIDADES DE VIDA (revisão completa desenhada; AGUARDA APROVAÇÃO DELA;
+implementação PAUSADA por ordem expressa).** "A Base-X não nasce de
+componentes. Ela nasce de capacidades de vida. (...) Ela cuida da vida."
+12 DOMÍNIOS oficiais: Saúde · Tempo (absorve Agenda) · Casa · Mobilidade ·
+Comunicação · Vida Financeira · Família (inclui acompanhamento de idosos) ·
+Bem-estar (separa de Saúde) · Aprendizado · Goals (meses/anos) + os NOVOS
+👁️ VISION (a Giulieta enxerga: fotos, receitas, exames, plantas — "parte
+natural da experiência") e 📡 MULTICANAL ("a Giulieta não pertence ao
+WhatsApp"). Providers/Connectors/Especialistas DESCEM para mecânica interna
+(nenhum criado/renomeado/extinto; ARQUITETURA-CONTEXT-PROVIDERS segue
+vigente como camada de mecânica). REVISÃO em
+ARQUITETURA-CAPACIDADES-DE-VIDA.md (fora do git) com parecer da LIFE
+ARCHITECT (aprova com ajustes; 8 achados INCORPORADOS — os altos: V1
+Emergências só muda de organograma com assinatura dela e garantia P0
+escrita; V2 o "hoje" do Multicanal estava inflado — continuidade entre
+canais NÃO existe (a mesma pessoa em duas portas = duas memórias); primeira
+capacidade real do domínio é identidade unificada; V3 portões do Vision
+endurecidos — o que a Giu FALA da imagem também é dado, terceiros/crianças/
+trânsito pela OpenAI cobertos; V4 PORTÃO DO CUIDADO DE QUEM NÃO ESCOLHEU —
+a mãe da Nanda jamais vigiada: mínimo necessário, sempre pela Nanda, Giu
+nunca a contata, desconforto encerra). CRITÉRIO FINAL da fundadora atendido:
+caso real DESTA SEMANA por pessoa nos 12 domínios (10 já vivos hoje; Vision
+e continuidade multicanal nascem de fricção nomeada da família). CINCO
+DECISÕES aguardam ela (D-CV1 posição do Vision na fila; D-CV2 remapeamento;
+D-CV3 fila; D-CV4 privacidade do Vision; D-CV5 Emergências). Exceção formal
+ao "fim da fase conceitual" registrada em DECISOES-ARQUITETURA.md.
+
 **08/07 — ✅ PR #24 MERGEADO (a pedido dela: "merge") — main 2f1b961,
 91/91 em worktree limpo. Time + Calendar Providers e voz com fôlego EM
 PRODUÇÃO (deploy automático). Ambos os Providers entram agora na fase 3:
