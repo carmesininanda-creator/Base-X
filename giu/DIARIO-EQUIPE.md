@@ -62,9 +62,14 @@ do Despacho, §6); demais no roadmap P1/P2/P3.
 
 ## 3. Registro corrido (descobertas · decisões · problemas)
 
+**08/07 — ✅ PR #24 MERGEADO (a pedido dela: "merge") — main 2f1b961,
+91/91 em worktree limpo. Time + Calendar Providers e voz com fôlego EM
+PRODUÇÃO (deploy automático). Ambos os Providers entram agora na fase 3:
+validação em uso real pela Família Fundadora.**
+
 **08/07 — 🏗️ FASE 2 EM RITMO: fundadora MERGEOU o Time Provider (PR #23) e
 decidiu o fim da fase conceitual; 📅 CALENDAR PROVIDER + 🎙️ VOZ V0 prontos
-no PR #24 (link enviado; o merge é dela).** DECISÕES registradas: sem novos
+no PR #24 (mergeado em seguida, ver acima).** DECISÕES registradas: sem novos
 motores/documentos conceituais — só capacidades reais; ordem oficial:
 Calendar → Communication (Gmail) → Home (Rappi/iFood/Alexa) → Mobility
 (Uber) → Health (Oura/Garmin/Apple Health); DUAS FRENTES PERMANENTES
