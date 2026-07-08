@@ -1881,3 +1881,15 @@ def test_remarcar_valida_data_e_pede_o_que_muda():
     assert "Nada a mudar" in tools.execute_tool("remarcar_compromisso", {"id": iid}, u)
     r = tools.execute_tool("remarcar_compromisso", {"id": iid, "nova_data": "2020-01-01"}, u)
     assert "já passou" in r                                       # o sistema confere
+
+
+# ─── Filosofia do 1% por dia (decisão da fundadora) ───────────────────────────
+
+def test_filosofia_do_um_por_cento_no_nucleo():
+    prompt = brain._system_prompt(IAN, "oi")
+    assert "A FILOSOFIA DO 1%" in prompt
+    assert "qual é o 1% de hoje?" in prompt
+    assert "NUNCA vira dívida" in prompt              # 1% é convite, não meta
+    assert "recomeçar do zero também é um 1%" in prompt
+    assert "pelo EXEMPLO" in prompt                   # nunca sermão sobre "1%"
+    assert "o crédito é sempre dela" in prompt
