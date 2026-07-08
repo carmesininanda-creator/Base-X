@@ -62,6 +62,23 @@ do Despacho, §6) · open_meteo ✅ (T7). Duas frentes permanentes: capacidades
 
 ## 3. Registro corrido (descobertas · decisões · problemas)
 
+**08/07 — 🕊️ OS TRÊS MERGES FEITOS (#29 voz + #30 recorrência + #31
+filosofia do 1%) — main c62b5fd, 143/143 em worktree limpo, deploy
+automático rodando. E a DECISÃO DO DIA: "nada de novas funcionalidades por
+um dia — só usar. Agora a Giu precisa respirar. Ela precisa viver."**
+O ciclo contínuo entra em PAUSA (a lista de mercado viva espera o dia
+passar); o Code fica de plantão só para o que a vida quebrar. COM ESTE
+DEPLOY a produção ganha DE UMA VEZ: a voz que aceita direção
+(gpt-4o-mini-tts como padrão + identidade vocal + energia por momento), os
+lembretes recorrentes com as 3 cercas ("remédio da mamãe todo dia às 8h"),
+e a filosofia do 1% no núcleo. HANDOFF AO DESPACHO (nesta ordem): 1) conferir
+o deploy; 2) PLANTAR as 4 Life Seeds (arquivos anexados na conversa da
+fundadora); 3) rodar bateria_voz.py (48 amostras cegas) e mandar para a
+Nanda; 4) alarme de saldo OpenAI (o pendente eterno). AÍ: a Nanda ouve a voz
+NOVA pela primeira vez, escolhe entre as 8 candidatas, e dá o GO — solta a
+Giu PARA A FAMÍLIA (não para o mundo). A Primeira Semana da Família
+Fundadora começa. 🌱💛
+
 **08/07 — 🎭 SPRINT DA VOZ REORIENTADA pela fundadora: "parem — a
 arquitetura está excelente, mas o resultado não; a voz ainda parece um
 sistema lendo texto" → a sprint vira DIREÇÃO ARTÍSTICA e fica ABERTA até a
