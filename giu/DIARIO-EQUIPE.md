@@ -62,6 +62,22 @@ do Despacho, §6) · open_meteo ✅ (T7). Duas frentes permanentes: capacidades
 
 ## 3. Registro corrido (descobertas · decisões · problemas)
 
+**08/07 — ⚖️ NOVO CRITÉRIO de priorização (fundadora): EQUILÍBRIO entre as
+áreas — impacto humano acima de completude técnica ("se o Calendar resolve
+80%, prefiro começar o Home a buscar 99%"). PR #28 MERGEADO (main 9261c9b,
+128/128 em worktree limpo): Calendar com lugar, duração, radar honesto de
+conflitos, REMARCAR e CANCELAR — ~85% da fricção de agenda coberta; recorrência
+e Google→retrato ficam para a fila do impacto.** ENTREGUE o
+QUADRO-EQUILIBRIO-VIDA.md (no git): as 11 áreas com o que existe / o que
+falta / o próximo "como a Giu vivia sem isso?" de cada uma. FILA PROPOSTA
+pelo novo critério: 1) 🔁 RECORRÊNCIA transversal (remédio contínuo + conta
+do dia 5 + fisio de quinta — TRÊS áreas com um código); 2) 🎂 check-in que
+sabe o dia (D-CP4, só datas queridas — o bom dia do aniversário); 3) 🛒 lista
+de mercado viva ("acabou o café" → lista que se monta sozinha); 4) 📸 VISION
+V-0 (bloqueado SÓ pela D-CV4 — decisão da Nanda nas 6 cláusulas de
+privacidade); 5) ⏱️ hora de sair. Conectores (Gmail/Uber/Rappi/Alexa/
+wearables) seguem por ativação, atrás de parecer.
+
 **08/07 — 💬 FRASE-NORTE das capacidades registrada (Nanda): "não quero
 correr atrás de funcionalidades — quero que cada nova capacidade faça a
 família dizer: 'Nossa... como a Giu vivia sem isso?'" — a régua passa a ser
