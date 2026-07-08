@@ -46,6 +46,8 @@ SCOPES = {
 # Mapeia tipo de ação pendente → escopo exigido
 ACTION_SCOPES = {
     "agendar": "agenda",
+    "remarcar": "agenda",
+    "cancelar_compromisso": "agenda",
     "criar_lembrete": "lembretes",
     "compartilhar": "compartilhamento",
     "email": "email",
@@ -425,6 +427,49 @@ TOOL_DEFINITIONS = [
     {
         "type": "function",
         "function": {
+            "name": "remarcar_compromisso",
+            "description": (
+                "Propõe REMARCAR um compromisso existente (nova data/hora/lugar/duração). "
+                "NÃO executa: cria uma ação pendente — apresente o resumo ('dentista vai de "
+                "terça 15h para quinta 10h, fecho?') e chame confirmar_acao após o sim. "
+                "O id vem de ver_agenda. A vida remarca o tempo todo: isto é cuidado, não falha."
+            ),
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "id": {"type": "integer", "description": "id do compromisso (ver_agenda)"},
+                    "nova_data": {"type": "string", "description": "YYYY-MM-DD, se mudar"},
+                    "nova_hora": {"type": "string", "description": "HH:MM, se mudar"},
+                    "novo_lugar": {"type": "string", "description": "se mudar"},
+                    "nova_duracao_minutos": {"type": "integer", "description": "se souber"},
+                },
+                "required": ["id"],
+            },
+        },
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "cancelar_compromisso",
+            "description": (
+                "Propõe CANCELAR um compromisso que não vai mais acontecer. NÃO executa: "
+                "cria uma ação pendente — confirme com a pessoa e chame confirmar_acao. "
+                "Cancelar é DIFERENTE de concluir (nunca finja que foi feito) e de "
+                "silenciar (a pendência que ela não quer ajuda continua viva). "
+                "O id vem de ver_agenda."
+            ),
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "id": {"type": "integer", "description": "id do compromisso (ver_agenda)"},
+                },
+                "required": ["id"],
+            },
+        },
+    },
+    {
+        "type": "function",
+        "function": {
             "name": "criar_lembrete",
             "description": (
                 "Propõe um lembrete proativo. NÃO executa: cria uma ação pendente. "
@@ -593,6 +638,35 @@ def _execute_agendar(user_id, payload):
     return result
 
 
+def _execute_remarcar(user_id, payload):
+    item = memory.reschedule_agenda(
+        user_id, payload["id"], payload.get("nova_data"), payload.get("nova_hora"),
+        payload.get("novo_lugar"), payload.get("nova_duracao_minutos"),
+    )
+    if not item:
+        return "Não encontrei esse compromisso ativo desta pessoa — nada foi remarcado."
+    quando = f"{item['date'] or 'sem data'} {item['time'] or ''}".strip()
+    resultado = f"Compromisso #{item['id']} remarcado: {item['title']} — {quando}"
+    if item.get("lugar"):
+        resultado += f" @ {item['lugar']}"
+    if google_calendar.is_configured(user_id):
+        resultado += (". HONESTIDADE: o espelho no Google ainda NÃO atualiza — se o evento "
+                      "existe lá, avise a pessoa com leveza que lá continua o horário antigo.")
+    return resultado + "."
+
+
+def _execute_cancelar(user_id, payload):
+    ok = memory.cancel_agenda(user_id, payload["id"])
+    if not ok:
+        return "Não encontrei esse compromisso ativo desta pessoa — nada foi cancelado."
+    resultado = ("Compromisso cancelado (não vira 'feito' — cancelar é cancelar). "
+                 "Confirme com leveza, sem lamento.")
+    if google_calendar.is_configured(user_id):
+        resultado += (" HONESTIDADE: no Google o evento continua — avise a pessoa "
+                      "que lá ela precisa remover, por enquanto.")
+    return resultado
+
+
 def _execute_criar_lembrete(user_id, payload):
     memory.add_reminder(user_id, payload["texto"], payload["quando"], payload.get("channel", "web"))
     return f"Lembrete criado para {payload['quando']}."
@@ -619,6 +693,8 @@ def _execute_compartilhar(user_id, payload):
 
 EXECUTORS = {
     "agendar": _execute_agendar,
+    "remarcar": _execute_remarcar,
+    "cancelar_compromisso": _execute_cancelar,
     "criar_lembrete": _execute_criar_lembrete,
     "compartilhar": _execute_compartilhar,
 }
@@ -817,6 +893,38 @@ def execute_tool(name, arguments, user_id, channel="web"):
             f"Ação pendente #{action_id} criada: {summary}. "
             "Apresente o resumo e pergunte se a pessoa confirma. "
             f"Se ela confirmar, chame confirmar_acao com action_id={action_id}."
+        )
+
+    if name == "remarcar_compromisso":
+        if args.get("nova_data") and (err := _validate_date(args["nova_data"])):
+            return err
+        if args.get("nova_hora") and (err := _validate_time(args["nova_hora"])):
+            return err
+        if not any(args.get(k) for k in ("nova_data", "nova_hora", "novo_lugar",
+                                          "nova_duracao_minutos")):
+            return "Nada a mudar — confirme com a pessoa o que muda (data, hora, lugar ou duração)."
+        item = next((i for i in memory.get_agenda(user_id) if i["id"] == args["id"]), None)
+        if not item:
+            return "Não encontrei esse compromisso ativo (o id vem de ver_agenda)."
+        destino = f"{args.get('nova_data') or item['date'] or 'sem data'} {args.get('nova_hora') or item['time'] or ''}".strip()
+        summary = f"Remarcar: {item['title']} → {destino}"
+        action_id = memory.add_pending_action(user_id, "remarcar", summary, args, "baixo")
+        return (
+            f"Ação pendente #{action_id} criada: {summary}. "
+            "Apresente o resumo e pergunte se a pessoa confirma. "
+            f"Se ela confirmar, chame confirmar_acao com action_id={action_id}."
+        )
+
+    if name == "cancelar_compromisso":
+        item = next((i for i in memory.get_agenda(user_id) if i["id"] == args["id"]), None)
+        if not item:
+            return "Não encontrei esse compromisso ativo (o id vem de ver_agenda)."
+        summary = f"Cancelar: {item['title']} — {item['date'] or 'sem data'} {item['time'] or ''}".strip()
+        action_id = memory.add_pending_action(user_id, "cancelar_compromisso", summary, args, "baixo")
+        return (
+            f"Ação pendente #{action_id} criada: {summary}. "
+            "Confirme com a pessoa (cancelar não é concluir). "
+            f"Após o sim, chame confirmar_acao com action_id={action_id}."
         )
 
     if name == "criar_lembrete":
