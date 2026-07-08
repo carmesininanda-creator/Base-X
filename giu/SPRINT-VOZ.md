@@ -1,5 +1,22 @@
 # 🎙️ SPRINT DA VOZ — Charter oficial (painel das quatro guardiãs)
 
+> ## ⚠️ FASE 2 — DIREÇÃO ARTÍSTICA (reorientação da fundadora, 08/07/2026)
+> Ela ouviu: **"a voz continua errada — artificial, monótona, pouca vida,
+> pouca proximidade. Ainda parece um sistema lendo texto."** A sprint deixa
+> de ser problema técnico e vira **direção artística**: esquecer parâmetros;
+> testar vozes COMPLETAMENTE diferentes (mais jovens, mais maduras, mais
+> leves, mais sorridentes, mais naturais). A pergunta da escuta muda:
+> **"Com qual delas eu gostaria de conversar durante muitos anos?"**
+> Não procuramos "a melhor voz da OpenAI" — procuramos **A VOZ DA GIULIETA**.
+> **A sprint permanece ABERTA até a sensação "Que bom falar com a Giu"
+> aparecer naturalmente.** Instrumento: bateria AMPLA cega (bateria_voz.py —
+> 8 vozes × 3 direções de cena × 2 textos-de-vida, gabarito lacrado).
+> Nota honesta: no dia deste veredito, a produção ainda falava com o tts-1
+> (surdo a toda instrução — PR #29 não mergeado); a fase 2 roda inteira no
+> modelo vivo. Se nenhuma das 8 despertar a sensação, os caminhos seguintes
+> são: outros provedores de TTS e (com peso ético e de custo) voz própria —
+> nesta ordem, e só se preciso.
+
 > Aberta pela fundadora em 08/07/2026, **prioridade máxima**. Liderança:
 > Voice Architect, com Psychology, Relationship e Life Architects.
 > Pergunta única: **"Como deve soar alguém que as pessoas desejam ouvir

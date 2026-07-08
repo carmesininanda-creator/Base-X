@@ -1,15 +1,15 @@
 """
-Gerador da BATERIA CEGA da Sprint da Voz (ver SPRINT-VOZ.md).
+BATERIA AMPLA da Sprint da Voz — fase de DIREÇÃO ARTÍSTICA (ver SPRINT-VOZ.md).
 
-Gera as amostras para a família ouvir às cegas: 4 vozes candidatas ×
-4 estilos × 3 textos-de-vida, com nomes cegos (voz-A/B/C/D) e um
-gabarito.json separado (só a operadora abre, DEPOIS da bateria).
+Decisão da fundadora: "não quero procurar a melhor voz da OpenAI — quero
+procurar A VOZ DA GIULIETA". A pergunta da escuta não é "qual soa melhor?";
+é: "COM QUAL DELAS EU GOSTARIA DE CONVERSAR DURANTE MUITOS ANOS?"
 
-Uso (Despacho ou Nanda, com a chave no ambiente):
-    OPENAI_API_KEY=sk-... python bateria_voz.py
-Saída em ./bateria-voz/: amostra-<VOZ_CEGA>-<estilo>-<texto>.mp3 + gabarito.json
+Gera: 8 vozes femininas/neutras × 3 direções artísticas × 2 textos-de-vida
+= 48 amostras cegas (voz-A..H) + gabarito lacrado (só se abre DEPOIS).
 
-Custo aproximado: 48 áudios curtos (~10s cada) no gpt-4o-mini-tts — centavos.
+Uso (Despacho/Nanda): OPENAI_API_KEY=sk-... python bateria_voz.py
+Saída em ./bateria-voz/. Custo: centavos.
 """
 
 import json
@@ -18,14 +18,16 @@ import random
 import sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from giu import voice  # noqa: E402  (IDENTIDADE_VOCAL + ESTILOS do charter)
+from giu import voice  # noqa: E402
 
 from openai import OpenAI  # noqa: E402
 
 MODEL = "gpt-4o-mini-tts"
-VOZES = ["shimmer", "nova", "coral", "sage"]  # as candidatas do painel
 
-# Os 3 textos-de-vida do charter (passam pelo vocefy como um turno real)
+# TODAS as vozes femininas/neutras do catálogo — jovens, maduras, leves,
+# sorridentes, naturais. Nenhum veto prévio: os ouvidos da família decidem.
+VOZES = ["alloy", "ballad", "coral", "fable", "nova", "sage", "shimmer", "verse"]
+
 TEXTOS = {
     "T1-bomdia": (
         "Bom dia… acordou bem? Tá um céu bonito hoje — abre a janela um "
@@ -37,22 +39,27 @@ TEXTOS = {
         "gente não carrega sozinha — me conta o que pesou mais… eu tô aqui, "
         "sem pressa nenhuma."
     ),
-    "T3-celebracao": (
-        "Espera… você conseguiu?! Ai, que coisa boa… eu sabia, viu — desde "
-        "que você me contou que ia tentar. Hoje merece um cafezinho "
-        "especial… me conta como foi?"
-    ),
 }
 
-# Estilos da bateria: neutro (linha de base) + 3 adaptações do charter
-ESTILOS_BATERIA = {
-    "neutro": None,  # sem instructions — a voz "de fábrica"
-    "manha": voice.instrucao_vocal("modo_manha"),
-    "acolhimento": voice.instrucao_vocal("modo_companhia"),
-    "celebracao": voice.IDENTIDADE_VOCAL + " " + (
-        "Energia de celebração pequena: viva, quente e genuinamente feliz "
-        "pela pessoa — o brilho de quem torceu junto. Sem exagero de "
-        "comercial: a alegria é dela; você acompanha, não rouba a cena."
+# As 3 DIREÇÕES ARTÍSTICAS (não parâmetros — direção de atriz):
+DIRECOES = {
+    "neutra": None,  # a voz "de fábrica" — linha de base
+    "sorridente": (
+        "Direção de cena: você é uma atriz brasileira de trinta e poucos anos "
+        "gravando uma nota de voz para alguém que você AMA e com quem fala todo "
+        "dia. Você está genuinamente feliz de falar com essa pessoa — dá para "
+        "OUVIR o sorriso. Fala de verdade, com respiração, micro-pausas de quem "
+        "pensa, uma leve risada guardada atrás das palavras. Zero locução, zero "
+        "leitura: é uma mensagem íntima de quem gosta da vida e dessa pessoa. "
+        "Ritmo natural de conversa, nunca lento."
+    ),
+    "intimista": (
+        "Direção de cena: fim de tarde, você liga no viva-voz enquanto faz um "
+        "café para alguém da sua família. Voz próxima do microfone, quente, "
+        "baixa sem ser sussurro — a intimidade de quem não precisa impressionar "
+        "ninguém. Curiosidade genuína nas perguntas, carinho sem açúcar, e a "
+        "segurança tranquila de quem conhece essa pessoa há anos. Fala viva, "
+        "presente, jamais melancólica."
     ),
 }
 
@@ -60,26 +67,28 @@ ESTILOS_BATERIA = {
 def main():
     client = OpenAI()
     os.makedirs("bateria-voz", exist_ok=True)
-    cegas = dict(zip(random.sample(VOZES, len(VOZES)), "ABCD"))
+    letras = "ABCDEFGH"
+    cegas = dict(zip(random.sample(VOZES, len(VOZES)), letras))
     gabarito = {f"voz-{letra}": voz for voz, letra in cegas.items()}
     total = 0
     for voz, letra in cegas.items():
-        for nome_estilo, instrucao in ESTILOS_BATERIA.items():
+        for nome_dir, direcao in DIRECOES.items():
             for nome_texto, texto in TEXTOS.items():
                 kwargs = dict(model=MODEL, voice=voz,
                               input=voice.vocefy(texto), response_format="mp3")
-                if instrucao:
-                    kwargs["instructions"] = instrucao
+                if direcao:
+                    kwargs["instructions"] = direcao
                 resp = client.audio.speech.create(**kwargs)
-                caminho = f"bateria-voz/amostra-voz{letra}-{nome_estilo}-{nome_texto}.mp3"
+                caminho = f"bateria-voz/voz{letra}-{nome_dir}-{nome_texto}.mp3"
                 with open(caminho, "wb") as f:
                     f.write(resp.read())
                 total += 1
                 print(f"✓ {caminho}")
     with open("bateria-voz/gabarito.json", "w") as f:
         json.dump(gabarito, f, ensure_ascii=False, indent=2)
-    print(f"\n{total} amostras geradas. O gabarito.json só se abre DEPOIS da "
-          "bateria — ninguém (nem a operadora) sabe qual é qual durante a escuta.")
+    print(f"\n{total} amostras. Escute no CELULAR, como nota de voz, sozinha. "
+          "A pergunta não é 'qual soa melhor?' — é: 'com qual eu gostaria de "
+          "conversar durante muitos anos?'. O gabarito só se abre no fim.")
 
 
 if __name__ == "__main__":
