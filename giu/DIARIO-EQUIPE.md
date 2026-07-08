@@ -21,32 +21,32 @@
 
 ## 1. Estado atual (retrato — atualizado por quem mudar algo)
 
-**Código (`main` = `804a614`):** a Giulieta do nascimento — voz como
-preferência de relacionamento, primeiro encontro por Blueprint, Blueprints no
-cérebro (garantia), identidade semeada, falha honesta nos 3 canais, Friction
-Lens, presença natural (5 ajustes), Conversation Spine, cinco pilares +
-filosofia oficial, metáfora oficial (membro da família + equipe invisível),
-missão do tamanho da vida, **Mission Engine + Life Radar + Life Lens**,
-organismo Base-X (21 domínios; catálogo mudo no desabafo), conector Google
-Calendar por pessoa (OAuth; D1/D2 pagas), correções da Voice Architect e
-**Energia Vital** (velocidade 1.0; a voz de quem gosta da vida). **62/62
-testes E2E em checkout limpo.**
+**Código (`main` = `2f1b961`):** a Giulieta da Fase 2 — tudo do nascimento
+(Blueprints por construção, Conversation Spine, Mission Engine + Life Radar +
+Life Lens, organismo Base-X com 21 domínios, falha honesta, Energia Vital)
+MAIS o **Living Context vivo**: ⏰ Time Provider (retrato "O MOMENTO DE
+AGORA", datas queridas com véspera, clima/sol por cidade autorizada) e
+📅 Calendar Provider (dia CHEIO → UMA prioridade, conflito por código,
+véspera com preparo; "a Agenda Viva é o cérebro, o Google só sincroniza");
+voz com fôlego humano e telefone dígito a dígito. **91/91 testes E2E em
+checkout limpo.**
 
-**PRs:** #9 a #22 mergeados. Fila de PRs: vazia.
+**PRs:** #9 a #24 mergeados (#23 e #24 = Fase 2). Fila de PRs: vazia.
 
-**Produção (WhatsApp +55 11 92078-5067):** funcionando após incidente
-(fronteira OpenAI). ⚠️ PENDENTE de confirmação formal (ver problemas abertos).
+**Produção (WhatsApp +55 11 92078-5067):** deploy automático ativo; Time e
+Calendar Providers NO AR. ⚠️ Ciclo de voz (H2) e alarme de saldo pendentes.
 
-**Piloto Primeira Semana:** protocolo pronto (PROTOCOLO-PRIMEIRA-SEMANA.md).
-NÃO iniciado — bloqueado pelos itens abertos abaixo. Participantes: Nanda,
-Ian, Nine, Rafael (todos maiores de idade). Ninguém da família usa o número
-até o go da Nanda.
+**Família Fundadora — Primeira Semana:** protocolo pronto
+(PROTOCOLO-PRIMEIRA-SEMANA.md). NÃO iniciada — aguarda o go da Nanda
+(H2 + H1). Participantes: Nanda, Ian, Nine, Rafael. Fase 3 dos Providers
+(validação em uso real) acontece dentro dela.
 
-**Pilares (estado):** Identity ✅ · Friction Lens ✅ · Mission Engine ✅
-(embrião real) · Living Context (**arquitetura OFICIAL em 10 áreas da vida**,
-decisão da fundadora; engenharia pós-piloto) · Relationship (camada ✅; motor
+**Pilares (estado):** Identity ✅ · Friction Lens ✅ · Mission Engine ✅ ·
+**Living Context ✅ VIVO (Time + Calendar; próximos na ordem dela:
+Communication → Home → Mobility → Health)** · Relationship (camada ✅; motor
 RIM congelado). Life Connectors: Google Calendar por pessoa ✅ (aguarda OAuth
-do Despacho, §6); demais no roadmap P1/P2/P3.
+do Despacho, §6) · open_meteo ✅ (T7). Duas frentes permanentes: capacidades
++ Voz e Presença.
 
 ## 2. Handoffs abertos (quem deve o quê a quem)
 
