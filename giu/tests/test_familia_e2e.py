@@ -1468,9 +1468,11 @@ def test_comunicacao_c5_pendencia_sem_data_acorda_com_idade():
 def test_comunicacao_anti_cobranca_cp1_viaja_com_o_dado():
     u = "5511900007998"
     snap = ctx_com.snapshot(u)
-    assert "ENCERRA" in snap                      # o "não" encerra
     assert "momento LEVE" in snap                 # nunca empilha em momento ruim
-    assert "nunca reoferecer" in snap
+    assert "UMA oferta" in snap
+    assert "NUNCA marque como feita" in snap      # M2: recusa ≠ conclusão falsa
+    assert "nunca a diga a ela" in snap           # M6: idade orienta, não cobra
+    assert "FICA MUDA" in snap                    # M7: desabafo cala esta linha
 
 
 def test_comunicacao_fatos_de_pendencia_entram_e_saem():
@@ -1478,7 +1480,7 @@ def test_comunicacao_fatos_de_pendencia_entram_e_saem():
     memory.remember_fact(u, "Precisa enviar o comprovante para o consulado", "pendencias")
     snap = ctx_com.snapshot(u)
     assert "comprovante para o consulado" in snap
-    assert "apague o fato" in snap                # resolvido = memória limpa
+    assert "esquecer_fato" in snap                # resolvido = mão REAL de apagar (M1)
     fato = [f for f in memory.get_facts(u) if f["category"] == "pendencias"][0]
     memory.delete_fact(u, fato["id"])
     assert ctx_com.snapshot(u) == ""              # resolvida → silêncio de novo
@@ -1512,3 +1514,72 @@ def test_retrato_tres_provedores_dentro_do_orcamento():
     corpo = r.split("\n", 1)[1] if "\n" in r else ""
     assert len(corpo.splitlines()) <= context.RETRATO_MAX_LINHAS
     assert "AGORA:" in r and "PENDÊNCIAS" in r and "DATAS QUERIDAS" in r
+
+
+def test_m1_esquecer_fato_e_mao_real():
+    u = "5511900007994"
+    memory.remember_fact(u, "Precisa mandar o contrato para a imobiliária", "pendencias")
+    assert "contrato para a imobiliária" in ctx_com.snapshot(u)
+    r = tools.execute_tool("esquecer_fato", {"trecho": "contrato para a imobiliária"}, u)
+    assert "apagado(s) AGORA" in r
+    assert ctx_com.snapshot(u) == ""              # "risquei daqui" agora é verdade
+    # Consentimento (categoria limites) é inapagável por esta porta
+    memory.remember_fact(u, "Recusou memória de saúde", "limites")
+    assert memory.facts_remove(u, "Recusou memória") == 0
+
+
+def test_m1_onboarding_nao_planta_pendencia_eterna():
+    u = "5511900007993"
+    from giu import onboarding as _onb
+    _onb.register(u, "pendencia_inicial", "pagar as contas")
+    assert ctx_com.snapshot(u) == ""              # traço é rotina, não pendência
+
+
+def test_m2_nao_quero_ajuda_silencia_para_sempre():
+    u = "5511900007992"
+    memory.add_agenda(u, "Renovar o passaporte")
+    assert "Renovar o passaporte" in ctx_com.snapshot(u)
+    r = tools.execute_tool("silenciar_pendencia", {"titulo": "Renovar o passaporte"}, u)
+    assert "PARA SEMPRE" in r
+    snap = ctx_com.snapshot(u)
+    assert "Renovar o passaporte" not in snap and "PENDÊNCIAS" not in snap
+    # E a pendência segue VIVA na agenda (não foi falsificada como feita)
+    assert any(i["title"] == "Renovar o passaporte" and not i["done"]
+               for i in memory.get_agenda(u))
+    # Outra pendência nova volta a ofertar normalmente — só a recusada cala
+    memory.add_agenda(u, "Trocar o chuveiro")
+    snap = ctx_com.snapshot(u)
+    assert "Trocar o chuveiro" in snap and "em aberto: 2" in snap
+
+
+def test_m3_fatos_antigos_nao_somem_em_silencio():
+    u = "5511900007991"
+    for i in range(4):
+        memory.remember_fact(u, f"Pendência contada {i+1}", "pendencias")
+    snap = ctx_com.snapshot(u)
+    assert "Pendência contada 1" in snap          # a fricção mais VELHA aparece
+    assert "(e mais 2)" in snap                   # as demais têm contagem, não silêncio
+
+
+def test_m5_idade_da_pendencia_com_backdate():
+    from datetime import timedelta
+    u = "5511900007990"
+    iid = memory.add_agenda(u, "Levar o notebook no conserto")
+    tres_dias = (_hoje().replace(tzinfo=None) - timedelta(days=3)).isoformat(timespec="seconds")
+    with memory._conn() as conn:
+        conn.execute("UPDATE agenda SET created_at=? WHERE id=?", (tres_dias, iid))
+    snap = ctx_com.snapshot(u)
+    assert "há 3 dia(s)" in snap
+    assert "há 0" not in snap                     # criada agora jamais mostra idade
+
+
+def test_m8_teto_do_retrato_e_exercido(monkeypatch):
+    gigante = {"nome": "Stub", "area": "x",
+               "available": lambda u: True,
+               "snapshot": lambda u: "\n".join(f"linha {i}" for i in range(10))}
+    monkeypatch.setattr(context, "PROVIDERS", [gigante, gigante, gigante])
+    r = context.retrato("qualquer")
+    corpo = r.split("\n", 1)[1]
+    # 3 linhas por provider (teto do snapshot) e 14 no total (teto do retrato)
+    assert len(corpo.splitlines()) <= context.RETRATO_MAX_LINHAS
+    assert corpo.splitlines().count("linha 3") == 0   # 4ª linha de um provider cai

@@ -96,7 +96,9 @@ def register(user_id, campo, valor):
     done[campo] = True
 
     if campo == "pendencia_inicial":
-        memory.remember_fact(user_id, f"Vive esquecendo ou adiando: {valor}", "pendencias")
+        # M1 da Life Architect: isto é um TRAÇO (rotina), não uma pendência
+        # resolvível — na categoria pendencias ele viraria ruído eterno no retrato.
+        memory.remember_fact(user_id, f"Vive esquecendo ou adiando: {valor}", "rotina")
         memory.set_profile(user_id, onboarding=done)
         return "Pendência inicial guardada. Continue para a próxima etapa do onboarding."
 

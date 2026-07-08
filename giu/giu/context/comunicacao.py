@@ -38,25 +38,35 @@ def snapshot(user_id, _now=None):
     """Como está a COMUNICAÇÃO/as pendências da vida desta pessoa? (1-2 linhas)"""
     now = _now or datetime.now(ZoneInfo(config.TIMEZONE))
     sem_data = [i for i in memory.get_agenda(user_id) if not i["date"]]
+    recusadas = memory.pendencias_recusadas(user_id)
+    # M2: recusa tem memória DURÁVEL — pendência silenciada nunca reabre oferta
+    ofertaveis = [i for i in sem_data
+                  if (i["title"] or "").strip().lower() not in recusadas]
     pendencias_fatos = [f for f in memory.get_facts(user_id)
-                        if f["category"] == "pendencias"][-3:]
+                        if f["category"] == "pendencias"]
 
     linhas = []
-    if sem_data:
-        mais_antiga = min(sem_data, key=lambda i: i.get("created_at") or "9999")
+    if ofertaveis:
+        mais_antiga = min(ofertaveis, key=lambda i: i.get("created_at") or "9999")
         idade = _idade_dias(mais_antiga.get("created_at"), now)
         ha = f", há {idade} dia(s)" if idade is not None and idade > 0 else ""
         linhas.append(
             f"PENDÊNCIAS em aberto: {len(sem_data)} (a mais antiga: "
-            f"\"{mais_antiga['title']}\"{ha}) — no momento LEVE, uma oferta de "
-            "ajuda; se ela disser 'não' ou já tiver resolvido, ENCERRA "
-            "(concluir_compromisso fecha; nunca reoferecer na mesma conversa)."
+            f"\"{mais_antiga['title']}\"{ha}). No momento LEVE, UMA oferta de ajuda "
+            "— e distinga: 'já resolvi' → concluir_compromisso; 'não quero ajuda' → "
+            "silenciar_pendencia (o item segue vivo em ver_agenda; NUNCA marque como "
+            "feita uma coisa não feita). A idade orienta VOCÊ — nunca a diga a ela. "
+            "EM DESABAFO OU EMOÇÃO QUENTE, ESTA LINHA FICA MUDA."
         )
     if pendencias_fatos:
-        itens = "; ".join(f["content"] for f in pendencias_fatos)
+        visiveis = pendencias_fatos[:2]  # as mais ANTIGAS: fricção velha primeiro (M3)
+        resto = len(pendencias_fatos) - len(visiveis)
+        itens = "; ".join(f["content"] for f in visiveis)
+        if resto > 0:
+            itens += f" (e mais {resto})"
         linhas.append(
             f"Ela contou que precisa resolver: {itens} — acompanhe com "
-            "naturalidade quando o assunto aparecer; resolvido = apague o fato."
+            "naturalidade quando o assunto aparecer; resolvido = esquecer_fato."
         )
     return "\n".join(linhas[:2])
 

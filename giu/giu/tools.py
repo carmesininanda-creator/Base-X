@@ -270,6 +270,45 @@ TOOL_DEFINITIONS = [
     {
         "type": "function",
         "function": {
+            "name": "esquecer_fato",
+            "description": (
+                "APAGA da memória permanente os fatos que contêm o trecho — imediato. "
+                "Use quando a pessoa pedir para esquecer algo, quando um fato estiver "
+                "errado, ou quando uma pendência guardada como fato foi RESOLVIDA "
+                "('já resolvi' também é motivo de apagar). Registros de consentimento "
+                "não são apagáveis por aqui."
+            ),
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "trecho": {"type": "string", "description": "Trecho do fato a esquecer (mínimo 3 letras). Ex: 'comprovante para o consulado'"},
+                },
+                "required": ["trecho"],
+            },
+        },
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "silenciar_pendencia",
+            "description": (
+                "Quando a pessoa disser que NÃO QUER ajuda com uma pendência (sem tê-la "
+                "resolvido), silencia a OFERTA para sempre — a pendência continua viva em "
+                "ver_agenda, mas você nunca mais oferece; só a pessoa reabre o assunto. "
+                "NUNCA use concluir_compromisso para isso: seria fingir que foi feito."
+            ),
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "titulo": {"type": "string", "description": "Título exato da pendência (como está em ver_agenda). Ex: 'Renovar CNH'"},
+                },
+                "required": ["titulo"],
+            },
+        },
+    },
+    {
+        "type": "function",
+        "function": {
             "name": "esquecer_data",
             "description": (
                 "ESQUECE uma data guardada, imediatamente — 'esquece essa data' tem a mesma "
@@ -647,6 +686,22 @@ def execute_tool(name, arguments, user_id, channel="web"):
         return ("Data guardada. Você vai revê-la no retrato do dia e da véspera — "
                 "quando chegar, toque no assunto com carinho e no momento certo, "
                 "nunca como notificação.")
+
+    if name == "esquecer_fato":
+        removidos = memory.facts_remove(user_id, args["trecho"])
+        if not removidos:
+            return ("Não encontrei fato com esse trecho (ou o trecho é curto demais — "
+                    "use pelo menos 3 letras). Nada foi apagado.")
+        return (f"{removidos} fato(s) apagado(s) AGORA. Se foi uma pendência resolvida, "
+                "comemore com leveza — o crédito é dela.")
+
+    if name == "silenciar_pendencia":
+        ok = memory.pendencia_recusar(user_id, args["titulo"])
+        if not ok:
+            return "Título vazio — nada silenciado."
+        return ("Oferta silenciada PARA SEMPRE (a pendência continua viva em ver_agenda; "
+                "só ela reabre o assunto). Respeite: a partir de agora, silêncio total "
+                "sobre isso, a menos que ELA puxe.")
 
     if name == "esquecer_data":
         removidas = memory.dates_remove(user_id, args["titulo"])

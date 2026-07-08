@@ -59,10 +59,26 @@ UMA vez, no momento leve; "já resolvi" encerra na hora
 
 ---
 
+## As leis que o parecer da Life Architect endureceu (M1–M8)
+
+- **"Risquei daqui" agora é verdade (M1):** nasceu `esquecer_fato` — a mão
+  real de apagar; e o onboarding não planta mais pendência eterna (o traço
+  "vive esquecendo X" virou rotina, não pendência).
+- **"Não quero ajuda" tem memória PARA SEMPRE (M2):** `silenciar_pendencia`
+  cala a oferta sem falsificar conclusão — a pendência segue viva em
+  ver_agenda; só a pessoa reabre. Recusa nunca vira "feito".
+- **Fricção velha não some em silêncio (M3):** fatos além dos 2 mostrados
+  entram na contagem "(e mais N)".
+- **A idade orienta a Giu, nunca cobra (M6):** "há 40 dias" jamais é dito à
+  pessoa. **Em desabafo, a linha inteira CALA (M7).**
+- **Limite registrado — dívida M4 (14 dias):** o check-in matinal ainda
+  conta pendências sem data todo dia, sem CP-1 — segunda porta a fechar
+  (routines/server), na próxima leva.
+
 **Portão da fundadora:** *"boa companhia ou só uma IA mais capaz?"* — Boa
 companhia é quem você conta "preciso responder o contador" numa terça
 corrida e que te oferece o esboço pronto no momento calmo — e risca da lista
-sem drama quando você já resolveu sozinha.
+sem drama quando você já resolveu sozinha (agora com a mão real de riscar).
 
 **Fase:** arquitetura ✅ → implementação ✅ → **validação em uso real
 (Família Fundadora)** → evolução (Gmail por ativação; notificações
