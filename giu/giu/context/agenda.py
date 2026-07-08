@@ -66,7 +66,7 @@ def snapshot(user_id, _now=None):
     por_vir = [i for i in items if i["date"] == hoje_str
                and (not i["time"] or i["time"] >= hora_agora)]
     de_amanha = [i for i in items if i["date"] == amanha_str]
-    sem_data = [i for i in items if not i["date"]]
+    # Pendências sem data moram no Communication Provider (C5) — uma porta só.
 
     linhas = []
     if len(por_vir) > 3:
@@ -75,10 +75,8 @@ def snapshot(user_id, _now=None):
             "a lista: reduza a UMA prioridade com ela (a lista completa está em ver_agenda)."
         )
     elif por_vir:
-        linha = "AGENDA — hoje ainda: " + "; ".join(_fmt(i) for i in por_vir)
-        if sem_data:
-            linha += f" · {len(sem_data)} pendência(s) sem data (ver_agenda)"
-        linhas.append(linha + ".")
+        linhas.append("AGENDA — hoje ainda: "
+                      + "; ".join(_fmt(i) for i in por_vir) + ".")
     if de_amanha:
         linhas.append(
             "AGENDA — amanhã: " + "; ".join(_fmt(i) for i in de_amanha[:3])

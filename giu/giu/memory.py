@@ -204,6 +204,40 @@ def get_facts(user_id, limit=40):
     return [{"id": r["id"], "category": r["category"], "content": r["content"]} for r in reversed(rows)]
 
 
+def facts_remove(user_id, trecho):
+    """'Esquece isso' e 'já resolvi' precisam de mão real (M1 da Life
+    Architect): apaga fatos cujo conteúdo contém o trecho. A categoria
+    'limites' (provas de consentimento) é INAPAGÁVEL por aqui. Retorna
+    quantos saíram."""
+    alvo = (trecho or "").strip().lower()
+    if len(alvo) < 3:
+        return 0  # trecho curto demais apagaria a memória errada
+    with _conn() as conn:
+        cur = conn.execute(
+            "DELETE FROM facts WHERE user_id=? AND category != 'limites' "
+            "AND lower(content) LIKE ?",
+            (user_id, f"%{alvo}%"),
+        )
+        return cur.rowcount
+
+
+def pendencia_recusar(user_id, titulo):
+    """M2 da Life Architect: o 'não quero ajuda' ganha memória DURÁVEL.
+    A pendência continua viva (ver_agenda) — só a OFERTA silencia para
+    sempre; a pessoa reabre quando quiser."""
+    titulo = (titulo or "").strip().lower()
+    if not titulo:
+        return False
+    recusadas = set(get_profile(user_id)["data"].get("pendencias_recusadas", []))
+    recusadas.add(titulo)
+    set_profile(user_id, pendencias_recusadas=sorted(recusadas))
+    return True
+
+
+def pendencias_recusadas(user_id):
+    return set(get_profile(user_id)["data"].get("pendencias_recusadas", []))
+
+
 def delete_fact(user_id, fact_id):
     with _conn() as conn:
         cur = conn.execute("DELETE FROM facts WHERE user_id=? AND id=?", (user_id, fact_id))
@@ -430,7 +464,7 @@ def add_agenda(user_id, title, date=None, time=None, notes=None):
 
 
 def get_agenda(user_id, include_done=False):
-    sql = "SELECT id, title, date, time, notes, done FROM agenda WHERE user_id=?"
+    sql = "SELECT id, title, date, time, notes, done, created_at FROM agenda WHERE user_id=?"
     if not include_done:
         sql += " AND done=0"
     sql += " ORDER BY date IS NULL, date, time"
