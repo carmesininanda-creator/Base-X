@@ -62,6 +62,28 @@ do Despacho, §6) · open_meteo ✅ (T7). Duas frentes permanentes: capacidades
 
 ## 3. Registro corrido (descobertas · decisões · problemas)
 
+**08/07 — 🔄 MODO CONTÍNUO instituído pela fundadora (escolhe→implementa→
+testa→guardiãs→dívidas→PR→merge dela→próxima, sem esperar mensagens) +
+CICLO 1 ENTREGUE: 🔁 RECORRÊNCIA no PR #30 (aguarda merge).** A LIFE
+ARCHITECT arbitrou a prioridade (poder dado por ela): recorrência
+transversal VENCEU a lista de mercado — "a medicação esquecida custa saúde;
+a lista, um café" — pela cena da mãe da Nanda ("não precisa mais ser a
+memória viva de duas gerações"); lista de mercado viva é o PRÓXIMO ciclo.
+IMPLEMENTADO: lembretes recorrentes (diario/semanal/mensal:<dia>/dias:...)
+com as 3 CERCAS da guardiã em código ("pode parar" é lei numa frase e NOMEIA
+o que parou; pulso de re-consentimento gentil DENTRO da mensagem a cada N
+disparos; zero culpa auditado). REVISÃO Life+Relationship **BLOQUEOU** e foi
+paga: R1 — a janela de 24h do WhatsApp fechada matava o recorrente em 5min,
+para sempre, em silêncio (a própria cena da mãe morrendo pelo caminho mais
+comum) → recorrente JAMAIS morre por falha: pula a ocorrência e segue; R2
+"todo dia 31" persiste o alvo (não vira 28 p/ sempre); R3 push entra no
+histórico (o "pode parar" tem referente); R4 transparência do que parou;
+R5 outage multi-dia ganha honestidade. 137/137. TAMBÉM NESTE PERÍODO:
+handoff das Life Seeds ENCERRADO (fonte canônica = os 4 JSONs impressos na
+conversa da fundadora; Despacho salva → POST /vida → apaga; Despacho
+confirmou que não recria). FILA DE PRs para a Nanda: #29 (Sprint da Voz) e
+#30 (Recorrência). No merge do #30 → próximo ciclo: 🛒 lista de mercado viva.
+
 **08/07 — 🎙️ SPRINT DA VOZ aberta pela fundadora (prioridade máxima) —
 charter do painel entregue + fundação da VOZ ADAPTATIVA no PR #29 (merge
 dela).** Pergunta única: "como deve soar alguém que as pessoas desejam
