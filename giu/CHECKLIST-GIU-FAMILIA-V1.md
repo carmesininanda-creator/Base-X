@@ -22,7 +22,7 @@
 | # | Item | Estado | 👤 |
 |---|------|--------|-----|
 | CC1 | **Merge do PR #25** (Comunicação — pendências sem eco) | ✅ mergeado (delegado: "vamos concluir os itens restantes") | — |
-| CC2 | **A VOZ DA GIULIETA** — o ciclo técnico funciona (ela ouviu), mas a voz foi REPROVADA duas vezes ("parece um sistema lendo texto"). Nova regra dela: **a Giu Família NÃO lança com esta voz.** Caminho: Despacho provisiona chaves (ElevenLabs/Azure/Google) → bateria multi-provedor → o ouvido dela escolhe | 🔴 BLOQUEADOR do GO (sprint aberta) | Despacho + Nanda |
+| CC2 | **A PRESENÇA DA GIULIETA** (Sprint da Presença) — o ciclo técnico funciona (ela ouviu), mas a voz foi REPROVADA duas vezes ("parece um sistema lendo texto"). Nova regra dela: **a Giu Família NÃO lança com esta voz.** Caminho: Despacho provisiona chaves (ElevenLabs/Azure/Google) → bateria multi-provedor → o ouvido dela escolhe | 🔴 BLOQUEADOR do GO (sprint aberta) | Despacho + Nanda |
 | CC3 | **Alarme de saldo OpenAI** no painel (recorrência do 429 no meio da semana é inaceitável) | 🔴 pendente | Despacho |
 | CC4 | **Dívida M4**: check-in matinal sem a lei da oferta única | ✅ paga no PR #26 (bom dia sem coleção de culpas: vencidos ≤7 dias; recusadas nunca; ações antigas expiram) | — |
 | CC5 | **SEMEAR A VIDA** (elevado pela fundadora: identidade + vida — pessoas, projetos, objetivos, rotina, preferências, contexto, fricções, INTERESSES, SONHOS, DESAFIOS, datas) | 🟡 mecanismo no PR #26 (com expurgo pela recusa — S1); fichas preenchidas prontas FORA do git aguardando revisão dela + aplicação do Despacho | Nanda revisa · Despacho aplica |

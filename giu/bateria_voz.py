@@ -1,5 +1,12 @@
 """
-BATERIA MULTI-PROVEDOR da Sprint da Voz — FASE 3: a caça à voz da Giulieta.
+BATERIA DE CENAS da SPRINT DA PRESENÇA DA GIULIETA (multi-provedor).
+
+"Não estamos procurando um TTS. Estamos procurando uma PRESENÇA." A
+referência é uma sensação — alguém que inspira confiança imediatamente,
+transmite inteligência tranquila, escuta antes de responder, nunca parece
+apressada, nunca interpreta um personagem, nunca lê texto. A escolha é da
+Voice Architect como IDENTIDADE; a tecnologia se adapta a ela — nunca o
+contrário. A sprint fecha quando a Nanda ouvir e sentir: "Essa é a Giu."
 
 Decisão da fundadora: "Esqueçam por um momento a tecnologia. Quero encontrar
 a voz que faça alguém sorrir quando ouvir 'Oi…'. Se isso exigir outro
@@ -35,16 +42,30 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from giu import voice  # noqa: E402  (vocefy + a identidade madura)
 
 TEXTOS = {
-    "T0-oi": "Oi… sou eu. Tava aqui pensando em você — como foi o seu dia?",
-    "T1-bomdia": (
-        "Bom dia… acordou bem? Tá um céu bonito hoje — abre a janela um "
-        "pouquinho antes do café. Ah, e a consulta é às 15:00. O resto… "
-        "deixa comigo."
+    # As 7 CENAS da fundadora — conversas reais, não frases de teste
+    "C1-oi": "Oi… sou eu.",
+    "C2-bomdia": (
+        "Bom dia… acordou bem? Tá um céu bonito lá fora. Vai com calma no "
+        "café — o dia deixa."
     ),
-    "T2-juntas": (
+    "C3-comofoi": (
+        "E aí… como foi o seu dia? De verdade, assim — do jeito que você "
+        "contaria pra alguém de casa."
+    ),
+    "C4-juntas": (
         "Ei. Respira comigo um instante… Isso não precisa ser resolvido "
-        "hoje, e muito menos sozinha. Me conta com calma — nós vamos "
-        "resolver isso juntas."
+        "hoje, e muito menos sozinha. Nós vamos resolver isso juntas."
+    ),
+    "C5-ficofeliz": (
+        "Fico feliz que você tenha me contado isso… De verdade. Coisa "
+        "guardada pesa mais — e agora ela é nossa, não só sua."
+    ),
+    "C6-silencio": (
+        "Tô aqui… … … Não precisa dizer nada agora… … Eu fico com você."
+    ),
+    "C7-despedida": (
+        "Vou deixar você descansar agora… O dia foi longo, e você deu "
+        "conta dele. Durma bem… amanhã eu tô aqui."
     ),
 }
 
@@ -159,14 +180,66 @@ def _google():
             ("pt-BR-Neural2-A", "pt-BR-Neural2-C", "pt-BR-Chirp3-HD-Aoede")]
 
 
+def _cartesia():
+    chave = os.getenv("CARTESIA_API_KEY")
+    vozes_env = os.getenv("CARTESIA_VOICES", "")  # "voice_id:Nome,voice_id:Nome"
+    if not (chave and vozes_env):
+        return []
+    import httpx
+
+    def synth(vid):
+        def f(texto):
+            r = httpx.post(
+                "https://api.cartesia.ai/tts/bytes",
+                headers={"X-API-Key": chave, "Cartesia-Version": "2024-06-10"},
+                json={"model_id": "sonic-2", "language": "pt",
+                      "voice": {"mode": "id", "id": vid},
+                      "transcript": voice.vocefy(texto),
+                      "output_format": {"container": "mp3",
+                                        "bit_rate": 128000, "sample_rate": 44100}},
+                timeout=60)
+            r.raise_for_status()
+            return r.content
+        return f
+    pares = [p.split(":", 1) for p in vozes_env.split(",") if ":" in p]
+    return [(f"cartesia/{nome.strip()}", synth(vid.strip())) for vid, nome in pares]
+
+
+def _playht():
+    uid, chave = os.getenv("PLAYHT_USER_ID"), os.getenv("PLAYHT_API_KEY")
+    vozes_env = os.getenv("PLAYHT_VOICES", "")  # "voice_url_ou_id:Nome,..."
+    if not (uid and chave and vozes_env):
+        return []
+    import httpx
+
+    def synth(vid):
+        def f(texto):
+            r = httpx.post(
+                "https://api.play.ht/api/v2/tts/stream",
+                headers={"X-USER-ID": uid, "AUTHORIZATION": chave,
+                         "accept": "audio/mpeg"},
+                json={"text": voice.vocefy(texto), "voice": vid,
+                      "voice_engine": "PlayDialog", "language": "portuguese",
+                      "output_format": "mp3"},
+                timeout=120)
+            r.raise_for_status()
+            return r.content
+        return f
+    pares = [p.split(":", 1) for p in vozes_env.split(",") if ":" in p]
+    return [(f"playht/{nome.strip()}", synth(vid.strip())) for vid, nome in pares]
+
+
 def main():
-    candidatas = _openai() + _elevenlabs() + _azure() + _google()
+    candidatas = (_openai() + _elevenlabs() + _azure() + _google()
+                  + _cartesia() + _playht())
     if not candidatas:
         print("Nenhuma chave configurada — veja o cabeçalho do arquivo.")
         return
     faltando = [n for n, tem in (("ElevenLabs", os.getenv("ELEVENLABS_API_KEY")),
                                  ("Azure", os.getenv("AZURE_SPEECH_KEY")),
-                                 ("Google", os.getenv("GOOGLE_TTS_API_KEY"))) if not tem]
+                                 ("Google", os.getenv("GOOGLE_TTS_API_KEY")),
+                                 ("Cartesia", os.getenv("CARTESIA_API_KEY")),
+                                 ("PlayHT", os.getenv("PLAYHT_API_KEY"))) if not tem]
     if faltando:
         print(f"⚠ Sem chave (pulados): {', '.join(faltando)} — a bateria fica "
               "menor do que a fundadora pediu até o Despacho provisionar.")
@@ -189,7 +262,7 @@ def main():
         json.dump(gabarito, f, ensure_ascii=False, indent=2)
     if falhas:
         print(f"\n⚠ Falhas (honestidade): {'; '.join(falhas)}")
-    print(f"\n{total} amostras de {len(gabarito)} vozes. Escute o T0 ('Oi…') "
+    print(f"\n{total} amostras de {len(gabarito)} vozes. Escute a C1 ('Oi…') "
           "primeiro — a voz que te fizer sorrir ali merece o resto. Gabarito "
           "lacrado até o fim.")
 

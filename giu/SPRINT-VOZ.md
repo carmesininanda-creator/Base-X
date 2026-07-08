@@ -1,66 +1,45 @@
-# 🎙️ SPRINT DA VOZ — Charter oficial (painel das quatro guardiãs)
+# 🕯️ SPRINT DA PRESENÇA DA GIULIETA
+### (antes "Sprint da Voz" — renomeada pela fundadora em 08/07/2026)
 
-> ## 🔴 FASE 3 — A CAÇA MULTI-PROVEDOR (fundadora, 08/07/2026 — VIGENTE)
-> Ela ouviu a voz nova e REPROVOU de novo: "continua parecendo um sistema
-> lendo texto. Não é um problema técnico. É um problema de identidade."
-> DECISÕES: (1) **esquecer completamente a voz atual** — parar de ajustar
-> parâmetros, parar de tentar salvá-la; (2) **bateria muito maior, além da
-> OpenAI**: comparar provedores (ElevenLabs, Azure, Google — e, se preciso,
-> clonagem LICENCIADA ou qualquer outra solução: "a identidade da Giulieta
-> vale mais do que a tecnologia usada para produzi-la"); (3) escolha
-> EXCLUSIVAMENTE pelo ouvido; (4) **a Giu Família NÃO lança com esta voz** —
-> a voz vira bloqueador do GO.
+> **"Percebi que não estamos procurando um TTS. Estamos procurando uma
+> PRESENÇA."** A referência não é uma voz específica — é uma SENSAÇÃO: a de
+> alguém que gostaríamos de ouvir durante muitos anos; a de alguém que faz
+> pensar **"Que bom falar com a Giu."**
 >
-> **O NOVO BRIEFING OFICIAL da Voice Architect (dela):** procurar uma voz
-> que transmita **maturidade, inteligência tranquila e calor humano** —
-> a sensação que atrizes como Annette Bening transmitem (presença,
-> confiança, humanidade) **sem copiar voz ou identidade de ninguém**.
-> Mulher entre 45 e 60 na SENSAÇÃO; naturalmente sorridente sem ser
-> animadora; segura sem autoritária; elegante sem formal; curiosa;
-> acolhedora; como quem está na mesma sala. NUNCA jovem (quem está
-> preocupado com um exame, um filho, a mãe — precisa ouvir "nós vamos
-> resolver isso juntas", não inexperiência). Nunca teatral, infantil,
-> melancólica ou institucional.
+> ## Os critérios oficiais (dela)
+> A Giulieta deve soar como alguém que:
+> - inspira confiança imediatamente;
+> - transmite inteligência tranquila;
+> - **escuta antes de responder**;
+> - nunca parece apressada;
+> - nunca parece interpretar um personagem;
+> - nunca parece um sistema lendo texto.
 >
-> **O teste do "Oi…":** a voz certa faz a pessoa SORRIR ao ouvir "Oi…".
-> A única pergunta: "com qual voz eu gostaria de conversar durante muitos
-> anos?" A sprint segue ABERTA até a resposta aparecer naturalmente.
+> E o briefing de maturidade permanece: mulher de 45–60 NA SENSAÇÃO —
+> a experiência que atrizes como Annette Bening transmitem (presença,
+> confiança, humanidade), sem copiar voz ou identidade de ninguém. Nunca
+> jovem, nunca teatral, nunca melancólica, nunca institucional.
 >
-> **Instrumento:** bateria_voz.py agora é MULTI-PROVEDOR (OpenAI maduras +
-> ElevenLabs multilingual + Azure Neural pt-BR + Google pt-BR; cada um liga
-> com a própria chave; sem chave = pulado com aviso). HANDOFF AO DESPACHO:
-> provisionar ELEVENLABS_API_KEY, AZURE_SPEECH_KEY(+REGION) e
-> GOOGLE_TTS_API_KEY (planos gratuitos/baratos bastam para a bateria),
-> rodar, e mandar as amostras. A identidade madura já é a instrução de
-> produção (voice.py) — mas a voz atual está MORTA para o projeto; ela só
-> fala até a vencedora assumir.
-
-> ## ⚠️ FASE 2 — DIREÇÃO ARTÍSTICA (reorientação da fundadora, 08/07/2026)
-> Ela ouviu: **"a voz continua errada — artificial, monótona, pouca vida,
-> pouca proximidade. Ainda parece um sistema lendo texto."** A sprint deixa
-> de ser problema técnico e vira **direção artística**: esquecer parâmetros;
-> testar vozes COMPLETAMENTE diferentes (mais jovens, mais maduras, mais
-> leves, mais sorridentes, mais naturais). A pergunta da escuta muda:
-> **"Com qual delas eu gostaria de conversar durante muitos anos?"**
-> Não procuramos "a melhor voz da OpenAI" — procuramos **A VOZ DA GIULIETA**.
-> **A sprint permanece ABERTA até a sensação "Que bom falar com a Giu"
-> aparecer naturalmente.** Instrumento: bateria AMPLA cega (bateria_voz.py —
-> 8 vozes × 3 direções de cena × 2 textos-de-vida, gabarito lacrado).
-> Nota honesta: no dia deste veredito, a produção ainda falava com o tts-1
-> (surdo a toda instrução — PR #29 não mergeado); a fase 2 roda inteira no
-> modelo vivo. Se nenhuma das 8 despertar a sensação, os caminhos seguintes
-> são: outros provedores de TTS e (com peso ético e de custo) voz própria —
-> nesta ordem, e só se preciso.
-
-> Aberta pela fundadora em 08/07/2026, **prioridade máxima**. Liderança:
-> Voice Architect, com Psychology, Relationship e Life Architects.
-> Pergunta única: **"Como deve soar alguém que as pessoas desejam ouvir
-> durante muitos anos?"** Critério de decisão: a sensação **"Que bom falar
-> com a Giu"** — nunca a nota técnica.
+> ## A INVERSÃO OFICIAL
+> **A Voice Architect deixa de escolher uma voz. Ela escolhe uma
+> IDENTIDADE. A tecnologia se adapta à identidade — nunca o contrário.**
+> Provedor, modelo e parâmetros são consequência; a presença é a causa.
 >
-> As 6 instruções da Seção 2 JÁ estão no código (giu/voice.py:
-> IDENTIDADE_VOCAL + ESTILOS) e ligam via `GIU_TTS_MODEL=gpt-4o-mini-tts` —
-> reversível em segundos por env var, sem deploy. No tts-1 atual, nada muda.
+> ## A bateria de CENAS (não frases)
+> A escuta é de conversas reais, cegas, no celular:
+> C1 "Oi…" · C2 bom dia · C3 "como foi seu dia?" · C4 "vamos resolver isso
+> juntas" · C5 "fico feliz que você tenha me contado isso" ·
+> C6 **silêncio** (a presença que não precisa falar) · C7 despedida.
+> Provedores: OpenAI · ElevenLabs · Azure · Google · **Cartesia · PlayHT** ·
+> qualquer outro que entregue qualidade superior. Clonagem LICENCIADA na
+> mesa se preciso. Instrumento: bateria_voz.py (multi-provedor, cada chave
+> liga o seu; gabarito lacrado).
+>
+> ## As regras que não mudam
+> A escolha é EXCLUSIVAMENTE pelo ouvido. **A voz é bloqueador oficial do
+> lançamento — vale tanto quanto a própria identidade da Giulieta.** A
+> sprint segue ABERTA até a Nanda ouvir uma voz e sentir, espontaneamente:
+> **"Essa é a Giu."**
 
 ---
 
