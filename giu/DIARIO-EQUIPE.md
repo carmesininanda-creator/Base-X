@@ -62,6 +62,27 @@ do Despacho, §6) · open_meteo ✅ (T7). Duas frentes permanentes: capacidades
 
 ## 3. Registro corrido (descobertas · decisões · problemas)
 
+**08/07 — 🎙️ SPRINT DA VOZ aberta pela fundadora (prioridade máxima) —
+charter do painel entregue + fundação da VOZ ADAPTATIVA no PR #29 (merge
+dela).** Pergunta única: "como deve soar alguém que as pessoas desejam
+ouvir durante muitos anos?" PAINEL (Voice liderando + Psychology +
+Relationship + Life): a metáfora oficial — "a amiga da família que virou de
+casa; continuação de conversa, nunca início de atendimento" — 7 traços
+permanentes, assinatura sonora em 3 segundos (entrada morna, pausa que
+pensa, final que fica aberto), 4 candidatas (shimmer defende o posto às
+cegas; nova; CORAL é a aposta do painel; sage como controle), bateria
+emocional CEGA com as 6 perguntas dela + a decisiva ("se essa voz te
+ligasse amanhã de manhã…"), regra anti-caricatura (±15%; dúvida → neutro-
+âncora), vencedora = "titular por 30 dias". NO CÓDIGO: IDENTIDADE_VOCAL
+(âncora fixa em TODA instrução, travada por teste) + ESTILOS pelos 6 modos
+de presença; o momento do turno viaja até o TTS (turno + check-ins);
+emergência = calma FIRME. ZERO risco hoje: instructions só no
+gpt-4o-mini-tts — no tts-1 nada muda; liga/desliga por env var em segundos.
+bateria_voz.py gera as 48 amostras cegas (gabarito lacrado) — HANDOFF:
+Despacho roda o script e distribui; a família ouve sozinha, no celular.
+SPRINT-VOZ.md é o documento oficial. 132/132 testes. Escopo protegido (R5):
+vocefy intocado, speed 1.0 encerrado, sem clonagem, sem timbre por membro.
+
 **08/07 — ⚖️ NOVO CRITÉRIO de priorização (fundadora): EQUILÍBRIO entre as
 áreas — impacto humano acima de completude técnica ("se o Calendar resolve
 80%, prefiro começar o Home a buscar 99%"). PR #28 MERGEADO (main 9261c9b,
