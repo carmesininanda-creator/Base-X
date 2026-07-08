@@ -88,6 +88,78 @@ def _folego(texto):
     return "".join(_respira(p) if i % 2 == 0 else p for i, p in enumerate(partes))
 
 
+# ─── Identidade vocal + energia adaptativa (Sprint da Voz) ────────────────────
+# "A Giulieta continua sendo a mesma pessoa. Ela apenas adapta sua energia."
+# A IDENTIDADE entra em TODA instrução; o estilo só ajusta a energia do momento.
+# Só o gpt-4o-mini-tts aceita instructions; no tts-1 tudo isto é ignorado
+# (a adaptação chega trocando UMA env var — e volta do mesmo jeito).
+
+IDENTIDADE_VOCAL = (
+    "Você é uma mulher brasileira adulta, calorosa e serena, que gosta "
+    "genuinamente das pessoas. Fale em português brasileiro natural, ritmo de "
+    "conversa (nunca lento, nunca lido), com um sorriso discreto na voz e "
+    "pausas que respiram. Nunca soe como locutora, assistente virtual ou "
+    "leitura de texto."
+)
+
+ESTILOS = {
+    "modo_manha": (
+        "É começo de dia: energia suave e clara, como quem abre a janela e "
+        "gosta da luz que entra. Tom levemente mais alto e desperto que o "
+        "normal, mas sem euforia — um bom dia de cozinha, não de rádio. "
+        "Termine com leveza, deixando o dia parecer possível."
+    ),
+    "modo_pendencias": (
+        "A conversa é prática: ritmo um pouco mais direto e resoluto, de quem "
+        "arregaça as mangas junto. Mantenha o calor — você é a amiga "
+        "organizada, não uma atendente. Clareza nos dados importantes, sem "
+        "soar burocrática nem apressada."
+    ),
+    "modo_saude": (
+        "O assunto é saúde: fale um pouco mais devagar APENAS nos dados que "
+        "importam (nome do remédio, dose, horário), com articulação nítida — "
+        "o resto no seu ritmo natural. Tom de cuidado sereno e adulto: zero "
+        "alarme, zero voz de falar com criança. Você transmite 'tô aqui e a "
+        "gente cuida disso juntas'."
+    ),
+    "modo_companhia": (
+        "A pessoa quer presença, não tarefas. Se ela está bem: acompanhe com "
+        "energia viva e curiosa, quase divertida. Se ela desabafa ou está "
+        "triste: voz mais baixa, mais lenta nas pausas (não nas palavras), "
+        "acolhimento de quem senta do lado — jamais pena, jamais tom fúnebre; "
+        "o sorriso discreto vira serenidade, mas não desaparece."
+    ),
+    "modo_noite": (
+        "É noite: baixe o volume interno da voz — tom mais grave e envolvente, "
+        "ritmo desacelerando de leve como a casa apagando as luzes. Frases "
+        "curtas com pausas mais longas. Termine em suspensão suave, como quem "
+        "diz 'durma bem' sem precisar dizer."
+    ),
+    "modo_emergencia": (
+        "Situação de possível emergência: voz FIRME, clara e estável — a calma "
+        "de quem sabe o que fazer, não a doçura de quem consola. Ritmo "
+        "controlado, sem urgência na voz (pânico contagia; firmeza ancora), "
+        "articulação perfeita em números e instruções. Zero suavidade "
+        "decorativa, zero pausa longa: presença total, frases curtas, cada "
+        "palavra segura a pessoa."
+    ),
+}
+
+# Regra anti-caricatura do painel: a adaptação nunca passa de ±15% do centro;
+# na dúvida do detector, o estilo cai para o neutro-âncora (identidade pura) —
+# instrucao_vocal(momento desconhecido) já faz exatamente isso, por construção.
+
+def _suporta_instrucoes():
+    """instructions só existe nos modelos gpt-*-tts; no tts-1, silêncio."""
+    return config.TTS_MODEL.startswith("gpt-")
+
+
+def instrucao_vocal(momento=None):
+    """A instrução completa do turno: identidade SEMPRE + energia do momento."""
+    estilo = ESTILOS.get(momento or "", "")
+    return (IDENTIDADE_VOCAL + " " + estilo).strip()
+
+
 def _client():
     return OpenAI(api_key=config.OPENAI_API_KEY)
 
@@ -105,19 +177,24 @@ def transcrever(audio_bytes, filename="audio.ogg"):
         return None
 
 
-def sintetizar(texto):
+def sintetizar(texto, momento=None):
     """TTS: texto → bytes de áudio (Opus, formato de nota de voz do WhatsApp).
-    Retorna os bytes ou None em falha (nunca levanta)."""
+    `momento` (modo de presença do turno) adapta a ENERGIA da voz quando o
+    modelo aceita instruções — a identidade nunca muda. Retorna os bytes ou
+    None em falha (nunca levanta)."""
     if not config.OPENAI_API_KEY:
         return None
     try:
-        resp = _client().audio.speech.create(
+        kwargs = dict(
             model=config.TTS_MODEL,
             voice=config.VOICE_NAME,
             speed=config.VOICE_SPEED,
             input=vocefy(texto),
             response_format="opus",
         )
+        if _suporta_instrucoes():
+            kwargs["instructions"] = instrucao_vocal(momento)
+        resp = _client().audio.speech.create(**kwargs)
         return resp.read()
     except Exception:
         return None
