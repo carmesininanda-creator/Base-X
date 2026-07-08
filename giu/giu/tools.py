@@ -507,7 +507,7 @@ TOOL_DEFINITIONS = [
         "type": "function",
         "function": {
             "name": "concluir_compromisso",
-            "description": "Marca um compromisso da agenda como concluído, pelo id.",
+            "description": "Marca um compromisso da agenda como concluído, pelo id (o id vem de ver_agenda).",
             "parameters": {
                 "type": "object",
                 "properties": {"id": {"type": "integer"}},
@@ -664,16 +664,10 @@ def execute_tool(name, arguments, user_id, channel="web"):
         lat = lon = None
         nome = cidade
         try:
-            import httpx
-            resp = httpx.get(
-                "https://geocoding-api.open-meteo.com/v1/search",
-                params={"name": cidade, "count": 1, "language": "pt", "format": "json"},
-                timeout=6,
-            )
-            resultados = resp.json().get("results") or []
-            if resultados:
-                nome = resultados[0].get("name", cidade)
-                lat, lon = resultados[0]["latitude"], resultados[0]["longitude"]
+            from .integrations import open_meteo
+            achado = open_meteo.geocodificar(cidade)
+            if achado:
+                nome, lat, lon = achado
         except Exception:
             pass  # sem geocodificação agora: guarda o nome; o clima chega depois
         if not memory.city_set(user_id, nome, lat, lon):

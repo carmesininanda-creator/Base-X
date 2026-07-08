@@ -19,9 +19,8 @@ import time as _time
 from datetime import datetime, timedelta
 from zoneinfo import ZoneInfo
 
-import httpx
-
 from .. import config, memory
+from ..integrations import open_meteo
 
 # ─── Piso interno: calendário humano em português (cálculo puro) ──────────────
 
@@ -116,19 +115,12 @@ def _linha_datas(user_id, now):
 
 
 # ─── Clima e sol (cidade AUTORIZADA por ela — enriquecimento, nunca dimensão) ──
+# A fronteira com o fornecedor mora no Life Connector (integrations/open_meteo)
+# — este Provider não conhece URL nem payload (T7 da Life Architect).
 
-_CLIMA_TIMEOUT = 2.5          # teto de tempo: conector lento = conector mudo
-_CLIMA_TTL = 30 * 60          # cache técnico volátil (memória do processo)
-_clima_cache = {}             # user_id -> (epoch, linha)
-
-_WMO = {
-    0: "céu limpo", 1: "quase limpo", 2: "parcialmente nublado", 3: "nublado",
-    45: "neblina", 48: "neblina", 51: "garoa", 53: "garoa", 55: "garoa",
-    61: "chuva fraca", 63: "chuva", 65: "chuva forte", 66: "chuva gelada",
-    67: "chuva gelada", 71: "neve", 73: "neve", 75: "neve", 77: "neve",
-    80: "pancadas de chuva", 81: "pancadas de chuva", 82: "pancadas fortes de chuva",
-    95: "tempestade", 96: "tempestade com granizo", 99: "tempestade com granizo",
-}
+_CLIMA_TIMEOUT = open_meteo.TIMEOUT  # teto de tempo: conector lento = conector mudo
+_CLIMA_TTL = 30 * 60                 # cache técnico volátil (memória do processo)
+_clima_cache = {}                    # (user_id, lat, lon) -> (epoch, linha)
 
 
 def _linha_clima(user_id, now):
@@ -141,27 +133,12 @@ def _linha_clima(user_id, now):
     if em_cache and _time.time() - em_cache[0] < _CLIMA_TTL:
         return em_cache[1]
     try:
-        resp = httpx.get(
-            "https://api.open-meteo.com/v1/forecast",
-            params={
-                "latitude": cidade["lat"], "longitude": cidade["lon"],
-                "current": "temperature_2m,weather_code",
-                "daily": "temperature_2m_max,temperature_2m_min,sunrise,sunset",
-                "timezone": config.TIMEZONE, "forecast_days": 1,
-            },
-            timeout=_CLIMA_TIMEOUT,
-        )
-        resp.raise_for_status()
-        dados = resp.json()
-        atual = dados["current"]
-        dia = dados["daily"]
-        desc = _WMO.get(atual.get("weather_code"), "")
-        sol = (f"o sol nasce às {dia['sunrise'][0][11:16]}" if now.hour < 12
-               else f"o sol se põe às {dia['sunset'][0][11:16]}")
-        linha = (f"Lá fora em {cidade['nome']}: {round(atual['temperature_2m'])}°C"
-                 + (f", {desc}" if desc else "")
-                 + f" (máx {round(dia['temperature_2m_max'][0])}° / "
-                 f"mín {round(dia['temperature_2m_min'][0])}°); {sol}.")
+        tempo = open_meteo.previsao(cidade["lat"], cidade["lon"], config.TIMEZONE)
+        sol = (f"o sol nasce às {tempo['nascer']}" if now.hour < 12
+               else f"o sol se põe às {tempo['por']}")
+        linha = (f"Lá fora em {cidade['nome']}: {tempo['temperatura']}°C"
+                 + (f", {tempo['descricao']}" if tempo["descricao"] else "")
+                 + f" (máx {tempo['maxima']}° / mín {tempo['minima']}°); {sol}.")
     except Exception:
         return ""  # degrada em silêncio — a pessoa nunca vê erro de fornecedor
     _clima_cache[chave] = (_time.time(), linha)
