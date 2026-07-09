@@ -2029,10 +2029,11 @@ def test_voz_identidade_nunca_muda_so_a_energia():
     from giu import voice
     for momento in list(voice.ESTILOS) + [None, "modo_inexistente"]:
         instrucao = voice.instrucao_vocal(momento)
-        # A âncora de identidade (charter do painel) está em TODA instrução
-        assert "gosta genuinamente das pessoas" in instrucao
-        assert "sorriso discreto" in instrucao
-        assert "Nunca soe como locutora" in instrucao
+        # A âncora de identidade (versão refinada da fundadora, 09/07) está
+        # em TODA instrução: não é personagem, escuta primeiro, sem pressa
+        assert "Nunca interpreta um personagem" in instrucao
+        assert "escuta primeiro" in instrucao
+        assert "Nunca tenha pressa" in instrucao
     # Momento desconhecido → neutro-âncora (regra anti-caricatura do painel)
     assert voice.instrucao_vocal("modo_inexistente") == voice.IDENTIDADE_VOCAL
 
@@ -2063,7 +2064,7 @@ def test_voz_viva_por_padrao_e_speed_nunca_derruba_o_audio(monkeypatch):
     monkeypatch.setattr(_cfg, "TTS_MODEL", "gpt-4o-mini-tts")
     kwargs = voice._tts_kwargs("oi", "modo_manha")
     assert "instructions" in kwargs and "speed" not in kwargs
-    assert "gosta genuinamente das pessoas" in kwargs["instructions"]
+    assert "Nunca interpreta um personagem" in kwargs["instructions"]
     # tts-1 (rollback): speed SIM, instructions NÃO — nada quebra
     monkeypatch.setattr(_cfg, "TTS_MODEL", "tts-1")
     kwargs = voice._tts_kwargs("oi", "modo_manha")
